@@ -21,11 +21,12 @@ Online su revkeeper.pages.dev: nella scheda moto, marca → modello → anno, mi
 ## Decisions so far
 
 - Grilling iniziale: elenco da vPIC + curato; menu per marca/modello/anno, gomme, liquidi; dati tecnici precompilati; editor foto con zoom e spostamento; obiettivo: costruito e online.
+- [vPIC per le moto e fonti gratuite delle specifiche](101-ricerca-vpic-specifiche.md): vPIC letto una volta da uno script e salvato come JSON statico unito al catalogo curato (niente chiamate dall'app); specifiche solo a mano dalle schede ufficiali per i modelli del catalogo.
 
 ## Not yet specified
 
 - Aggiornamento del catalogo curato nel tempo (nuovi modelli ogni anno).
-- Cosa fare se vPIC non risponde o cambia formato (cache, fallback).
+- Rigenerare il JSON da vPIC ogni anno (script da rilanciare).
 
 ## Out of scope
 
