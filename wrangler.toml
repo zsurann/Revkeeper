@@ -8,9 +8,10 @@ GOOGLE_CLIENT_ID = "517496172383-1l7otafbhost3ubro8ei3qqnlgsa77ma.apps.googleuse
 [[d1_databases]]
 binding = "DB"
 database_name = "revkeeper"
-database_id = "00000000-0000-0000-0000-000000000000" # shortcut: segnaposto per lo sviluppo locale, il deploy mette l'id vero
+database_id = "155ba912-464e-4fd1-b2ea-0d223f8c386f"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
 binding = "FILES"
 bucket_name = "revkeeper-files"
+jurisdiction = "eu"

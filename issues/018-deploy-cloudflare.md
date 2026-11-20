@@ -3,7 +3,7 @@ id: 18
 title: "Deploy su Cloudflare Pages"
 labels: [wayfinder:task]
 status: open
-assignee:
+assignee: claude
 blocked_by: [17]
 ---
 
