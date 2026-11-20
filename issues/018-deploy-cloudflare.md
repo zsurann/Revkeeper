@@ -20,4 +20,4 @@ Online su **https://revkeeper.pages.dev**.
 - Verifiche in produzione: `/`, manifest e `sw.js` rispondono 200, `/api/me` 401; il pulsante Google compare senza errori di origine. Lighthouse mobile: **performance 97, accessibilità 100, best practice 100**, LCP 2,1 s, CLS 0, TBT 20 ms.
 - Correzione: fondo bianco dietro il pulsante Google sul tema scuro (`color-scheme` del contenitore).
 
-Da verificare a mano dall'utente: il login Google completo su Android e sull'iPhone con l'app installata nella schermata Home.
+Login Google verificato dall'utente su Android. Da verificare: iPhone con l'app installata nella schermata Home.

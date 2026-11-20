@@ -23,4 +23,4 @@ Fatto e pubblicato.
 
 Verifiche: 24 test (promemoria a 30 e 7 giorni, km fermi, ora locale nel fuso), `tsc` di client, server e cron, build; endpoint provati con `wrangler pages dev` (iscrizione non valida, ora 25, fuso sbagliato → 400; iscrizione valida salvata con ora e fuso; disiscrizione). Deploy del Worker riuscito con il trigger orario.
 
-Non verificato: una push vera arrivata su un telefono. Da provare con "Invia prova" dopo il login.
+Verificato dall'utente: la notifica di prova arriva su Android, quindi il login Google in produzione funziona. Resta da provare iOS con l'app installata nella schermata Home.
