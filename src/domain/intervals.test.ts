@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DATA, itemsFor, type Dataset } from './intervals'
 
-const bike = { id: 'b', make: 'Yamaha', model: 'MT-07', year: 2022, category: 'custom' }
+const bike = { id: 'b', make: 'Moto', model: 'Senza libretto', year: 2022, category: 'custom' }
 
 describe('itemsFor', () => {
   it('eredita dal preset padre, sovrascrive e annulla con null', () => {
@@ -19,8 +19,8 @@ describe('itemsFor', () => {
         { id: 'yamaha.mt07', label: '', make: 'Yamaha', model: 'MT-07', aliases: ['MT07'], yearFrom: 2021, yearTo: null, extends: 'preset.naked', source: {}, intervals: [{ item: 'valve_clearance', action: 'inspect', km: 42000 }] },
       ],
     }
-    expect(itemsFor({ ...bike, model: 'mt 07' }, d).find((i) => i.item === 'valve_clearance')).toMatchObject({ km: 42000, origin: 'model' })
-    expect(itemsFor({ ...bike, year: 2019 }, d)[0]?.origin).toBe('preset')
+    expect(itemsFor({ ...bike, make: 'Yamaha', model: 'mt 07' }, d).find((i) => i.item === 'valve_clearance')).toMatchObject({ km: 42000, origin: 'model' })
+    expect(itemsFor({ ...bike, make: 'Yamaha', model: 'MT-07', year: 2019 }, d)[0]?.origin).toBe('preset')
   })
 
   it('Kawasaki Z650 2017: valori del libretto e due voci per la catena', () => {
@@ -48,5 +48,17 @@ describe('itemsFor', () => {
       expect(items.length).toBeGreaterThan(0)
       for (const i of items) expect(i.km ?? i.months).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('libretti seconda tornata', () => {
+  it('Honda SH125i: olio a 1.000 km poi ogni 6.000 km o 12 mesi, dal libretto', () => {
+    const items = itemsFor({ id: 'b', make: 'Honda', model: 'SH 125', year: 2022 })
+    expect(items.every((i) => i.origin === 'model')).toBe(true)
+    expect(items.find((i) => i.item === 'engine_oil')).toMatchObject({ km: 6000, months: 12, firstKm: 1000 })
+  })
+  it('Yamaha MT-07 dal libretto solo per la generazione 2021–2024', () => {
+    expect(itemsFor({ id: 'b', make: 'Yamaha', model: 'MT-07', year: 2023 })[0]?.origin).toBe('model')
+    expect(itemsFor({ id: 'b', make: 'Yamaha', model: 'MT-07', year: 2025, category: 'naked' })[0]?.origin).toBe('preset')
   })
 })

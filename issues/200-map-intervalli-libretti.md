@@ -2,7 +2,7 @@
 id: 200
 title: "Mappa: più intervalli dai libretti ufficiali"
 labels: [wayfinder:map]
-status: open
+status: closed
 ---
 
 ## Destination
@@ -17,9 +17,12 @@ status: open
 
 ## Decisions so far
 
+- [Intervalli ufficiali di 9 modelli](201-ricerca-intervalli.md): 6 trovati (SH125i/150i/350i, MT-07 2021–24, Tracer 7, R 1300 GS); Vespa GTS, Ducati Monster, Benelli TRK 502 senza fonte ufficiale raggiungibile.
+- [Integrare gli intervalli e pubblicare](202-integrare-intervalli.md): 6 modelli in intervals.json, test e prova E2E; pubblicati tramite PR.
+
 ## Not yet specified
 
-- Modelli il cui libretto non è consultabile (siti Piaggio/Vespa e Benelli bloccati nella ricerca precedente): fonte alternativa o esclusione.
+- Vespa GTS 300, Ducati Monster, Benelli TRK 502 e MT-07 dal 2025: nessuna fonte ufficiale raggiungibile da qui; restano ai valori tipici finché l'utente non fornisce il PDF del libretto.
 
 ## Out of scope
 
