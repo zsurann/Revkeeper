@@ -4,7 +4,7 @@ title: "Worker Cloudflare: login, sync e push"
 labels: [wayfinder:task]
 status: open
 assignee:
-blocked_by: [13]
+blocked_by: []
 ---
 
 ## Question
