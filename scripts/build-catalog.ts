@@ -1,6 +1,7 @@
 // Genera src/data/catalog.json da vPIC (NHTSA) + data/catalog-extra.json. Da rilanciare una volta l'anno:
-//   node scripts/build-catalog.ts
-import { readFileSync, writeFileSync } from 'node:fs'
+//   node scripts/build-catalog.ts            scarica da vPIC (circa 6 minuti) e salva la copia in .cache/
+//   node scripts/build-catalog.ts --offline  riusa la copia, per applicare solo modifiche a catalog-extra.json
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { buildCatalog, type Extra, type Raw } from '../src/domain/catalogBuild.ts'
 
 // Marca mostrata nell'app → nomi usati da vPIC (alcune marche compaiono con più nomi)
@@ -32,12 +33,18 @@ const get = async (make: string, year: number): Promise<string[]> => {
 const jobs = Object.entries(BRANDS).flatMap(([brand, makes]) =>
   makes.flatMap((make) => Array.from({ length: NOW + 1 - FROM + 1 }, (_, i) => ({ brand, make, year: FROM + i }))),
 )
-const raw: Raw[] = []
-// 4 richieste alla volta: vPIC ha un limite "automatico" non dichiarato
-for (let i = 0; i < jobs.length; i += 4) {
-  const batch = jobs.slice(i, i + 4)
-  raw.push(...(await Promise.all(batch.map(async (j) => ({ brand: j.brand, year: j.year, names: await get(j.make, j.year) })))))
-  process.stderr.write(`\r${Math.min(i + 4, jobs.length)}/${jobs.length}`)
+const CACHE = '.cache/vpic-raw.json'
+let raw: Raw[] = []
+if (process.argv.includes('--offline') && existsSync(CACHE)) raw = JSON.parse(readFileSync(CACHE, 'utf8')) as Raw[]
+else {
+  // 4 richieste alla volta: vPIC ha un limite "automatico" non dichiarato
+  for (let i = 0; i < jobs.length; i += 4) {
+    const batch = jobs.slice(i, i + 4)
+    raw.push(...(await Promise.all(batch.map(async (j) => ({ brand: j.brand, year: j.year, names: await get(j.make, j.year) })))))
+    process.stderr.write(`\r${Math.min(i + 4, jobs.length)}/${jobs.length}`)
+  }
+  mkdirSync('.cache', { recursive: true })
+  writeFileSync(CACHE, JSON.stringify(raw))
 }
 const extra = JSON.parse(readFileSync('data/catalog-extra.json', 'utf8')) as Extra
 const catalog = buildCatalog(raw, extra, NOW, new Date().toISOString().slice(0, 10))

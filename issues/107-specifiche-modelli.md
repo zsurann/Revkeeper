@@ -3,7 +3,7 @@ id: 107
 title: "Specifiche tecniche dei 21 modelli"
 labels: [wayfinder:task]
 status: open
-assignee:
+assignee: claude
 blocked_by: []
 ---
 
