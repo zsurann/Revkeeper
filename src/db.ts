@@ -55,3 +55,8 @@ export const addReading = async (bike: Bike, date: string, km: number) => {
   if (km < now) throw new KmDecreasingError(`I km non possono scendere sotto ${now}`)
   return save('readings', { bikeId: bike.id, date, km })
 }
+
+export const getAttachment = async (id: Id) => {
+  const a = await (await db()).get('attachments', id)
+  return a?.deletedAt ? undefined : a
+}
