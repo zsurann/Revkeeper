@@ -1,0 +1,535 @@
+[
+  {
+    "id": "honda.sh125i.2020",
+    "label": "Honda SH125i",
+    "make": "Honda",
+    "model": "SH125i",
+    "aliases": [
+      "SH 125",
+      "SH125",
+      "SH 125i"
+    ],
+    "yearFrom": 2020,
+    "yearTo": null,
+    "category": "scooter",
+    "intervals": [
+      {
+        "item": "engine_oil",
+        "action": "replace",
+        "km": 6000,
+        "months": 12,
+        "firstKm": 1000
+      },
+      {
+        "item": "air_filter",
+        "action": "replace",
+        "km": 18000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "inspect",
+        "km": 6000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "replace",
+        "km": 12000
+      },
+      {
+        "item": "valve_clearance",
+        "action": "inspect",
+        "km": 6000
+      },
+      {
+        "item": "drive_belt",
+        "action": "inspect",
+        "km": 12000
+      },
+      {
+        "item": "drive_belt",
+        "action": "replace",
+        "km": 24000
+      },
+      {
+        "item": "final_drive_oil",
+        "action": "replace",
+        "months": 24
+      },
+      {
+        "item": "brake_fluid",
+        "action": "inspect",
+        "km": 6000,
+        "months": 12
+      },
+      {
+        "item": "brake_fluid",
+        "action": "replace",
+        "months": 24
+      },
+      {
+        "item": "coolant",
+        "action": "inspect",
+        "km": 12000,
+        "months": 12
+      },
+      {
+        "item": "coolant",
+        "action": "replace",
+        "months": 36
+      },
+      {
+        "item": "tyres",
+        "action": "inspect",
+        "km": 6000,
+        "months": 12
+      }
+    ],
+    "source": {
+      "kind": "owner_manual",
+      "title": "Honda SH125i/SH150i Manuale d'uso (3LK0RA00)",
+      "edition": "2020, italiano (HMEI); tabella identica nelle edizioni 2022-2023 (3LK0RA10) e 2024 (3LK0RA20)",
+      "page": 77,
+      "url": "https://2rom-prd-data.hondamotopub.com/om/HMEI/SH125_SH150/2020/SH125_SH150_3LK0RA00_0.pdf",
+      "verifiedAt": "2026-11-20"
+    }
+  },
+  {
+    "id": "honda.sh150i.2020",
+    "label": "Honda SH150i",
+    "make": "Honda",
+    "model": "SH150i",
+    "aliases": [
+      "SH 150",
+      "SH150",
+      "SH 150i"
+    ],
+    "yearFrom": 2020,
+    "yearTo": null,
+    "category": "scooter",
+    "intervals": [
+      {
+        "item": "engine_oil",
+        "action": "replace",
+        "km": 6000,
+        "months": 12,
+        "firstKm": 1000
+      },
+      {
+        "item": "air_filter",
+        "action": "replace",
+        "km": 18000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "inspect",
+        "km": 6000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "replace",
+        "km": 12000
+      },
+      {
+        "item": "valve_clearance",
+        "action": "inspect",
+        "km": 6000
+      },
+      {
+        "item": "drive_belt",
+        "action": "inspect",
+        "km": 12000
+      },
+      {
+        "item": "drive_belt",
+        "action": "replace",
+        "km": 24000
+      },
+      {
+        "item": "final_drive_oil",
+        "action": "replace",
+        "months": 24
+      },
+      {
+        "item": "brake_fluid",
+        "action": "inspect",
+        "km": 6000,
+        "months": 12
+      },
+      {
+        "item": "brake_fluid",
+        "action": "replace",
+        "months": 24
+      },
+      {
+        "item": "coolant",
+        "action": "inspect",
+        "km": 12000,
+        "months": 12
+      },
+      {
+        "item": "coolant",
+        "action": "replace",
+        "months": 36
+      },
+      {
+        "item": "tyres",
+        "action": "inspect",
+        "km": 6000,
+        "months": 12
+      }
+    ],
+    "source": {
+      "kind": "owner_manual",
+      "title": "Honda SH125i/SH150i Manuale d'uso (3LK0RA00)",
+      "edition": "2020, italiano (HMEI); tabella identica nelle edizioni 2022-2023 (3LK0RA10) e 2024 (3LK0RA20)",
+      "page": 77,
+      "url": "https://2rom-prd-data.hondamotopub.com/om/HMEI/SH125_SH150/2020/SH125_SH150_3LK0RA00_0.pdf",
+      "verifiedAt": "2026-11-20"
+    }
+  },
+  {
+    "id": "honda.sh350i.2021",
+    "label": "Honda SH350i",
+    "make": "Honda",
+    "model": "SH350i",
+    "aliases": [
+      "SH 350",
+      "SH350",
+      "SH 350i",
+      "SH350A"
+    ],
+    "yearFrom": 2021,
+    "yearTo": null,
+    "category": "scooter",
+    "intervals": [
+      {
+        "item": "engine_oil",
+        "action": "replace",
+        "km": 12000,
+        "months": 12,
+        "firstKm": 1000
+      },
+      {
+        "item": "oil_filter",
+        "action": "replace",
+        "km": 24000,
+        "firstKm": 1000
+      },
+      {
+        "item": "air_filter",
+        "action": "replace",
+        "km": 24000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "replace",
+        "km": 12000
+      },
+      {
+        "item": "valve_clearance",
+        "action": "inspect",
+        "km": 24000
+      },
+      {
+        "item": "drive_belt",
+        "action": "inspect",
+        "km": 12000
+      },
+      {
+        "item": "drive_belt",
+        "action": "replace",
+        "km": 24000
+      },
+      {
+        "item": "final_drive_oil",
+        "action": "replace",
+        "months": 24
+      },
+      {
+        "item": "brake_fluid",
+        "action": "inspect",
+        "km": 12000,
+        "months": 12
+      },
+      {
+        "item": "brake_fluid",
+        "action": "replace",
+        "months": 24
+      },
+      {
+        "item": "coolant",
+        "action": "inspect",
+        "km": 12000,
+        "months": 12
+      },
+      {
+        "item": "coolant",
+        "action": "replace",
+        "months": 36
+      },
+      {
+        "item": "tyres",
+        "action": "inspect",
+        "km": 12000,
+        "months": 12
+      }
+    ],
+    "source": {
+      "kind": "owner_manual",
+      "title": "Honda SH350i (SH350A) Manuale d'uso (3LK1WA00)",
+      "edition": "2021-2022, italiano (HMEI); tabella identica nell'edizione 2025 (3LK1WA20)",
+      "page": 75,
+      "url": "https://2rom-prd-data.hondamotopub.com/om/HMEI/SH350A/2021-2022/3LK1WA00%20SH350A%20OM%2020%20ita_WEB.pdf",
+      "verifiedAt": "2026-11-20"
+    }
+  },
+  {
+    "id": "yamaha.mt07.2021",
+    "label": "Yamaha MT-07",
+    "make": "Yamaha",
+    "model": "MT-07",
+    "aliases": [
+      "MT07",
+      "MT 07",
+      "MTN690"
+    ],
+    "yearFrom": 2021,
+    "yearTo": 2024,
+    "category": "naked",
+    "intervals": [
+      {
+        "item": "engine_oil",
+        "action": "replace",
+        "km": 10000,
+        "months": 12,
+        "firstKm": 1000
+      },
+      {
+        "item": "oil_filter",
+        "action": "replace",
+        "km": 20000,
+        "firstKm": 1000
+      },
+      {
+        "item": "air_filter",
+        "action": "replace",
+        "km": 40000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "inspect",
+        "km": 10000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "replace",
+        "km": 20000
+      },
+      {
+        "item": "valve_clearance",
+        "action": "inspect",
+        "km": 40000
+      },
+      {
+        "item": "chain",
+        "action": "lube",
+        "km": 1000
+      },
+      {
+        "item": "chain",
+        "action": "adjust",
+        "km": 1000
+      },
+      {
+        "item": "brake_fluid",
+        "action": "replace",
+        "months": 24
+      },
+      {
+        "item": "coolant",
+        "action": "inspect",
+        "km": 10000,
+        "months": 12
+      },
+      {
+        "item": "coolant",
+        "action": "replace",
+        "months": 36
+      },
+      {
+        "item": "tyres",
+        "action": "inspect",
+        "km": 10000,
+        "months": 12
+      }
+    ],
+    "source": {
+      "kind": "owner_manual",
+      "title": "Yamaha MTN690/MTN690-U (MT-07) Uso e manutenzione",
+      "edition": "BAT-28199-H0, 1a edizione ottobre 2020 (italiano); stesse voci in BAT-28199-H1 e BTK-28199-H1",
+      "page": 51,
+      "url": "https://cdn2.yamaha-motor.eu/prod/owner-manuals/Motorcycles/PBAT28199H0H.PDF",
+      "verifiedAt": "2026-11-20"
+    }
+  },
+  {
+    "id": "yamaha.tracer7.2020",
+    "label": "Yamaha Tracer 7",
+    "make": "Yamaha",
+    "model": "Tracer 7",
+    "aliases": [
+      "Tracer 700",
+      "Tracer7",
+      "MTT690"
+    ],
+    "yearFrom": 2020,
+    "yearTo": null,
+    "category": "adventure",
+    "intervals": [
+      {
+        "item": "engine_oil",
+        "action": "replace",
+        "km": 10000,
+        "months": 12,
+        "firstKm": 1000
+      },
+      {
+        "item": "oil_filter",
+        "action": "replace",
+        "km": 20000,
+        "firstKm": 1000
+      },
+      {
+        "item": "air_filter",
+        "action": "replace",
+        "km": 40000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "inspect",
+        "km": 10000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "replace",
+        "km": 20000
+      },
+      {
+        "item": "valve_clearance",
+        "action": "inspect",
+        "km": 40000
+      },
+      {
+        "item": "chain",
+        "action": "lube",
+        "km": 1000
+      },
+      {
+        "item": "chain",
+        "action": "adjust",
+        "km": 1000
+      },
+      {
+        "item": "brake_fluid",
+        "action": "replace",
+        "months": 24
+      },
+      {
+        "item": "coolant",
+        "action": "inspect",
+        "km": 10000,
+        "months": 12
+      },
+      {
+        "item": "coolant",
+        "action": "replace",
+        "months": 36
+      },
+      {
+        "item": "tyres",
+        "action": "inspect",
+        "km": 10000,
+        "months": 12
+      }
+    ],
+    "source": {
+      "kind": "owner_manual",
+      "title": "Yamaha MTT690/MTT690-U (TRACER 7) Uso e manutenzione",
+      "edition": "B4T-F8199-HA, 1a edizione novembre 2021 (italiano); stesse voci in B4T-F8199-H1 (Tracer 700, marzo 2020)",
+      "page": 54,
+      "url": "https://cdn2.yamaha-motor.eu/prod/owner-manuals/Motorcycles/PB4TF8199HAH.pdf",
+      "verifiedAt": "2026-11-20"
+    }
+  },
+  {
+    "id": "bmw.r1300gs.2024",
+    "label": "BMW R 1300 GS",
+    "make": "BMW",
+    "model": "R 1300 GS",
+    "aliases": [
+      "R1300GS",
+      "R 1300GS",
+      "1300 GS"
+    ],
+    "yearFrom": 2024,
+    "yearTo": null,
+    "category": "adventure",
+    "intervals": [
+      {
+        "item": "engine_oil",
+        "action": "replace",
+        "km": 10000,
+        "months": 12,
+        "firstKm": 1200
+      },
+      {
+        "item": "oil_filter",
+        "action": "replace",
+        "km": 10000,
+        "months": 12,
+        "firstKm": 1200
+      },
+      {
+        "item": "final_drive_oil",
+        "action": "replace",
+        "km": 20000,
+        "months": 24,
+        "firstKm": 1200
+      },
+      {
+        "item": "valve_clearance",
+        "action": "inspect",
+        "km": 20000
+      },
+      {
+        "item": "spark_plugs",
+        "action": "replace",
+        "km": 20000
+      },
+      {
+        "item": "air_filter",
+        "action": "replace",
+        "km": 20000
+      },
+      {
+        "item": "brake_fluid",
+        "action": "replace",
+        "months": 24
+      },
+      {
+        "item": "tyres",
+        "action": "inspect",
+        "km": 10000,
+        "months": 12
+      }
+    ],
+    "source": {
+      "kind": "owner_manual",
+      "title": "BMW Motorrad R 1300 GS Uso e manutenzione",
+      "edition": "R_0M21_RM_0223_04 (italiano, edizione online)",
+      "page": 301,
+      "url": "https://manuals.bmw-motorrad.com/manuals/BA-Extern/IN/BA-INTERNET-COM/PDF/R_0M21_RM_0223_04.pdf",
+      "verifiedAt": "2026-11-20"
+    }
+  }
+]
