@@ -3,7 +3,7 @@ id: 102
 title: "Prototipo menu a tendina ed editor foto"
 labels: [wayfinder:prototype]
 status: open
-assignee:
+assignee: claude
 blocked_by: []
 ---
 
