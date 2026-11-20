@@ -24,6 +24,7 @@ Online su revkeeper.pages.dev: nella scheda moto, marca → modello → anno, mi
 - [vPIC per le moto e fonti gratuite delle specifiche](101-ricerca-vpic-specifiche.md): vPIC letto una volta da uno script e salvato come JSON statico unito al catalogo curato (niente chiamate dall'app); specifiche solo a mano dalle schede ufficiali per i modelli del catalogo.
 - [Prototipo menu a tendina ed editor foto](102-prototipo-combobox-foto.md): combobox che si apre al tocco e filtra, «Usa …» solo senza risultati, marca → modello → anno, precompilazione; editor 16:9 con trascina/pizzica/barra, approvato.
 - [Forma e contenuto del catalogo curato](103-catalogo-curato.md): vPIC ripulito + aggiunte EU; varianti unite se i dati tecnici sono uguali; specifiche per Z650 + 20 più venduti; catalog.json generato da script.
+- [Costruire l'editor della foto](105-costruire-editor-foto.md): editor a schermo intero con trascina, pizzica e barra di zoom, export 1600×900 JPEG; logica del ritaglio testata.
 
 ## Not yet specified
 

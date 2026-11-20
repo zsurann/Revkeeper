@@ -3,7 +3,7 @@ import { save } from './db'
 import { BRANDS, bikeFromForm } from './domain/bikeForm'
 import type { Bike } from './domain/types'
 import { CATEGORIES } from './domain/intervals'
-import { compressImage } from './image'
+import { PhotoEditor } from './PhotoEditor'
 import { Field, Screen, field, ghost, primary, usePhoto } from './ui'
 
 const Group = ({ title, children, open }: { title: string; children: ReactNode; open?: boolean }) => (
@@ -49,15 +49,12 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
     }
   }
 
-  const pick = async (file?: File) => {
-    if (!file) return
-    try {
-      const blob = await compressImage(file)
-      setPhoto(blob)
-      setPreview(URL.createObjectURL(blob))
-    } catch {
-      setError('Non riesco a leggere questa foto')
-    }
+  // La foto passa dall'editor (zoom e spostamento) e ne esce già ritagliata 16:9 a 1600 px
+  const [editing, setEditing] = useState<File>()
+  const edited = (blob: Blob) => {
+    setPhoto(blob)
+    setPreview(URL.createObjectURL(blob))
+    setEditing(undefined)
   }
 
   const t = bike?.tyres
@@ -65,6 +62,7 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
   const sp = bike?.specs
   return (
     <Screen>
+      {editing && <PhotoEditor file={editing} onDone={edited} onCancel={() => setEditing(undefined)} />}
       <header className="flex items-center justify-between">
         <h1 className="font-gauge text-2xl">{bike ? 'Scheda moto' : 'Aggiungi moto'}</h1>
         {onCancel && <button type="button" onClick={onCancel} className={ghost}>Annulla</button>}
@@ -72,7 +70,10 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
       <form onSubmit={submit} className="grid gap-4">
         <label className="grid aspect-[16/9] max-w-full cursor-pointer place-items-center overflow-hidden rounded-panel border border-dashed border-edge bg-well text-sm text-dim">
           {preview ?? saved ? <img src={preview ?? saved} alt="Foto della moto" className="h-full w-full object-cover" /> : 'Aggiungi una foto'}
-          <input id="photo" type="file" accept="image/*" className="sr-only" onChange={(e) => void pick(e.target.files?.[0])} />
+          <input id="photo" type="file" accept="image/*" className="sr-only" onChange={(e) => {
+            setEditing(e.target.files?.[0])
+            e.target.value = ''
+          }} />
         </label>
         <Group title="Dati base" open>
           <Field label="Marca">
