@@ -3,7 +3,7 @@ export type Id = string
 export type IsoDate = string
 
 // updatedAt/deletedAt servono al sync last-write-wins (issues/010-strategia-sync.md)
-type Meta = { id: Id; updatedAt: number; deletedAt?: number }
+type Meta = { id: Id; updatedAt: number; deletedAt?: number; dirty?: 1 }
 
 export type Bike = Meta & {
   make: string
@@ -57,7 +57,8 @@ export type DocKind = 'assicurazione' | 'bollo' | 'revisione'
 
 export type BikeDocument = Meta & { bikeId: Id; kind: DocKind; dueDate: IsoDate; attachmentIds: Id[] }
 
-export type Attachment = Meta & { name: string; type: string; blob: Blob }
+// blob assente = presente solo online, si scarica quando serve; uploaded = già su R2
+export type Attachment = Meta & { name: string; type: string; size?: number; blob?: Blob; uploaded?: 1 }
 
 export type Thresholds = { warnKm: number; warnDays: number }
 export const DEFAULT_THRESHOLDS: Thresholds = { warnKm: 500, warnDays: 30 }

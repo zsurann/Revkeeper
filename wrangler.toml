@@ -1,0 +1,16 @@
+name = "revkeeper"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-11-01"
+
+[vars]
+GOOGLE_CLIENT_ID = "517496172383-1l7otafbhost3ubro8ei3qqnlgsa77ma.apps.googleusercontent.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "revkeeper"
+database_id = "00000000-0000-0000-0000-000000000000" # shortcut: segnaposto per lo sviluppo locale, il deploy mette l'id vero
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "revkeeper-files"

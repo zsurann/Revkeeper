@@ -4,7 +4,7 @@ title: "Deploy su Cloudflare Pages"
 labels: [wayfinder:task]
 status: open
 assignee:
-blocked_by: [13, 17]
+blocked_by: [17]
 ---
 
 ## Question

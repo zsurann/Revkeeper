@@ -30,7 +30,7 @@ export const usePending = () => {
       }
     }
   }
-  const persist = async () => (await Promise.all(pending.map((p) => save('attachments', p)))).map((a) => a.id)
+  const persist = async () => (await Promise.all(pending.map((p) => save('attachments', { ...p, size: p.blob.size })))).map((a) => a.id)
   return { pending, error, add, persist, clear: () => setPending([]) }
 }
 

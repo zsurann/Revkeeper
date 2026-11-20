@@ -20,12 +20,13 @@ const Row = ({ bike, km, active, onPick }: { bike: Bike; km: number; active: boo
   )
 }
 
-export const Garage = ({ bikes, kms, activeId, onPick, onAdd, onClose }: {
+export const Garage = ({ bikes, kms, activeId, onPick, onAdd, onAccount, onClose }: {
   bikes: Bike[]
   kms: Record<Id, number>
   activeId?: Id
   onPick: (id: Id) => void
   onAdd: () => void
+  onAccount: () => void
   onClose: () => void
 }) => (
   <Screen>
@@ -37,5 +38,6 @@ export const Garage = ({ bikes, kms, activeId, onPick, onAdd, onClose }: {
       {bikes.map((b) => <Row key={b.id} bike={b} km={kms[b.id] ?? b.startKm} active={b.id === activeId} onPick={() => onPick(b.id)} />)}
     </div>
     <button onClick={onAdd} className={primary}>+ Aggiungi moto</button>
+    <button onClick={onAccount} className={ghost}>Account e sincronizzazione</button>
   </Screen>
 )
