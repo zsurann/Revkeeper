@@ -8,7 +8,8 @@
     "build": "tsc -b && tsc -p tsconfig.server.json && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "dev:api": "wrangler pages dev dist --port 8788"
+    "dev:api": "wrangler pages dev dist --port 8788",
+    "catalog": "node scripts/build-catalog.ts"
   },
   "dependencies": {
     "@block65/webcrypto-web-push": "^2.0.0",
