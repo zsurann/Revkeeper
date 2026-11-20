@@ -4,7 +4,7 @@ title: "Costruire i menu a tendina della scheda moto"
 labels: [wayfinder:task]
 status: open
 assignee:
-blocked_by: [102, 103]
+blocked_by: [102, 106]
 ---
 
 ## Question
