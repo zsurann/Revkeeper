@@ -38,6 +38,7 @@ export type Due = {
   dueDate?: IsoDate
   estimatedDate?: IsoDate
   effectiveDate?: IsoDate
+  progress: number // quota dell'intervallo già consumata (km o tempo, la maggiore); >1 = scaduta
   status: Status
 }
 
@@ -60,15 +61,22 @@ export const nextDue = (
     .filter((s) => !s.deletedAt && s.itemIds.includes(item.id))
     .sort((a, b) => b.km - a.km || b.date.localeCompare(a.date))[0]
   const base = last ? { km: last.km, date: last.date } : { km: bike.startKm, date: bike.startDate }
-  const kmInterval = !last && item.firstKm !== undefined ? item.firstKm : item.km
+  // firstKm è il primo tagliando a km assoluti: vale solo se la moto non l'ha ancora superato
+  const firstDue = !last && item.firstKm !== undefined && bike.startKm < item.firstKm ? item.firstKm : undefined
+  const kmInterval = firstDue !== undefined ? firstDue - base.km : item.km
   const dueKm = kmInterval === undefined ? undefined : base.km + kmInterval
   const dueDate = item.months === undefined ? undefined : addMonths(base.date, item.months)
-  const kmLeft = dueKm === undefined ? undefined : dueKm - currentKm(bike, readings)
+  const cur = currentKm(bike, readings)
+  const kmLeft = dueKm === undefined ? undefined : dueKm - cur
+  const kmProgress = kmInterval ? (cur - base.km) / kmInterval : 0
+  const span = dueDate ? daysBetween(base.date, dueDate) : 0
+  const timeProgress = span > 0 ? daysBetween(base.date, today) / span : 0
+  const progress = Math.max(0, kmProgress, timeProgress)
   const rate = kmPerDay(readings, today)
   const estimatedDate =
     kmLeft !== undefined && rate !== undefined && rate > 0 ? addDays(today, Math.max(0, Math.ceil(kmLeft / rate))) : undefined
   const effectiveDate = minDate(dueDate, estimatedDate)
-  return { dueKm, kmLeft, dueDate, estimatedDate, effectiveDate, status: statusOf(kmLeft, effectiveDate, today, t) }
+  return { dueKm, kmLeft, dueDate, estimatedDate, effectiveDate, progress, status: statusOf(kmLeft, effectiveDate, today, t) }
 }
 
 export const documentStatus = (doc: BikeDocument, today: IsoDate, t: Thresholds): Status =>

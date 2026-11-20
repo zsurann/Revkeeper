@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-20",
+  "items": {
+    "engine_oil": { "label": "Olio motore" },
+    "oil_filter": { "label": "Filtro olio" },
+    "air_filter": { "label": "Filtro aria" },
+    "spark_plugs": { "label": "Candele" },
+    "valve_clearance": { "label": "Gioco valvole" },
+    "chain": { "label": "Catena: pulizia e lubrificazione" },
+    "drive_belt": { "label": "Cinghia di trasmissione" },
+    "final_drive_oil": { "label": "Olio trasmissione finale" },
+    "brake_fluid": { "label": "Liquido freni" },
+    "coolant": { "label": "Liquido di raffreddamento" },
+    "tyres": { "label": "Controllo pneumatici" }
+  },
+  "presets": [
+    {
+      "id": "preset.naked",
+      "label": "Stradale / naked",
+      "intervals": [
+        { "item": "engine_oil", "action": "replace", "km": 10000, "months": 12, "firstKm": 1000 },
+        { "item": "oil_filter", "action": "replace", "km": 10000, "months": 12, "firstKm": 1000 },
+        { "item": "air_filter", "action": "replace", "km": 20000 },
+        { "item": "spark_plugs", "action": "replace", "km": 20000 },
+        { "item": "valve_clearance", "action": "inspect", "km": 40000 },
+        { "item": "chain", "action": "lube", "km": 1000 },
+        { "item": "brake_fluid", "action": "replace", "months": 24 },
+        { "item": "coolant", "action": "replace", "months": 36 },
+        { "item": "tyres", "action": "inspect", "months": 6 }
+      ]
+    },
+    {
+      "id": "preset.sport",
+      "label": "Sportiva",
+      "extends": "preset.naked",
+      "intervals": [
+        { "item": "spark_plugs", "action": "replace", "km": 16000 },
+        { "item": "valve_clearance", "action": "inspect", "km": 24000 }
+      ]
+    },
+    {
+      "id": "preset.adventure",
+      "label": "Enduro / adventure",
+      "extends": "preset.naked",
+      "intervals": [
+        { "item": "air_filter", "action": "inspect", "km": 10000 },
+        { "item": "chain", "action": "lube", "km": 600 }
+      ]
+    },
+    {
+      "id": "preset.custom",
+      "label": "Custom / cruiser (cinghia o cardano)",
+      "extends": "preset.naked",
+      "intervals": [
+        { "item": "engine_oil", "action": "replace", "km": 8000, "months": 12, "firstKm": 1000 },
+        { "item": "oil_filter", "action": "replace", "km": 8000, "months": 12, "firstKm": 1000 },
+        { "item": "chain", "km": null, "months": null },
+        { "item": "final_drive_oil", "action": "replace", "km": 24000 }
+      ]
+    },
+    {
+      "id": "preset.scooter",
+      "label": "Scooter",
+      "intervals": [
+        { "item": "engine_oil", "action": "replace", "km": 5000, "months": 12, "firstKm": 1000 },
+        { "item": "oil_filter", "action": "replace", "km": 10000, "months": 12 },
+        { "item": "air_filter", "action": "replace", "km": 10000 },
+        { "item": "spark_plugs", "action": "replace", "km": 10000 },
+        { "item": "drive_belt", "action": "replace", "km": 20000 },
+        { "item": "final_drive_oil", "action": "replace", "km": 10000 },
+        { "item": "brake_fluid", "action": "replace", "months": 24 },
+        { "item": "coolant", "action": "replace", "months": 24 },
+        { "item": "tyres", "action": "inspect", "months": 6 }
+      ]
+    }
+  ],
+  "models": []
+}

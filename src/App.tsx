@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { BikeForm } from './BikeForm'
-import { addReading, KmDecreasingError, listBikes, listByBike } from './db'
-import { currentKm } from './domain/due'
-import type { Bike, Id } from './domain/types'
+import { DueList, NextServiceCard, ServiceArc, type Row } from './Dashboard'
+import { addReading, KmDecreasingError, listBikes, listByBike, save } from './db'
+import { currentKm, documentStatus, nextDue } from './domain/due'
+import { itemsFor } from './domain/intervals'
+import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type Id, type MaintenanceItem, type OdometerReading, type Service, type Status } from './domain/types'
 import { Garage } from './Garage'
+import { Maintenance } from './Maintenance'
 import { Odometer } from './Odometer'
+import { dueShort, monthYear } from './format'
 import { Screen, field, ghost, primary } from './ui'
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -15,8 +19,11 @@ const readActive = () => {
 const writeActive = (id: Id) => {
   try { localStorage.setItem(ACTIVE, id) } catch { /* preferenza per dispositivo, non critica */ }
 }
+const RANK: Record<Status, number> = { overdue: 0, warn: 1, ok: 2 }
+const DOC_LABEL = { assicurazione: 'Assicurazione', bollo: 'Bollo', revisione: 'Revisione' } as const
 
-type View = 'home' | 'garage' | 'new' | 'edit'
+type View = 'home' | 'garage' | 'new' | 'edit' | 'maintenance'
+type Detail = { items: MaintenanceItem[]; services: Service[]; readings: OdometerReading[]; documents: BikeDocument[] }
 
 export const App = () => {
   const [bikes, setBikes] = useState<Bike[]>()
@@ -24,7 +31,11 @@ export const App = () => {
   const [activeId, setActiveId] = useState(readActive)
   const [view, setView] = useState<View>('home')
   const [prevKm, setPrevKm] = useState<number>()
+  const [detail, setDetail] = useState<Detail>()
   const [error, setError] = useState('')
+
+  const bike = bikes?.find((b) => b.id === activeId) ?? bikes?.[0]
+  const km = bike ? (kms[bike.id] ?? bike.startKm) : 0
 
   const load = useCallback(async () => {
     const all = await listBikes()
@@ -34,8 +45,34 @@ export const App = () => {
   }, [])
   useEffect(() => void load(), [load])
 
-  const bike = bikes?.find((b) => b.id === activeId) ?? bikes?.[0]
-  const km = bike ? (kms[bike.id] ?? bike.startKm) : 0
+  const loadDetail = useCallback(async (b: Bike) => {
+    const [items, services, readings, documents] = await Promise.all([
+      listByBike('items', b.id),
+      listByBike('services', b.id),
+      listByBike('readings', b.id),
+      listByBike('documents', b.id),
+    ])
+    setDetail({ items, services, readings, documents })
+  }, [])
+  useEffect(() => {
+    if (bike) void loadDetail(bike)
+  }, [bike, kms, loadDetail])
+
+  const rows = useMemo(() => {
+    if (!bike || !detail) return []
+    const d = today()
+    const items: Row[] = detail.items.map((i) => {
+      const due = nextDue(i, bike, detail.services, detail.readings, d, DEFAULT_THRESHOLDS)
+      return { id: i.id, label: i.label, status: due.status, due, right: dueShort(due) }
+    })
+    const docs: Row[] = detail.documents.map((doc) => ({
+      id: doc.id,
+      label: DOC_LABEL[doc.kind],
+      status: documentStatus(doc, d, DEFAULT_THRESHOLDS),
+      right: monthYear(doc.dueDate),
+    }))
+    return [...items, ...docs].sort((a, b) => RANK[a.status] - RANK[b.status] || (b.due?.progress ?? 0) - (a.due?.progress ?? 0))
+  }, [bike, detail])
 
   const pick = (id: Id) => {
     writeActive(id)
@@ -59,7 +96,9 @@ export const App = () => {
     }
   }
 
+  // Una moto senza voci riceve quelle del modello verificato o del preset della sua categoria
   const saved = async (b: Bike) => {
+    if ((await listByBike('items', b.id)).length === 0) await Promise.all(itemsFor(b).map((i) => save('items', i)))
     await load()
     pick(b.id)
   }
@@ -69,7 +108,10 @@ export const App = () => {
   if (view === 'edit') return <BikeForm bike={bike} onDone={saved} onCancel={() => setView('home')} />
   if (view === 'garage')
     return <Garage bikes={bikes} kms={kms} activeId={bike.id} onPick={pick} onAdd={() => setView('new')} onClose={() => setView('home')} />
+  if (view === 'maintenance' && detail)
+    return <Maintenance bike={bike} items={detail.items} onChange={() => void loadDetail(bike)} onClose={() => setView('home')} />
 
+  const [next, ...rest] = rows
   return (
     <Screen>
       <header className="flex items-center justify-between gap-3">
@@ -80,11 +122,17 @@ export const App = () => {
           {bikes.length === 1 ? 'Garage' : `${bikes.length} moto`}
         </button>
       </header>
-      <Odometer key={`${bike.id}-${km}`} value={km} from={prevKm ?? km - 120} />
+      <div>
+        {next?.due && <ServiceArc key={`arc-${bike.id}-${km}`} progress={next.due.progress} label={next.label} />}
+        <Odometer key={`${bike.id}-${km}`} value={km} from={prevKm ?? km - 120} />
+      </div>
+      {next?.due && <NextServiceCard label={next.label} due={next.due} />}
+      {rest.length > 0 && <DueList rows={rest} />}
+      <button onClick={() => setView('maintenance')} className={`justify-self-start ${ghost}`}>Modifica intervalli</button>
       <form onSubmit={updateKm} className="grid gap-2 rounded-panel bg-panel p-4">
         <label htmlFor="km" className="text-sm text-dim">Km letti sul cruscotto</label>
         <div className="flex gap-2">
-          <input id="km" name="km" required type="number" inputMode="numeric" min="0" className={field} />
+          <input id="km" name="km" required inputMode="numeric" pattern="[0-9]*" className={field} />
           <button className={`shrink-0 ${primary}`}>+ Aggiorna km</button>
         </div>
         {error && <p role="alert" className="text-sm text-red">{error}</p>}

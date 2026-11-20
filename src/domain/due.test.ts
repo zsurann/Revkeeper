@@ -31,11 +31,16 @@ describe('nextDue', () => {
     expect(d.kmLeft).toBe(600)
     expect(d.status).toBe('ok')
   })
+  it('moto usata: ignora il primo tagliando già superato', () => {
+    const used = { ...bike, startKm: 23000 }
+    expect(nextDue(oil, used, [], [], '2026-11-20', T).dueKm).toBe(33000)
+  })
   it("parte dall'ultimo intervento e diventa ambra entro 500 km", () => {
     const d = nextDue(oil, bike, [svc('2026-06-01', 14000), svc('2025-06-01', 4000)], [read('2026-11-01', 23600)], '2026-11-20', T)
     expect(d.dueKm).toBe(24000)
     expect(d.dueDate).toBe('2027-06-01')
     expect(d.status).toBe('warn')
+    expect(d.progress).toBeCloseTo(0.96)
   })
   it('la stima in base ai km anticipa la data fissa', () => {
     const readings = [read('2026-10-01', 15000), read('2026-11-01', 18100)]

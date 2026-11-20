@@ -39,6 +39,7 @@ export const bikeFromForm = (f: FormData, prev?: Partial<Bike>): BikeDraft => {
     year,
     startKm,
     startDate: prev?.startDate ?? new Date().toISOString().slice(0, 10),
+    category: text(f, 'category') ?? prev?.category,
     plate: text(f, 'plate')?.toUpperCase(),
     vin: text(f, 'vin')?.toUpperCase(),
     tyres: compact({

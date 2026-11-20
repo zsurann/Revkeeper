@@ -2,6 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import { save } from './db'
 import { BRANDS, bikeFromForm } from './domain/bikeForm'
 import type { Bike } from './domain/types'
+import { CATEGORIES } from './domain/intervals'
 import { compressImage } from './image'
 import { Field, Screen, field, ghost, primary, usePhoto } from './ui'
 
@@ -81,6 +82,11 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
           <Txt name="model" label="Modello" value={bike?.model} placeholder="Africa Twin" />
           <Num name="year" label="Anno" value={bike?.year} />
           <Num name="startKm" label={bike ? 'Km iniziali' : 'Km attuali'} value={bike?.startKm} />
+          <Field label="Tipo di moto">
+            <select id="category" name="category" defaultValue={bike?.category ?? 'naked'} className={field}>
+              {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+            </select>
+          </Field>
           <Txt name="plate" label="Targa" value={bike?.plate} />
           <Txt name="vin" label="Telaio" value={bike?.vin} />
         </Group>
