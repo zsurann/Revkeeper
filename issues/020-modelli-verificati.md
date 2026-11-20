@@ -3,7 +3,7 @@ id: 20
 title: "Modelli verificati dai libretti ufficiali"
 labels: [wayfinder:task]
 status: open
-assignee:
+assignee: claude
 blocked_by: []
 ---
 
