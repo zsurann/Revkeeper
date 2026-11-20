@@ -10,14 +10,20 @@ export type Dataset = { items: Record<string, { label: string }>; presets: Prese
 export const DATA = dataset as unknown as Dataset
 export const CATEGORIES = DATA.presets.map((p) => ({ id: p.id.replace('preset.', ''), label: p.label }))
 
+const ACTION_LABEL: Record<Action, string> = { replace: 'sostituzione', inspect: 'controllo', adjust: 'regolazione', lube: 'lubrificazione' }
+
 const norm = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '')
 
 const resolve = (d: Dataset, entry: Preset, seen = new Set<string>()): Map<string, Interval> => {
   if (seen.has(entry.id)) throw new Error(`Ciclo negli intervalli: ${entry.id}`)
   seen.add(entry.id)
   const parent = entry.extends ? d.presets.find((p) => p.id === entry.extends) : undefined
+  // Chiave voce+azione: la stessa parte può avere più scadenze (catena: lubrificare e regolare)
   const out = parent ? resolve(d, parent, seen) : new Map<string, Interval>()
-  for (const i of entry.intervals) out.set(i.item, { ...out.get(i.item), ...i })
+  for (const i of entry.intervals) {
+    const keys = i.action ? [`${i.item}:${i.action}`] : [...out.keys()].filter((k) => k.startsWith(`${i.item}:`))
+    for (const k of keys) out.set(k, { ...out.get(k), ...i })
+  }
   return out
 }
 
@@ -41,12 +47,12 @@ export const itemsFor = (
   const preset = d.presets.find((p) => p.id === `preset.${bike.category ?? 'naked'}`) ?? d.presets[0]
   const entry = model ?? preset
   if (!entry) return []
-  return [...resolve(d, entry).values()]
-    .filter((i) => (i.km ?? undefined) !== undefined || (i.months ?? undefined) !== undefined)
-    .map((i) => ({
+  const list = [...resolve(d, entry).values()].filter((i) => (i.km ?? undefined) !== undefined || (i.months ?? undefined) !== undefined)
+  const twice = (item: string) => list.filter((i) => i.item === item).length > 1
+  return list.map((i) => ({
       bikeId: bike.id,
       item: i.item,
-      label: d.items[i.item]?.label ?? i.item,
+      label: (d.items[i.item]?.label ?? i.item) + (twice(i.item) || i.action === 'lube' || i.action === 'adjust' ? ` (${ACTION_LABEL[i.action ?? 'inspect']})` : ''),
       action: i.action ?? 'inspect',
       km: i.km ?? undefined,
       months: i.months ?? undefined,

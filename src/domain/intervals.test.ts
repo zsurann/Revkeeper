@@ -23,6 +23,25 @@ describe('itemsFor', () => {
     expect(itemsFor({ ...bike, year: 2019 }, d)[0]?.origin).toBe('preset')
   })
 
+  it('Kawasaki Z650 2017: valori del libretto e due voci per la catena', () => {
+    const items = itemsFor({ id: 'b', make: 'kawasaki', model: 'Z 650', year: 2017 })
+    expect(items.every((i) => i.origin === 'model')).toBe(true)
+    expect(items.find((i) => i.item === 'air_filter')?.km).toBe(18000)
+    expect(items.filter((i) => i.item === 'chain').map((i) => [i.label, i.km])).toEqual([
+      ['Catena (lubrificazione)', 600],
+      ['Catena (regolazione)', 1000],
+    ])
+    expect(itemsFor({ id: 'b', make: 'Kawasaki', model: 'Z650', year: 2020, category: 'naked' }).find((i) => i.item === 'air_filter')?.km).toBe(12000)
+    expect(itemsFor({ id: 'b', make: 'Kawasaki', model: 'Z650', year: 2024, category: 'naked' })[0]?.origin).toBe('preset')
+  })
+
+  it('ogni modello ha una fonte e voci valide', () => {
+    for (const m of DATA.models) {
+      expect(m.source).toBeTruthy()
+      for (const i of m.intervals) expect(Object.keys(DATA.items)).toContain(i.item)
+    }
+  })
+
   it('ogni preset del dataset si risolve e ha almeno un intervallo per voce', () => {
     for (const p of DATA.presets) {
       const items = itemsFor({ ...bike, category: p.id.replace('preset.', '') })

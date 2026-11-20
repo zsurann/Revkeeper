@@ -88,7 +88,10 @@ export const App = () => {
       status: documentStatus(doc, d, DEFAULT_THRESHOLDS),
       right: monthYear(doc.dueDate),
     }))
-    return [...items, ...docs].sort((a, b) => RANK[a.status] - RANK[b.status] || (b.due?.progress ?? 0) - (a.due?.progress ?? 0))
+    const left = (r: Row) => r.due?.kmLeft ?? Infinity
+    return [...items, ...docs].sort(
+      (a, b) => RANK[a.status] - RANK[b.status] || (b.due?.progress ?? 0) - (a.due?.progress ?? 0) || left(a) - left(b),
+    )
   }, [bike, detail])
 
   const pick = (id: Id) => {

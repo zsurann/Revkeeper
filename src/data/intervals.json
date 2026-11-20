@@ -2,32 +2,94 @@
   "schemaVersion": 1,
   "updatedAt": "2026-11-20",
   "items": {
-    "engine_oil": { "label": "Olio motore" },
-    "oil_filter": { "label": "Filtro olio" },
-    "air_filter": { "label": "Filtro aria" },
-    "spark_plugs": { "label": "Candele" },
-    "valve_clearance": { "label": "Gioco valvole" },
-    "chain": { "label": "Catena: pulizia e lubrificazione" },
-    "drive_belt": { "label": "Cinghia di trasmissione" },
-    "final_drive_oil": { "label": "Olio trasmissione finale" },
-    "brake_fluid": { "label": "Liquido freni" },
-    "coolant": { "label": "Liquido di raffreddamento" },
-    "tyres": { "label": "Controllo pneumatici" }
+    "engine_oil": {
+      "label": "Olio motore"
+    },
+    "oil_filter": {
+      "label": "Filtro olio"
+    },
+    "air_filter": {
+      "label": "Filtro aria"
+    },
+    "spark_plugs": {
+      "label": "Candele"
+    },
+    "valve_clearance": {
+      "label": "Gioco valvole"
+    },
+    "chain": {
+      "label": "Catena"
+    },
+    "drive_belt": {
+      "label": "Cinghia di trasmissione"
+    },
+    "final_drive_oil": {
+      "label": "Olio trasmissione finale"
+    },
+    "brake_fluid": {
+      "label": "Liquido freni"
+    },
+    "coolant": {
+      "label": "Liquido di raffreddamento"
+    },
+    "tyres": {
+      "label": "Controllo pneumatici"
+    }
   },
   "presets": [
     {
       "id": "preset.naked",
       "label": "Stradale / naked",
       "intervals": [
-        { "item": "engine_oil", "action": "replace", "km": 10000, "months": 12, "firstKm": 1000 },
-        { "item": "oil_filter", "action": "replace", "km": 10000, "months": 12, "firstKm": 1000 },
-        { "item": "air_filter", "action": "replace", "km": 20000 },
-        { "item": "spark_plugs", "action": "replace", "km": 20000 },
-        { "item": "valve_clearance", "action": "inspect", "km": 40000 },
-        { "item": "chain", "action": "lube", "km": 1000 },
-        { "item": "brake_fluid", "action": "replace", "months": 24 },
-        { "item": "coolant", "action": "replace", "months": 36 },
-        { "item": "tyres", "action": "inspect", "months": 6 }
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 10000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 10000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 20000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 20000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 40000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 1000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "months": 6
+        }
       ]
     },
     {
@@ -35,8 +97,16 @@
       "label": "Sportiva",
       "extends": "preset.naked",
       "intervals": [
-        { "item": "spark_plugs", "action": "replace", "km": 16000 },
-        { "item": "valve_clearance", "action": "inspect", "km": 24000 }
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 16000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 24000
+        }
       ]
     },
     {
@@ -44,8 +114,16 @@
       "label": "Enduro / adventure",
       "extends": "preset.naked",
       "intervals": [
-        { "item": "air_filter", "action": "inspect", "km": 10000 },
-        { "item": "chain", "action": "lube", "km": 600 }
+        {
+          "item": "air_filter",
+          "action": "inspect",
+          "km": 10000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 600
+        }
       ]
     },
     {
@@ -53,27 +131,401 @@
       "label": "Custom / cruiser (cinghia o cardano)",
       "extends": "preset.naked",
       "intervals": [
-        { "item": "engine_oil", "action": "replace", "km": 8000, "months": 12, "firstKm": 1000 },
-        { "item": "oil_filter", "action": "replace", "km": 8000, "months": 12, "firstKm": 1000 },
-        { "item": "chain", "km": null, "months": null },
-        { "item": "final_drive_oil", "action": "replace", "km": 24000 }
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 8000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 8000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "chain",
+          "km": null,
+          "months": null
+        },
+        {
+          "item": "final_drive_oil",
+          "action": "replace",
+          "km": 24000
+        }
       ]
     },
     {
       "id": "preset.scooter",
       "label": "Scooter",
       "intervals": [
-        { "item": "engine_oil", "action": "replace", "km": 5000, "months": 12, "firstKm": 1000 },
-        { "item": "oil_filter", "action": "replace", "km": 10000, "months": 12 },
-        { "item": "air_filter", "action": "replace", "km": 10000 },
-        { "item": "spark_plugs", "action": "replace", "km": 10000 },
-        { "item": "drive_belt", "action": "replace", "km": 20000 },
-        { "item": "final_drive_oil", "action": "replace", "km": 10000 },
-        { "item": "brake_fluid", "action": "replace", "months": 24 },
-        { "item": "coolant", "action": "replace", "months": 24 },
-        { "item": "tyres", "action": "inspect", "months": 6 }
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 5000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 10000,
+          "months": 12
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 10000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 10000
+        },
+        {
+          "item": "drive_belt",
+          "action": "replace",
+          "km": 20000
+        },
+        {
+          "item": "final_drive_oil",
+          "action": "replace",
+          "km": 10000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "months": 6
+        }
       ]
     }
   ],
-  "models": []
+  "models": [
+    {
+      "id": "kawasaki.z650.2017",
+      "label": "Kawasaki Z650",
+      "make": "Kawasaki",
+      "model": "Z650",
+      "aliases": [
+        "Z650",
+        "Z 650",
+        "ER650"
+      ],
+      "yearFrom": 2017,
+      "yearTo": 2019,
+      "category": "naked",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 18000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 12000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 600
+        },
+        {
+          "item": "chain",
+          "action": "adjust",
+          "km": 1000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "km": 24000,
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "km": 36000,
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Kawasaki Z650 / Z650 ABS Owner's Manual (ER650G/H)",
+        "edition": "2017, 99987-1928-01 (US English, km + miglia); 2019 99987-0072 identica",
+        "page": 102,
+        "url": "https://www.kawasaki-onlinetechinfo.net/dispeBook?file=99987-1928&mark=ER650GHF&manual_kind=OM&model_year=2017&lang_code=EN",
+        "verifiedAt": "2026-11-20"
+      }
+    },
+    {
+      "id": "kawasaki.z650.2020",
+      "label": "Kawasaki Z650",
+      "make": "Kawasaki",
+      "model": "Z650",
+      "aliases": [
+        "Z650",
+        "Z 650",
+        "ER650"
+      ],
+      "yearFrom": 2020,
+      "yearTo": 2021,
+      "category": "naked",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 12000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 12000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 600
+        },
+        {
+          "item": "chain",
+          "action": "adjust",
+          "km": 1000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "km": 24000,
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "km": 36000,
+          "months": 36
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Kawasaki Z650 / Z650 ABS Owner's Manual (ER650K/L)",
+        "edition": "2020, 99803-0033 (US English, km + miglia); 2021 99803-0142 stessa tabella",
+        "page": 122,
+        "url": "https://www.kawasaki-onlinetechinfo.net/dispeBook?file=99803-0033&mark=ER650KLF&manual_kind=OM&model_year=2020&lang_code=EN",
+        "verifiedAt": "2026-11-20"
+      }
+    },
+    {
+      "id": "kawasaki.z650.2022",
+      "label": "Kawasaki Z650",
+      "make": "Kawasaki",
+      "model": "Z650",
+      "aliases": [
+        "Z650",
+        "Z 650",
+        "ER650"
+      ],
+      "yearFrom": 2022,
+      "yearTo": 2023,
+      "category": "naked",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 12000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 600
+        },
+        {
+          "item": "chain",
+          "action": "adjust",
+          "km": 1000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "km": 24000,
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "km": 36000,
+          "months": 36
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Kawasaki Z650 / Z650 ABS Owner's Manual",
+        "edition": "2022 99803-0231 (ER650K/L) e 2023 99803-0344-01 (ER650N/P), US English, km + miglia",
+        "page": 122,
+        "url": "https://www.kawasaki-onlinetechinfo.net/dispeBook?file=99803-0231&mark=ER650KNF&manual_kind=OM&model_year=2022&lang_code=EN",
+        "verifiedAt": "2026-11-20"
+      }
+    },
+    {
+      "id": "honda.crf1100l.2025",
+      "label": "Honda CRF1100L Africa Twin",
+      "make": "Honda",
+      "model": "CRF1100L Africa Twin",
+      "aliases": [
+        "Africa Twin",
+        "CRF1100L",
+        "CRF1100"
+      ],
+      "yearFrom": 2025,
+      "yearTo": null,
+      "category": "adventure",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 24000,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 48000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "chain",
+          "action": "inspect",
+          "km": 1000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 1000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "km": 6000,
+          "months": 12
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Honda CRF1100 Africa Twin Owner's Manual",
+        "edition": "2025, 32MLN610 (EN, tabella 'ED, II ED, III ED type')",
+        "page": 253,
+        "url": "https://2rom-prd-data.hondamotopub.com/om/HMEE/CRF1100/2025/CRF1100%20OM%2032MLN610_eng_WEB.pdf",
+        "verifiedAt": "2026-11-20"
+      }
+    }
+  ]
 }

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { remove, save } from './db'
+import { DATA, findModel, itemsFor } from './domain/intervals'
 import type { Bike, MaintenanceItem } from './domain/types'
 import { Screen, field, ghost, primary } from './ui'
 
@@ -76,6 +77,14 @@ export const Maintenance = ({ bike, items, onChange, onClose }: { bike: Bike; it
         <h1 className="font-gauge text-2xl">Manutenzioni</h1>
         <button onClick={onClose} className={ghost}>Chiudi</button>
       </header>
+      {findModel(DATA, bike.make, bike.model, bike.year) && items.some((i) => i.origin !== 'model') && (
+        <button
+          onClick={() => void Promise.all(items.map((i) => remove('items', i.id))).then(() => Promise.all(itemsFor(bike).map((i) => save('items', i)))).then(onChange)}
+          className={primary}
+        >
+          Usa gli intervalli del libretto {bike.make} {bike.model}
+        </button>
+      )}
       <p className="m-0 text-sm text-dim">Ogni voce scade al primo traguardo tra km e mesi. I valori tipici sono indicativi: controlla il libretto della tua moto.</p>
       <div className="grid gap-3">{items.map((i) => <ItemRow key={i.id} item={i} onChange={onChange} />)}</div>
       <form onSubmit={add} className="grid gap-2 rounded-panel border border-dashed border-edge p-3">
