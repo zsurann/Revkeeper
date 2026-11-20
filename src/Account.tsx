@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getMeta } from './db'
+import { Notifications } from './Notifications'
 import { logout, startAccount, syncNow } from './sync'
 import { Screen, ghost, primary } from './ui'
 
@@ -93,6 +94,9 @@ export const Account = ({ onClose }: { onClose: () => void }) => {
           <button onClick={() => void logout().then(refresh)} className={`justify-self-start ${ghost}`}>Esci</button>
           <p className="m-0 text-xs text-dim">Uscendo, i dati restano su questo telefono ma smettono di sincronizzarsi.</p>
         </section>
+      ) : null}
+      {email ? (
+        <Notifications />
       ) : (
         <section className="grid gap-3 rounded-panel bg-panel p-4">
           <p className="m-0">Accedi per salvare il garage online e usarlo su più telefoni. Senza accesso l'app funziona lo stesso, solo su questo dispositivo.</p>

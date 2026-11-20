@@ -10,6 +10,6 @@
     "skipLibCheck": true,
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["server", "functions"],
+  "include": ["server", "functions", "cron"],
   "exclude": ["server/**/*.test.ts"]
 }

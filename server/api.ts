@@ -1,7 +1,8 @@
 /// <reference types="@cloudflare/workers-types" />
 import { AuthError, verifyIdToken, type Jwk } from './google'
+import { sendPush, type PushEnv } from './push'
 
-export type Env = { DB: D1Database; FILES: R2Bucket; GOOGLE_CLIENT_ID: string }
+export type Env = PushEnv & { FILES: R2Bucket; GOOGLE_CLIENT_ID: string }
 
 // Tetti per restare nel piano gratuito (vedi Notes della mappa)
 export const LIMITS = {
@@ -11,6 +12,7 @@ export const LIMITS = {
   fileBytes: 15 * 1024 * 1024,
   userBytes: 500 * 1024 * 1024,
   sessionDays: 180,
+  subsPerUser: 5,
 } as const
 const KINDS = new Set(['bikes', 'readings', 'items', 'services', 'documents', 'attachments'])
 const COOKIE = '__Host-rk'
@@ -109,6 +111,28 @@ const pull = async (url: URL, env: Env, userId: string) => {
   })
 }
 
+type SubBody = { subscription?: { endpoint?: string; keys?: { p256dh?: string; auth?: string } }; hour?: number; tz?: string }
+
+const subscribe = async (req: Request, env: Env, userId: string) => {
+  const { subscription: s, hour, tz } = (await req.json()) as SubBody
+  const endpoint = s?.endpoint ?? ''
+  if (!endpoint.startsWith('https://') || !s?.keys?.p256dh || !s.keys.auth) return fail(400, 'Iscrizione non valida')
+  if (!Number.isInteger(hour) || hour! < 0 || hour! > 23) return fail(400, 'Ora non valida')
+  try {
+    new Intl.DateTimeFormat('it', { timeZone: tz })
+  } catch {
+    return fail(400, 'Fuso orario non valido')
+  }
+  const n = await env.DB.prepare('SELECT count(*) n FROM push_subs WHERE user_id = ? AND endpoint != ?').bind(userId, endpoint).first<{ n: number }>()
+  if ((n?.n ?? 0) >= LIMITS.subsPerUser) return fail(429, 'Troppi dispositivi con notifiche: disattivale su uno')
+  await env.DB.batch([
+    env.DB.prepare('INSERT INTO push_subs(endpoint, user_id, p256dh, auth) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(endpoint) DO UPDATE SET user_id = ?2, p256dh = ?3, auth = ?4')
+      .bind(endpoint, userId, s.keys.p256dh, s.keys.auth),
+    env.DB.prepare('UPDATE users SET notify_hour = ?, tz = ? WHERE id = ?').bind(hour, tz, userId),
+  ])
+  return json({ ok: true })
+}
+
 const FILE_ID = /^[0-9a-f-]{36}$/
 
 const putFile = async (req: Request, env: Env, userId: string, id: string) => {
@@ -149,6 +173,17 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
       return json({ ok: true }, 200, { 'set-cookie': setCookie('', 0) })
     }
     if (req.method === 'POST' && path === '/sync/push') return await push(req, env, userId)
+    if (req.method === 'POST' && path === '/push/subscribe') return await subscribe(req, env, userId)
+    if (req.method === 'POST' && path === '/push/unsubscribe') {
+      const { endpoint } = (await req.json()) as { endpoint?: string }
+      await env.DB.prepare('DELETE FROM push_subs WHERE endpoint = ? AND user_id = ?').bind(endpoint ?? '', userId).run()
+      return json({ ok: true })
+    }
+    if (req.method === 'POST' && path === '/push/test') {
+      const { results } = await env.DB.prepare('SELECT endpoint, p256dh, auth FROM push_subs WHERE user_id = ?').bind(userId).all<{ endpoint: string; p256dh: string; auth: string }>()
+      const status = await Promise.all(results.map((sub) => sendPush(env, sub, { title: 'Revkeeper', body: 'Le notifiche funzionano.' })))
+      return json({ sent: status.filter((x) => x < 300).length, status })
+    }
     if (req.method === 'GET' && path === '/sync/pull') return await pull(url, env, userId)
     const file = /^\/files\/(.+)$/.exec(path)?.[1]
     if (file && FILE_ID.test(file)) {

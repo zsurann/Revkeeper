@@ -1,0 +1,16 @@
+name = "revkeeper-cron"
+main = "worker.ts"
+compatibility_date = "2026-11-01"
+workers_dev = false
+
+[triggers]
+crons = ["0 * * * *"]
+
+[vars]
+VAPID_SUBJECT = "https://revkeeper.pages.dev"
+VAPID_PUBLIC_KEY = "BCuIILVL_fqPhBQ3QuT-qiYNLyj0Vn_9lcpRv3PrQ_rCBP5FcP91ezdYRwE3kpWK9o_aOL2cF_mUc7V1hg97PsQ"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "revkeeper"
+database_id = "155ba912-464e-4fd1-b2ea-0d223f8c386f"
