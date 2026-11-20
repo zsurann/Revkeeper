@@ -104,6 +104,7 @@ export const Account = ({ onClose }: { onClose: () => void }) => {
           <div ref={btn} className="min-h-11 [color-scheme:light]" />
         </section>
       )}
+      <p className="m-0 text-xs text-dim">Elenco dei modelli: NHTSA vPIC, Traficom (CC BY 4.0), DGT, schede e libretti ufficiali dei costruttori.</p>
       {msg && <p role="status" className="m-0 text-sm text-dim">{busy ? 'Attendi…' : msg}</p>}
     </Screen>
   )

@@ -35,7 +35,15 @@ export const baseName = (raw: string) => {
 const key = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '')
 const keep = (n: string) => !DENY.test(n) && !/[/,]/.test(n) && n.length > 1
 
-export const buildCatalog = (raw: Raw[], extra: Extra, currentYear: number, generatedAt: string): Catalog => {
+const SOURCE: Record<string, string> = { traficom: 'Traficom (CC BY 4.0)', dgt: 'DGT' }
+
+export const buildCatalog = (
+  raw: Raw[],
+  extra: Extra,
+  currentYear: number,
+  generatedAt: string,
+  eu: { make: string; model: string; from: number; to: number; cc: number; kw: number; kg?: number; sources: string[] }[] = [],
+): Catalog => {
   const byBrand = new Map<string, Map<string, CatalogModel>>()
   const add = (brand: string, m: CatalogModel) => {
     const models = byBrand.get(brand) ?? new Map<string, CatalogModel>()
@@ -59,6 +67,18 @@ export const buildCatalog = (raw: Raw[], extra: Extra, currentYear: number, gene
       // Modelli prodotti fino all'anno scorso o oltre risultano ancora in produzione
       add(r.brand, { name, aliases: name !== n.trim() ? [n.trim()] : undefined, from: r.year, to: r.year >= currentYear - 1 ? null : r.year })
     }
+  const ongoing = (y: number) => (y >= currentYear - 1 ? null : y)
+  for (const m of eu) {
+    const spec: Spec = {
+      from: m.from,
+      to: ongoing(m.to),
+      cc: Math.round(m.cc),
+      ...(m.kw > 0 && { hp: Math.round(m.kw * 1.36) }),
+      ...(m.kg && { kg: Math.round(m.kg) }),
+      source: `Dati di immatricolazione: ${m.sources.map((s) => SOURCE[s] ?? s).join(', ')}`,
+    }
+    add(m.make, { name: m.model, from: m.from, to: ongoing(m.to), specs: [spec] })
+  }
   for (const [brand, e] of Object.entries(extra.brands)) {
     if (!byBrand.has(brand)) byBrand.set(brand, new Map())
     for (const m of e.models ?? []) add(brand, m)

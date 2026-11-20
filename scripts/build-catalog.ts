@@ -3,6 +3,7 @@
 //   node scripts/build-catalog.ts --offline  riusa la copia, per applicare solo modifiche a catalog-extra.json
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { buildCatalog, type Extra, type Raw } from '../src/domain/catalogBuild.ts'
+import type { EuModel } from '../src/domain/euImport.ts'
 
 // Marca mostrata nell'app → nomi usati da vPIC (alcune marche compaiono con più nomi)
 const BRANDS: Record<string, string[]> = {
@@ -47,7 +48,9 @@ else {
   writeFileSync(CACHE, JSON.stringify(raw))
 }
 const extra = JSON.parse(readFileSync('data/catalog-extra.json', 'utf8')) as Extra
-const catalog = buildCatalog(raw, extra, NOW, new Date().toISOString().slice(0, 10))
+// Modelli dai registri europei (scripts/import-eu.ts): aggiunti prima delle aggiunte manuali, che vincono
+const eu = existsSync('data/eu-models.json') ? (JSON.parse(readFileSync('data/eu-models.json', 'utf8')) as EuModel[]) : []
+const catalog = buildCatalog(raw, extra, NOW, new Date().toISOString().slice(0, 10), eu)
 writeFileSync('src/data/catalog.json', JSON.stringify(catalog) + '\n')
 if (skipped.length) console.error(`\nSaltati (vPIC non ha risposto): ${skipped.join(', ')}`)
 console.error(`\n${catalog.brands.length} marche, ${catalog.brands.reduce((s, b) => s + b.models.length, 0)} modelli`)

@@ -18,6 +18,8 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 
 ## Decisions so far
 
+- [Importare Traficom e DGT nel catalogo](305-importare-traficom-e-dgt-nel-catalogo.md): 3.758 modelli di 121 marche con dati tecnici dai registri; le specifiche ufficiali restano prioritarie; nomi normalizzati e testati.
+
 - [Scelta delle fonti e della pipeline](303-scelta-pipeline.md): Traficom + DGT subito, ASTRA dopo la conferma della licenza; un file per marca nell'app; libretti semi-automatici a tornate; aggiornamento ogni 3 mesi con PR.
 
 - [Open data dei registri veicoli europei per le moto](301-open-data-registri.md): ASTRA Svizzera (con gomme, licenza da confermare), Traficom Finlandia (CC BY 4.0) e DGT Spagna coprono migliaia di modelli con cc, kW e massa; RDW da provare; serbatoio solo manuale.
@@ -27,6 +29,8 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 - Grilling iniziale: obiettivo "metodo scelto e costruito"; copertura modelli e anni, dati tecnici, intervalli; solo fonti gratuite; nessun dato dagli utenti.
 
 ## Not yet specified
+
+- Pulizia dei nomi poco leggibili e delle marche doppie per maiuscole; alias per i codici interni (WW125 = PCX, GPD125 = NMAX).
 
 
 ## Out of scope

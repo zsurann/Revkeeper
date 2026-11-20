@@ -144,7 +144,11 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
           <Txt name="sparkPlug" label="Candele" value={fl?.sparkPlug} />
         </Group>
         <Group key={`specs-${rev}`} title="Dati tecnici" open={!!(sp || p)}>
-          {p && <p className="col-span-2 m-0 text-xs text-dim">Compilati dalla scheda ufficiale: puoi modificarli.</p>}
+          {p && (
+            <p className="col-span-2 m-0 text-xs text-dim">
+              Compilati da {p.source.startsWith('http') ? 'scheda ufficiale' : p.source.replace('Dati di immatricolazione: ', 'dati di immatricolazione ')}: puoi modificarli.
+            </p>
+          )}
           <Num name="cc" label="Cilindrata (cc)" value={p?.cc ?? sp?.cc} />
           <Num name="hp" label="Potenza (CV)" value={p?.hp ?? sp?.hp} />
           <Num name="kg" label="Peso (kg)" value={p?.kg ?? sp?.kg} />
