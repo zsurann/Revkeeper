@@ -139,7 +139,7 @@ const norm = (s) => s.toLowerCase().replace(/[\s\-_]/g, '')
 let uid = 0
 function combobox(host, { placeholder, options, onPick, free = true }) {
   const id = 'cb' + uid++
-  host.innerHTML = `<input id="${id}" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="${id}-l" autocomplete="off" placeholder="${placeholder}"><span class="chev" aria-hidden="true">▾</span><ul id="${id}-l" role="listbox" hidden></ul>`
+  host.innerHTML = `<input id="${id}" enterkeyhint="done" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="${id}-l" autocomplete="off" placeholder="${placeholder}"><span class="chev" aria-hidden="true">▾</span><ul id="${id}-l" role="listbox" hidden></ul>`
   const input = host.querySelector('input'), list = host.querySelector('ul')
   let items = [], active = -1
   const close = () => { list.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant') }
@@ -147,11 +147,13 @@ function combobox(host, { placeholder, options, onPick, free = true }) {
     const q = input.value.trim(), all = options()
     const hits = q ? all.filter((o) => norm(o.label).includes(norm(q))) : all
     items = hits.slice(0, 60)
-    if (free && q && !all.some((o) => norm(o.label) === norm(q))) items.push({ label: q, free: true })
+    // "Usa «testo»" solo se non c'è nessuna voce che corrisponde: se scrivi "Kawa" vedi solo Kawasaki
+    if (free && q && items.length === 0) items.push({ label: q, free: true })
     list.innerHTML = items.length ? items.map((o, i) => {
       const lab = o.free ? `Usa «${esc(o.label)}»` : mark(o.label, q)
       return `<li id="${id}-${i}" role="option" class="${o.free ? 'free' : ''}" aria-selected="${i === active}">${lab}${o.hint ? `<small>${o.hint}</small>` : ''}</li>`
-    }).join('') : '<li aria-disabled="true"><small>Nessun risultato</small></li>'
+    }).join('') : ''
+    if (!items.length) return close()
     list.hidden = false; input.setAttribute('aria-expanded', 'true')
     if (active >= 0) input.setAttribute('aria-activedescendant', `${id}-${active}`)
     list.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' })
