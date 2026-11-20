@@ -151,7 +151,8 @@ function combobox(host, { placeholder, options, onPick, free = true }) {
     if (free && q && items.length === 0) items.push({ label: q, free: true })
     list.innerHTML = items.length ? items.map((o, i) => {
       const lab = o.free ? `Usa «${esc(o.label)}»` : mark(o.label, q)
-      return `<li id="${id}-${i}" role="option" class="${o.free ? 'free' : ''}" aria-selected="${i === active}">${lab}${o.hint ? `<small>${o.hint}</small>` : ''}</li>`
+      // il nome sta in un solo <span>: senza, il pezzo evidenziato e il resto diventano due blocchi separati
+      return `<li id="${id}-${i}" role="option" class="${o.free ? 'free' : ''}" aria-selected="${i === active}"><span>${lab}</span>${o.hint ? `<small>${o.hint}</small>` : ''}</li>`
     }).join('') : ''
     if (!items.length) return close()
     list.hidden = false; input.setAttribute('aria-expanded', 'true')
