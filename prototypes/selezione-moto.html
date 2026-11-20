@@ -48,6 +48,7 @@ label.f { display: grid; gap: 4px; font-size: .85rem; color: var(--dim); min-wid
 /* Editor */
 #editor { position: fixed; inset: 0; z-index: 50; background: #05070a; display: grid; grid-template-rows: auto 1fr auto; touch-action: none;
   padding: calc(env(safe-area-inset-top, 0px) + 12px) max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 16px) max(16px, env(safe-area-inset-left, 0px)); }
+#editor[hidden] { display: none; }
 #editor header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 #stage { position: relative; align-self: center; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; cursor: grab; }
 #stage:active { cursor: grabbing; }
