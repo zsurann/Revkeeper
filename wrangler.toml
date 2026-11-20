@@ -1,0 +1,19 @@
+name = "revkeeper"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-11-01"
+
+[vars]
+VAPID_SUBJECT = "https://revkeeper.pages.dev"
+VAPID_PUBLIC_KEY = "BCuIILVL_fqPhBQ3QuT-qiYNLyj0Vn_9lcpRv3PrQ_rCBP5FcP91ezdYRwE3kpWK9o_aOL2cF_mUc7V1hg97PsQ"
+GOOGLE_CLIENT_ID = "517496172383-1l7otafbhost3ubro8ei3qqnlgsa77ma.apps.googleusercontent.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "revkeeper"
+database_id = "155ba912-464e-4fd1-b2ea-0d223f8c386f"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "revkeeper-files"
+jurisdiction = "eu"

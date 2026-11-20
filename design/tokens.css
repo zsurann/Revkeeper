@@ -1,0 +1,40 @@
+/* Revkeeper · Strumentazione — token Tailwind v4 (importare dopo `@import "tailwindcss";`).
+   Solo tema scuro: il cruscotto è scuro anche con il telefono in modalità chiara. */
+@theme {
+  /* Superfici */
+  --color-dash: #14181f;        /* sfondo cruscotto */
+  --color-dash-glow: #232b38;   /* centro del gradiente radiale in alto */
+  --color-panel: #1c222c;       /* pannelli e schede */
+  --color-well: #07090c;        /* incassi: rulli del contachilometri, binari delle barre */
+  --color-rule: #262e3a;        /* separatori */
+  --color-edge: #2e3746;        /* bordi dei chip */
+
+  /* Testo */
+  --color-ink: #eef1f6;
+  --color-dim: #8b93a3;         /* testo secondario, contrasto 5,8:1 su dash, 5,2:1 su panel */
+
+  /* Retroilluminazione */
+  --color-amber: #ffb547;       /* accento, "in scadenza", azione principale */
+  --color-amber-ink: #1a1205;   /* testo sopra l'ambra */
+  --color-red: #ff6b5b;         /* "scaduta" */
+  --color-ok: #7fd1a8;          /* conferme, usato poco */
+
+  /* Tipografia */
+  --font-sans: "Saira", system-ui, sans-serif;
+  --font-gauge: "Saira Condensed", "Saira", system-ui, sans-serif;
+
+  /* Forme */
+  --radius-panel: 18px;
+  --radius-pill: 28px;
+  --radius-digit: 3px;
+
+  /* Ombre e bagliori */
+  --shadow-fab: 0 8px 24px rgb(255 181 71 / 0.35);
+  --shadow-well: inset 0 2px 6px rgb(0 0 0 / 0.8);
+  --drop-shadow-glow: 0 0 6px rgb(255 181 71 / 0.6);
+
+  /* Motion */
+  --ease-needle: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-roll: 1400ms;
+  --duration-ui: 180ms;
+}
