@@ -1,0 +1,51 @@
+{
+  "popular": ["Honda", "Yamaha", "Kawasaki", "BMW", "Ducati", "Piaggio", "Vespa", "KTM", "Benelli", "Triumph", "Suzuki", "Aprilia", "Kymco", "SYM", "Royal Enfield", "Moto Guzzi", "Harley-Davidson", "Voge", "CFMoto"],
+  "brands": {
+    "Honda": { "models": [
+      { "name": "SH125i", "aliases": ["SH 125"], "from": 2001, "to": null },
+      { "name": "SH150i", "aliases": ["SH 150"], "from": 2001, "to": null },
+      { "name": "SH350i", "aliases": ["SH 350"], "from": 2021, "to": null },
+      { "name": "Forza 125", "from": 2015, "to": null },
+      { "name": "Forza 350", "from": 2021, "to": null },
+      { "name": "X-ADV", "aliases": ["XADV"], "from": 2017, "to": null }
+    ] },
+    "Piaggio": { "models": [
+      { "name": "Liberty 125", "from": 1997, "to": null },
+      { "name": "Beverly 300", "from": 2010, "to": null },
+      { "name": "Beverly 400", "from": 2021, "to": null },
+      { "name": "Medley 125", "from": 2016, "to": null },
+      { "name": "MP3 400", "from": 2022, "to": null },
+      { "name": "MP3 530", "from": 2022, "to": null }
+    ] },
+    "Vespa": { "models": [
+      { "name": "Primavera 125", "from": 2014, "to": null },
+      { "name": "Sprint 125", "from": 2014, "to": null },
+      { "name": "GTS 125", "from": 2008, "to": null },
+      { "name": "GTS 300", "from": 2008, "to": null }
+    ] },
+    "Kymco": { "models": [
+      { "name": "Agility 125", "from": 2005, "to": null },
+      { "name": "People S 125", "from": 2005, "to": null },
+      { "name": "Xciting S 400", "from": 2018, "to": null },
+      { "name": "AK 550", "from": 2017, "to": null }
+    ] },
+    "SYM": { "models": [
+      { "name": "Symphony 125", "from": 2008, "to": null },
+      { "name": "Jet 14", "from": 2017, "to": null },
+      { "name": "Maxsym TL 508", "from": 2019, "to": null }
+    ] },
+    "Benelli": { "models": [
+      { "name": "TRK 502", "aliases": ["TRK 502X"], "from": 2017, "to": null },
+      { "name": "TRK 702", "aliases": ["TRK 702X"], "from": 2023, "to": null },
+      { "name": "Leoncino 500", "from": 2017, "to": null }
+    ] },
+    "Yamaha": { "models": [
+      { "name": "NMAX 125", "from": 2015, "to": null },
+      { "name": "XMAX 125", "from": 2006, "to": null },
+      { "name": "XMAX 300", "from": 2017, "to": null },
+      { "name": "Tracer 7", "from": 2020, "to": null }
+    ] },
+    "Voge": { "models": [] },
+    "Zontes": { "models": [] }
+  }
+}

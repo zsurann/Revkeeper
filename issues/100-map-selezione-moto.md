@@ -25,11 +25,11 @@ Online su revkeeper.pages.dev: nella scheda moto, marca → modello → anno, mi
 - [Prototipo menu a tendina ed editor foto](102-prototipo-combobox-foto.md): combobox che si apre al tocco e filtra, «Usa …» solo senza risultati, marca → modello → anno, precompilazione; editor 16:9 con trascina/pizzica/barra, approvato.
 - [Forma e contenuto del catalogo curato](103-catalogo-curato.md): vPIC ripulito + aggiunte EU; varianti unite se i dati tecnici sono uguali; specifiche per Z650 + 20 più venduti; catalog.json generato da script.
 - [Costruire l'editor della foto](105-costruire-editor-foto.md): editor a schermo intero con trascina, pizzica e barra di zoom, export 1600×900 JPEG; logica del ritaglio testata.
+- [Generare il catalogo da vPIC e aggiunte europee](106-script-catalogo.md): script annuale che produce catalog.json (33 marche, 1.331 modelli, 69 KB) senza quad e con varianti unite.
 
 ## Not yet specified
 
 - Aggiornamento del catalogo curato nel tempo (nuovi modelli ogni anno).
-- Rigenerare il JSON da vPIC ogni anno (script da rilanciare).
 
 ## Out of scope
 
