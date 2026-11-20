@@ -18,6 +18,8 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 
 ## Decisions so far
 
+- [Open data dei registri veicoli europei per le moto](301-open-data-registri.md): ASTRA Svizzera (con gomme, licenza da confermare), Traficom Finlandia (CC BY 4.0) e DGT Spagna coprono migliaia di modelli con cc, kW e massa; RDW da provare; serbatoio solo manuale.
+
 - [Portali ufficiali dei libretti per marca](302-portali-libretti.md): libretti scaricabili da script per 11 marche (API per KTM/Husqvarna/GasGas e MV Agusta); Ducati e Gruppo Piaggio bloccati, Kawasaki/H-D/Benelli/SYM senza accesso libero; estrazione semi-automatica con verifica.
 
 - Grilling iniziale: obiettivo "metodo scelto e costruito"; copertura modelli e anni, dati tecnici, intervalli; solo fonti gratuite; nessun dato dagli utenti.
