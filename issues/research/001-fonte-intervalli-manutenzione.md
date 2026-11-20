@@ -112,7 +112,7 @@ Un solo file JSON, validabile con JSON Schema. Unità: km, mesi.
       "source": {
         "kind": "owner_manual",
         "title": "Yamaha MT-07 Manuale d'uso",
-        "edition": "B4C-F8199-H0",
+        "edition": "<codice libretto>",
         "page": 0,
         "url": "https://...",
         "verifiedAt": "2026-11-20"
