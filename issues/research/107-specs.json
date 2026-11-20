@@ -1,0 +1,62 @@
+{
+  "Kawasaki": {
+    "Z650": [
+      {"from": 2017, "to": 2019, "cc": 649, "kg": 186, "tankLitres": 15, "tyreFront": "120/70 ZR17", "tyreRear": "160/60 ZR17", "source": "https://www.kawasaki.com/en-us/products/ProductSpecSheetPDF/2019-z650-abs"},
+      {"from": 2020, "to": 2023, "cc": 649, "kg": 187, "tankLitres": 15, "tyreFront": "120/70 ZR17", "tyreRear": "160/60 ZR17", "source": "https://www.kawasaki.com/en-us/products/ProductSpecSheetPDF/2023-z650"},
+      {"from": 2024, "to": null, "cc": 649, "hp": 68, "kg": 188, "tankLitres": 15, "tyreFront": "120/70 ZR17", "tyreRear": "160/60 ZR17", "source": "https://www.kawasaki.it/it_it/Motorcycles/Supernaked/Z650_2026.html"}
+    ],
+    "Z900": [
+      {"from": 2025, "to": null, "cc": 948, "hp": 124, "kg": 213, "tankLitres": 17, "tyreFront": "120/70 ZR17", "tyreRear": "180/55 ZR17", "source": "https://www.kawasaki.it/it_it/Motorcycles/Supernaked/Z900_2026.html"}
+    ],
+    "Versys 650": [
+      {"from": 2022, "to": null, "cc": 649, "hp": 67, "kg": 219, "tankLitres": 21, "tyreFront": "120/70 ZR17", "tyreRear": "160/60 ZR17", "source": "https://www.kawasaki.it/it_it/Motorcycles/Adventure_Tourer/Versys_650_2026.html"}
+    ]
+  },
+  "Honda": {
+    "SH125i": [
+      {"from": 2020, "to": null, "cc": 125, "hp": 13, "kg": 137, "tankLitres": 7, "tyreFront": "100/80-16", "tyreRear": "120/80-16", "oilLitres": 1, "source": "https://www.honda.it/motorcycles/range/scooter/sh125i/specifications-and-price.html"}
+    ],
+    "SH150i": [
+      {"from": 2020, "to": null, "cc": 157, "hp": 17, "kg": 138, "tankLitres": 7, "tyreFront": "100/80-16", "tyreRear": "120/80-16", "oilLitres": 1, "source": "https://www.honda.it/motorcycles/range/scooter/sh150i/specifications-and-price.html"}
+    ],
+    "SH350i": [
+      {"from": 2021, "to": null, "cc": 330, "hp": 29, "kg": 172, "tankLitres": 9.1, "tyreFront": "110/70-R16", "tyreRear": "130/70-R16", "oilLitres": 1.85, "source": "https://www.honda.it/motorcycles/range/scooter/sh350i/specifications.html"}
+    ],
+    "X-ADV": [
+      {"from": 2021, "to": null, "cc": 745, "hp": 59, "kg": 237, "tankLitres": 13.2, "tyreFront": "120/70 R17", "tyreRear": "160/60 R15", "oilLitres": 4, "source": "https://www.honda.it/motorcycles/range/adventure/x-adv/specifications.html"}
+    ],
+    "NC750X": [
+      {"from": 2021, "to": null, "cc": 745, "hp": 59, "kg": 216, "tankLitres": 14.1, "tyreFront": "120/70 ZR17", "tyreRear": "160/60 ZR17", "oilLitres": 4, "source": "https://www.honda.it/motorcycles/range/adventure/nc750x/specifications.html"}
+    ],
+    "CB650R": [
+      {"from": 2024, "to": null, "cc": 649, "hp": 95, "kg": 207, "tankLitres": 15.4, "tyreFront": "120/70-ZR17", "tyreRear": "180/55-ZR17", "source": "https://www.honda.it/motorcycles/range/street/cb650r/specifications-and-price.html"}
+    ],
+    "Forza 350": [
+      {"from": 2021, "to": null, "cc": 330, "hp": 29, "kg": 186, "tankLitres": 11.7, "tyreFront": "120/70 R15", "tyreRear": "140/70 R14", "oilLitres": 1.8, "source": "https://www.honda.it/motorcycles/range/scooter/forza-350/specifications.html"}
+    ]
+  },
+  "Yamaha": {
+    "MT-07": [
+      {"from": 2025, "to": null, "cc": 689, "hp": 73, "kg": 183, "tankLitres": 14, "tyreFront": "120/70ZR17", "tyreRear": "180/55ZR17", "oilLitres": 3.0, "source": "https://www.yamaha-motor.eu/it/it/motorcycles/hyper-naked/pdp/mt-07/"}
+    ],
+    "Tracer 7": [
+      {"from": 2025, "to": null, "cc": 689, "hp": 73, "kg": 203, "tankLitres": 18, "tyreFront": "120/70 ZR 17", "tyreRear": "180/55 R 17", "oilLitres": 3.0, "source": "https://www.yamaha-motor.eu/it/it/motorcycles/sport-touring/pdp/tracer-7/"}
+    ],
+    "XMAX 300": [
+      {"from": 2023, "to": null, "cc": 292, "hp": 28, "kg": 183, "tankLitres": 13.2, "tyreFront": "120/70-15", "tyreRear": "140/70-14", "source": "https://www.yamaha-motor.eu/it/it/scooters/sport/pdp/xmax-300-2025/"}
+    ],
+    "NMAX 125": [
+      {"from": 2021, "to": null, "cc": 125, "hp": 12, "kg": 131, "tankLitres": 7.1, "tyreFront": "110/70-13", "tyreRear": "130/70-13", "source": "https://cdn2.yamaha-motor.eu/prod/product-assets/2021/G125YM/Factsheets/2021-G125YM_it-IT.pdf"}
+    ]
+  },
+  "BMW": {
+    "R 1300 GS": [
+      {"from": 2024, "to": null, "cc": 1300, "hp": 145, "kg": 237, "tankLitres": 19, "tyreFront": "120/70 R19", "tyreRear": "170/60 R17", "source": "https://www.bmw-motorrad.it/it/models/adventure/r1300gs/technicaldata.html"}
+    ]
+  },
+  "KTM": {
+    "390 Duke": [
+      {"from": 2024, "to": null, "cc": 399, "hp": 45, "kg": 165, "oilGrade": "15W-50", "source": "https://www.ktm.com/it-it/models/naked-bike/2025-ktm-390-duke/specifiche-tecniche.html"}
+    ]
+  }
+}

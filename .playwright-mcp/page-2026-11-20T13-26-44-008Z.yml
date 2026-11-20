@@ -1,0 +1,366 @@
+- generic [active] [ref=f27e1]:
+  - banner:
+    - navigation "Panoramica dei contenuti" [ref=f27e3]:
+      - button "Attiva/disattiva R 1300 GS navigazione" [ref=f27e4] [cursor=pointer]:
+        - generic [ref=f27e5]: R 1300 GS
+  - main [ref=f27e9]:
+    - generic [ref=f27e11]:
+      - button "Pause" [ref=f27e14] [cursor=pointer]
+      - button "Pause" [ref=f27e20] [cursor=pointer]
+      - generic [ref=f27e26]:
+        - generic [ref=f27e27]: "2026"
+        - generic [ref=f27e28]: R 1300 GS
+        - generic [ref=f27e30]:
+          - generic [ref=f27e32]:
+            - text: A partire da 21.500
+            - generic [ref=f27e33]:
+              - text: €.
+              - img "Show more price information" [ref=f27e35] [cursor=pointer]
+          - generic [ref=f27e41]:
+            - text: Scopri le offerte finanziarie dedicate a questo modello nella sezione BMW Financial
+            - generic [ref=f27e42]: Services.
+        - list [ref=f27e43]:
+          - listitem [ref=f27e44]:
+            - button "Test Ride" [ref=f27e45] [cursor=pointer]
+          - listitem [ref=f27e47]:
+            - button "Richiedi un preventivo" [ref=f27e48] [cursor=pointer]
+          - listitem [ref=f27e50]:
+            - button "Configura ora" [ref=f27e51] [cursor=pointer]
+    - generic [ref=f27e55]:
+      - generic [ref=f27e57]:
+        - text: «
+        - paragraph [ref=f27e58]: Let’s set THE PACE together
+        - text: »
+      - paragraph [ref=f27e60]: La tua BMW R 1300 GS
+    - generic [ref=f27e62]:
+      - heading "Non seguire, indica la strada." [level=3] [ref=f27e65]
+      - generic [ref=f27e69]:
+        - paragraph [ref=f27e70]:
+          - text: Insieme cresciamo oltre i nostri limiti. Sei pronto a diventare la versione migliore di te? Vai avanti. Affronta ogni pendenza e ogni curva con leggerezza. Anche in fuoristrada, nessuno può insegnarti nulla. Cosa ti spinge? Il tuo coraggio, la tua fiducia in te stesso e il mio motore più potente. Insieme dettiamo nuovi standard e viviamo lo
+          - strong [ref=f27e71]: "#SpiritOfGS"
+          - text: .
+        - paragraph [ref=f27e72]: Scopri BMW R 1300 GS, la regina delle Maxi Enduro.
+    - generic [ref=f27e79] [cursor=pointer]
+    - generic [ref=f27e82]:
+      - generic [ref=f27e83]:
+        - heading "BMW R 1300 GS" [level=2] [ref=f27e84]
+        - generic [ref=f27e85]: Versatilità senza pari
+      - paragraph [ref=f27e89]: "Nessun compromesso, tutto è su misura per te. Qual è la posizione di seduta che preferisci per raggiungere i tuoi nuovi traguardi? Più alta, più bassa? Monoposto? In due? Viaggi leggero ed essenziale o con tanti bagagli? Vuoi essere comodo sui lunghi tragitti o sportivo in fuoristrada? L’innovativo concetto modulare del telaio aspetta solo di esaudire i tuoi desideri. Chiamami l’enduro da turismo perfetta: potresti avere ragione."
+    - generic [ref=f27e92]:
+      - heading "Equipaggiata per tutte le esigenze" [level=3] [ref=f27e93]
+      - generic [ref=f27e95]:
+        - generic:
+          - button "Salta l'elenco"
+        - group [ref=f27e97]:
+          - generic:
+            - button "Previous slide" [disabled]
+            - button "Next slide" [ref=f27e98] [cursor=pointer]
+          - generic [ref=f27e102]:
+            - tabpanel "1 of 3" [ref=f27e103]:
+              - generic [ref=f27e104]:
+                - generic [ref=f27e105] [cursor=pointer]
+                - generic [ref=f27e106]:
+                  - heading "R 1300 GS Trophy" [level=4] [ref=f27e107]
+                  - generic [ref=f27e108]: Ottimizzata per l’offroad e pronta per l’uso sportivo in fuoristrada.
+                - link "Vai alla R 1300 GS Trophy" [ref=f27e111] [cursor=pointer]:
+                  - /url: /it/models/adventure/r1300gs/gs-trophy.html
+            - tabpanel "2 of 3" [ref=f27e113]:
+              - generic [ref=f27e114]:
+                - generic [ref=f27e115] [cursor=pointer]
+                - generic [ref=f27e116]:
+                  - heading "R 1300 GS Triple Black" [level=4] [ref=f27e117]
+                  - generic [ref=f27e118]: L’allrounder perfetta dal comfort imbattibile.
+                - link "Vai alla R 1300 GS Triple Black" [ref=f27e121] [cursor=pointer]:
+                  - /url: /it/models/adventure/r1300gs/tripleblack.html
+            - tabpanel [aria-hidden] [ref=f27e123]:
+              - generic [ref=f27e124]:
+                - generic [ref=f27e125] [cursor=pointer]
+                - generic [ref=f27e126]:
+                  - heading [level=4] [ref=f27e127]: R 1300 GS Option 719 Biscaya
+                  - generic [ref=f27e128]: Inconfondibile ed esclusiva, con un equipaggiamento di altissimo livello per chi ama le personalizzazioni.
+                - link [ref=f27e131] [cursor=pointer]:
+                  - /url: /it/models/adventure/r1300gs/option719-biscaya.html
+                  - generic [ref=f27e132]: Vai alla R 1300 GS Biscaya
+    - generic [ref=f27e134]:
+      - heading "Controllo e maneggevolezza" [level=3] [ref=f27e137]
+      - generic [ref=f27e141]:
+        - paragraph [ref=f27e142]: "Una leggerezza inattesa: hai tutto sotto controllo. Sotto di te hai 237 chilogrammi*. In un attimo, raggiungere grandi traguardi diventa facilissimo. Su tutti i fondi stradali hai una sensazione di guida senza precedenti. Sulla strada sei stabile e preciso. Piegare, frenare, accelerare... Hai il pieno controllo. Sperimenta una nuova facilità di guida grazie a telai completamente riprogettati, come il nuovo telaietto reggisella monoscocca, i nuovi EVO Telelever ed EVO Paralever, il nuovo DSA (Dynamic Suspension Adjustment) e l'innovativa regolazione adattiva dell'altezza del veicolo."
+        - paragraph [ref=f27e143]:
+          - subscript [ref=f27e144]: "*con peso a vuoto DIN"
+    - generic [ref=f27e145]:
+      - heading "Punti di forza per gli high performer" [level=2] [ref=f27e154]
+      - paragraph [ref=f27e160]: "Davanti a te: la tua prossima destinazione, ben illuminata con l’iconico faro in LED Matrix. Dietro di te: i traguardi che hai già raggiunto. E il posteriore monoscocca corto con un grande potenziale di personalizzazione. Non c'è dubbio: Stai guidando il modello di punta delle grandi moto Adventure. Scopri l'ampio equipaggiamento di serie:"
+    - generic [ref=f27e164]:
+      - heading "Raggiungi il prossimo livello" [level=3] [ref=f27e165]
+      - paragraph [ref=f27e169]: "Tutto è costruito intorno alle tue esigenze: comfort di marcia al livello superiore. L’innovativo supporto Telelever offre un handling eccezionale. La flyline GS, con una linea sella-serbatoio extra piatta, offre una libertà di movimento senza precedenti, una facile manovra e una posizione di seduta rilassata. L'ampia variabilità ergonomica consente ai piloti con le esigenze più diverse di gestire qualsiasi terreno. Grazie ai sensori ambientali del Riding Assistant opzionale, hai sempre tutto sotto controllo."
+    - generic [ref=f27e173]:
+      - heading "Concentrata sull'essenza dello spirito GS" [level=3] [ref=f27e174]
+      - paragraph [ref=f27e178]: "Direzione: nuove avventure. Grazie al Keyless Ride, ti basta salire in sella e puoi subito partire. Devi solo prendere posto sulla comoda sella di serie, che ha un’altezza variabile da 800 a 890 mm. Aziona l’indicatore di direzione integrato nel paramani e svolta verso la libertà. Ad ogni metro sarà sempre più chiaro: ti trovi in sella a qualcosa di unico. È molto semplice, la vera grandezza non richiede esagerazioni. Qui non ci sono elementi superflui, tutto si concentra sull'essenza della guida GS: il puro piacere di guidare."
+    - generic [ref=f27e182]:
+      - heading "Il cambio che regala libertà" [level=3] [ref=f27e183]
+      - button "Apri" [ref=f27e188] [cursor=pointer]:
+        - generic [ref=f27e189]: Cambio elettro-assistito automatico (ASA)
+    - generic [ref=f27e195]:
+      - 'heading "Più sicurezza: il radar posteriore" [level=3] [ref=f27e196]'
+      - generic [ref=f27e197]:
+        - paragraph [ref=f27e200]: Con il Riding Assistant opzionale puoi viaggiare in sicurezza. Questa opzione comprende un sensore radar nel posteriore che monitora lo spazio intorno alla moto. Durante il cambio di corsia, le spie di avvertimento integrate negli specchietti indicano un eventuale rischio di collisione con un altro veicolo.
+        - button "Leggi di più" [ref=f27e202] [cursor=pointer]
+    - generic [ref=f27e208]:
+      - heading "Tutto per il piacere di guida" [level=2] [ref=f27e217]
+      - generic [ref=f27e221]:
+        - generic [ref=f27e222]:
+          - generic [ref=f27e223]:
+            - generic [ref=f27e224]: "107"
+            - generic [ref=f27e225]: kW (145 CV) a 7.750 giri/min
+          - generic [ref=f27e226]:
+            - generic [ref=f27e227]: "149"
+            - generic [ref=f27e228]: Nm di coppia massima a 6.500 giri/min
+          - generic [ref=f27e229]:
+            - generic [ref=f27e230]: "1.300"
+            - generic [ref=f27e231]: cc di cilindrata
+          - generic [ref=f27e232]:
+            - generic [ref=f27e233]: "237"
+            - generic [ref=f27e234]: kg di peso a vuoto
+        - button "Dati ed equipaggiamento" [ref=f27e235] [cursor=pointer]
+    - generic [ref=f27e238]:
+      - heading "Non ci sono ostacoli" [level=3] [ref=f27e241]
+      - paragraph [ref=f27e246]: "Tutto dipende da te. Il tuo compito: sognare in grande. Il mio compito: darti abbastanza trazione per rendere tutto possibile. Il potente motore da 145 CV, unito alla massa a vuoto ridotta del veicolo, ti offre la potenza di cui hai bisogno. Il carattere del motore boxer di ultima generazione si percepisce nettamente a ogni velocità. Sperimenterai prestazioni straordinarie, con un controllo impressionante e una maggiore fluidità ai bassi regimi."
+    - region "Avvia il motore" [ref=f27e247]:
+      - heading "Il suono della tua libertà" [level=2] [ref=f27e256]
+      - generic [ref=f27e257]:
+        - generic [ref=f27e258]:
+          - generic [ref=f27e259]: Ascolta il suono
+          - button "INIZIA" [ref=f27e263] [cursor=pointer]
+        - radiogroup [ref=f27e266]:
+          - radio "Silenziatore di serie" [ref=f27e267] [cursor=pointer]:
+            - generic [ref=f27e273]:
+              - generic [ref=f27e274]: Silenziatore di serie
+              - generic [ref=f27e275]: L’impianto di scarico a terminale singolo in acciaio inossidabile spazzolato produce un suono boxer robusto.
+          - radio "Silenziatore sportivo Akrapovič" [ref=f27e276] [cursor=pointer]:
+            - generic [ref=f27e282]:
+              - generic [ref=f27e283]: Silenziatore sportivo Akrapovič
+              - generic [ref=f27e284]: Il doppio silenziatore sport in titanio e acciaio inossidabile di Akrapovič convince per il suo look sportivo e per il suono profondo.
+    - generic [ref=f27e290]:
+      - heading "4 anni senza preoccupazioni" [level=2] [ref=f27e291]
+      - generic [ref=f27e292]:
+        - paragraph [ref=f27e293]:
+          - strong [ref=f27e294]: Ride on & on & on.
+        - paragraph [ref=f27e295]: Con l'acquisto di una nuova moto o scooter BMW hai 4 anni di garanzia.
+        - paragraph [ref=f27e296]:
+          - link "Scopri di più" [ref=f27e297] [cursor=pointer]:
+            - /url: /it/service/services/service-and-warranty-packages.html
+    - generic [ref=f27e299]:
+      - heading "Una potenza che si vede" [level=2] [ref=f27e308]
+      - generic [ref=f27e310]:
+        - generic [ref=f27e311]:
+          - heading "Il colore dell’adrenalina" [level=3] [ref=f27e312]
+          - paragraph [ref=f27e313]: "Intenso, potente, deciso. Nella versione base, con la dinamica flyline GS, le linee decise e l’aspetto atletico, ci concentriamo su una cosa sola: la tua esperienza."
+        - generic [ref=f27e315]:
+          - listbox "Scegli il colore" [ref=f27e316]:
+            - option [ref=f27e317] [cursor=pointer]
+          - generic [ref=f27e319]:
+            - heading [level=4]
+            - paragraph
+            - link "Configurala adesso" [ref=f27e321] [cursor=pointer]:
+              - /url: javascript:void(0);
+    - generic [ref=f27e324]:
+      - heading "Sii insostituibile" [level=3] [ref=f27e327]
+      - paragraph [ref=f27e332]: "Il design carico di energia, la carrozzeria straordinaria, il serbatoio in alluminio leggero: tutto si inserisce in modo efficiente e integrato. Il sottotelaio in alluminio fuso è la base di infinite possibilità. I cerchi di serie realizzati per fusione e la catena cinematica in nero Avus, insieme al telaio principale, distinguono la potenza della zona inferiore rispetto all’espressività della zona anteriore della carrozzeria. La parte frontale bassa e compatta offre una visuale eccellente sulla strada. La nuova icona luminosa simmetrica rappresenta un’autentica rottura rispetto al design della tradizione: un volto inconfondibile."
+    - generic [ref=f27e333]:
+      - heading "Per chi vuole ancora di più" [level=2] [ref=f27e342]
+      - paragraph [ref=f27e348]: "Ti aspetti sempre di più? Ottimo atteggiamento. Scopri le nostre possibilità di personalizzazione. Puoi trovare tutto ciò che corrisponde ai tuoi desideri nel ricco equipaggiamento speciale e nella gamma di accessori originali BMW Motorrad. Oppure, puoi scegliere un carattere che sia solo tuo: la GS Trophy per il fuoristrada, la Triple Black con il massimo comfort e qualità versatili, o la Biscaya per una pura esclusività."
+    - generic [ref=f27e350]:
+      - heading "La Performer" [level=3] [ref=f27e353]
+      - generic [ref=f27e355]:
+        - paragraph [ref=f27e358]: Vuoi ottenere ancora di più ancora più rapidamente? Nessun problema. Con questa proposta di allestimento avrai ciò che cerchi. Soprattutto, più divertimento alla guida, con il pacchetto Dynamic. Inoltre, puoi beneficiare di un aggiornamento anche in termini di sicurezza e comfort di viaggio. Scopri la nostra proposta o configura la tua variante personalizzata.
+        - link "Vai al configuratore" [ref=f27e359] [cursor=pointer]:
+          - /url: /it/models/adventure/r1300gs/configurator.html
+    - generic [ref=f27e367]:
+      - button "Apri" [ref=f27e369] [cursor=pointer]:
+        - generic [ref=f27e370]: Pacchetto Dynamic
+      - button "Apri" [ref=f27e374] [cursor=pointer]:
+        - generic [ref=f27e375]: Headlight Pro
+      - button "Apri" [ref=f27e379] [cursor=pointer]:
+        - generic [ref=f27e380]: Estensione del paramani
+      - button "Apri" [ref=f27e384] [cursor=pointer]:
+        - generic [ref=f27e385]: Piastra portapacchi
+    - generic [ref=f27e390]:
+      - heading "Equipaggiata per tutte le esigenze" [level=3] [ref=f27e391]
+      - generic [ref=f27e393]:
+        - generic:
+          - button "Salta l'elenco"
+        - group [ref=f27e395]:
+          - generic:
+            - button "Previous slide" [disabled]
+            - button "Next slide" [ref=f27e396] [cursor=pointer]
+          - generic [ref=f27e400]:
+            - tabpanel "1 of 3" [ref=f27e401]:
+              - generic [ref=f27e402]:
+                - generic [ref=f27e403] [cursor=pointer]
+                - generic [ref=f27e404]:
+                  - heading "R 1300 GS Trophy" [level=4] [ref=f27e405]
+                  - generic [ref=f27e406]: Ottimizzata per l’offroad e pronta per l’uso sportivo in fuoristrada.
+                - link "Vai alla R 1300 GS Trophy" [ref=f27e409] [cursor=pointer]:
+                  - /url: /it/models/adventure/r1300gs/gs-trophy.html
+            - tabpanel "2 of 3" [ref=f27e411]:
+              - generic [ref=f27e412]:
+                - generic [ref=f27e413] [cursor=pointer]
+                - generic [ref=f27e414]:
+                  - heading "R 1300 GS Triple Black" [level=4] [ref=f27e415]
+                  - generic [ref=f27e416]: L’allrounder perfetta dal comfort imbattibile.
+                - link "Vai alla R 1300 GS Triple Black" [ref=f27e419] [cursor=pointer]:
+                  - /url: /it/models/adventure/r1300gs/tripleblack.html
+            - tabpanel [aria-hidden] [ref=f27e421]:
+              - generic [ref=f27e422]:
+                - generic [ref=f27e423] [cursor=pointer]
+                - generic [ref=f27e424]:
+                  - heading [level=4] [ref=f27e425]: R 1300 GS Option 719 Biscaya
+                  - generic [ref=f27e426]: Inconfondibile ed esclusiva, con un equipaggiamento di altissimo livello per chi ama l'individualità.
+                - link [ref=f27e429] [cursor=pointer]:
+                  - /url: /it/models/adventure/r1300gs/option719-biscaya.html
+                  - generic [ref=f27e430]: Vai alla R 1300 GS Biscaya
+    - generic [ref=f27e434]:
+      - heading "FAQ" [level=3] [ref=f27e435]
+      - generic [ref=f27e438]:
+        - button "Apri" [ref=f27e440] [cursor=pointer]:
+          - generic [ref=f27e441]: Che differenza c'è tra la R 1300 GS e la R 1300 GS Adventure?
+        - button "Apri" [ref=f27e445] [cursor=pointer]:
+          - generic [ref=f27e446]: Quanto pesa la R 1300 GS e come influisce sulla guidabilità in fuoristrada?
+        - button "Apri" [ref=f27e450] [cursor=pointer]:
+          - generic [ref=f27e451]: Cosa sono EVO Telelever ed EVO Paralever e perché sono importanti?
+        - button "Apri" [ref=f27e455] [cursor=pointer]:
+          - generic [ref=f27e456]: È possibile usarla comodamente in coppia con passeggero e bagagli?
+        - button "Apri" [ref=f27e460] [cursor=pointer]:
+          - generic [ref=f27e461]: Cosa include il prezzo di partenza di 21.500 €?
+        - button "Apri" [ref=f27e465] [cursor=pointer]:
+          - generic [ref=f27e466]: Esistono pacchetti di manutenzione programmata per questo modello?
+        - button "Apri" [ref=f27e470] [cursor=pointer]:
+          - generic [ref=f27e471]: È disponibile anche una versione usata certificata della R 1300 GS?
+        - button "Apri" [ref=f27e475] [cursor=pointer]:
+          - generic [ref=f27e476]: Posso configurare la R 1300 GS online prima di andare in concessionaria?
+    - generic [ref=f27e480]:
+      - heading "Subito disponibili in stock" [level=2] [ref=f27e481]
+      - generic [ref=f27e482]:
+        - button "Precedente" [ref=f27e483] [cursor=pointer]
+        - button "Prossima" [ref=f27e487] [cursor=pointer]
+    - generic [ref=f27e493]:
+      - heading "Più highlights per te" [level=2] [ref=f27e502]
+      - generic [ref=f27e506]:
+        - generic:
+          - button "Salta l'elenco"
+        - group [ref=f27e508]:
+          - generic:
+            - button "Previous slide" [disabled]
+            - button "Next slide" [ref=f27e509] [cursor=pointer]
+          - generic [ref=f27e513]:
+            - tabpanel "1 of 3" [ref=f27e514]:
+              - generic [ref=f27e515]:
+                - generic [ref=f27e516] [cursor=pointer]
+                - generic [ref=f27e517]:
+                  - heading "Abbigliamento per rider GS" [level=4] [ref=f27e518]
+                  - generic [ref=f27e519]: "Stile e funzionalità: l'online shop per le tue esperienze GS."
+                - link "Online Shop" [ref=f27e522] [cursor=pointer]:
+                  - /url: /it/wear/apparel.html
+            - tabpanel "2 of 3" [ref=f27e524]:
+              - generic [ref=f27e525]:
+                - generic [ref=f27e526] [cursor=pointer]
+                - generic [ref=f27e527]:
+                  - heading "ConnectedRide Navigator" [level=4] [ref=f27e528]
+                  - generic [ref=f27e529]: Questo dispositivo di navigazione non trova solo la strada, ma anche le esperienze.
+                - link "Vai al navigatore" [ref=f27e532] [cursor=pointer]:
+                  - /url: /it/individualisation/navigation-and-communication/connectedride-navigator.html
+            - tabpanel [aria-hidden] [ref=f27e534]:
+              - generic [ref=f27e535]:
+                - generic [ref=f27e536] [cursor=pointer]
+                - generic [ref=f27e537]:
+                  - heading [level=4] [ref=f27e538]: Expedition Leader
+                  - generic [ref=f27e539]: Addestrate sulla R 1300 GS, le nostre guide ti accompagneranno nella tua avventura.
+                - link [ref=f27e542] [cursor=pointer]:
+                  - /url: /it/experience/stories/adventure/expedition-leader.html
+                  - generic [ref=f27e543]: Scopri di più
+  - img "spinner" [ref=f27e545]
+  - contentinfo [ref=f27e547]:
+    - generic [ref=f27e548]:
+      - generic [ref=f27e549]:
+        - button "TORNA SU" [ref=f27e551] [cursor=pointer]
+        - paragraph [ref=f27e564]: I testi di questo sito sono creati con il supporto dell'IA.
+        - generic [ref=f27e566]:
+          - generic [ref=f27e567]:
+            - generic [ref=f27e568]: Registrati subito alla newsletter BMW Motorrad
+            - link "RIMANI AGGIORNATO!" [ref=f27e569] [cursor=pointer]:
+              - /url: javascript:void(0);
+            - navigation [ref=f27e576]:
+              - link "Facebook" [ref=f27e577] [cursor=pointer]:
+                - /url: https://www.facebook.com/BMW.Motorrad.Italia/
+              - link "Instagram" [ref=f27e581] [cursor=pointer]:
+                - /url: https://www.instagram.com/bmwmotorraditalia/?hl=it
+              - link "Youtube" [ref=f27e585] [cursor=pointer]:
+                - /url: https://www.youtube.com/user/bmwmotorrad
+              - link "LinkedIn" [ref=f27e589] [cursor=pointer]:
+                - /url: https://it.linkedin.com/company/bmw-group-italia
+          - generic [ref=f27e593]:
+            - navigation [ref=f27e594]:
+              - link "BMW.it" [ref=f27e596] [cursor=pointer]:
+                - /url: https://www.bmw.it/
+              - link "MINI.it" [ref=f27e604] [cursor=pointer]:
+                - /url: https://www.mini.it
+              - link [ref=f27e612] [cursor=pointer]:
+                - /url: https://www.bmwgroup.com/
+                - generic [ref=f27e613]:
+                  - text: Gruppo
+                  - generic [ref=f27e614]: BMW
+              - link [ref=f27e620] [cursor=pointer]:
+                - /url: https://www.bmw-welt.com/en.html
+                - generic [ref=f27e621]:
+                  - text: Museo
+                  - generic [ref=f27e622]: BMW
+              - link [ref=f27e628] [cursor=pointer]:
+                - /url: https://roadsafetystrategy.acem.eu/
+                - generic [ref=f27e629]:
+                  - text: ACEM Road Safety
+                  - generic [ref=f27e630]: Strategy
+              - link "FAQ" [ref=f27e636] [cursor=pointer]:
+                - /url: https://support.bmw-motorrad.com/s/?language=it
+              - link "Collegamenti utili" [ref=f27e644] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/mondo-bmw-motorrad.html
+              - link "Regolamento UE sulle batterie" [ref=f27e647] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/eu-battery-regulation.html
+            - navigation [ref=f27e649]:
+              - link "Politica in materia di privacy" [ref=f27e651] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/privacy.html
+              - link "Cookies" [ref=f27e654] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/cookie-disclaimer.html
+              - link "Nota legale" [ref=f27e657] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/nota-legale.html
+              - link "Reach" [ref=f27e660] [cursor=pointer]:
+                - /url: https://www.global.bmw-motorrad.com/en/reach/reach-it.html
+              - link "Codice Etico" [ref=f27e668] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/codice-etico.html
+              - link "Condizioni generali di compravendita" [ref=f27e671] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/condizioni-generali-di-compravendita.html
+              - link "DSA" [ref=f27e674] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/digital-service-act.html
+              - link "Regolamento sulla Sicurezza Generale dei Prodotti (GPSR)" [ref=f27e677] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/regolamento-sulla-sicurezza-generale-dei-prodotti-gpsr.html
+              - link "Informazioni legali BMW Motorrad ConnectedRide" [ref=f27e680] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/bmw-connectedride-services-legal-information.html
+              - link "Dichiarazione di accessibilità" [ref=f27e683] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/accessibility-statement.html
+              - link "Mappa del sito" [ref=f27e686] [cursor=pointer]:
+                - /url: /it/public-pool/content-pool/sitemap.html
+              - link "Modulo di recesso per Shop Abbigliamento" [ref=f27e689] [cursor=pointer]:
+                - /url: /it/service/forms/order-cancellation-form.html
+      - paragraph [ref=f27e710]: "© BMW AG 2026 Partita Iva: IT12532500159 Licenza SIAE Internet AMC 3881 Nota: tutti i modelli sono equipaggiati conformemente alla normativa Euro 4 o superiore. Le moto raffigurate nelle foto e nei video di questo sito possono essere equipaggiate diversamente."
+  - generic:
+    - document:
+      - dialog "cookie-banner" [ref=f27e711]:
+        - heading "Uso dei cookie" [level=2] [ref=f27e713]
+        - paragraph [ref=f27e715]:
+          - generic [ref=f27e717]:
+            - paragraph [ref=f27e718]: Utilizziamo i cookie, inclusi quelli per terze parti, a scopi analitici e per offrirti pubblicità mirata in base alle tue abitudini di navigazione. Facendo clic su "Accetta Cookie", acconsenti al salvataggio e alla lettura di informazioni sul tuo dispositivo.
+            - paragraph [ref=f27e719]: Inoltre accetti l'ulteriore elaborazione dei dati personali raccolti e letti, oltre al possibile trasferimento in paesi al di fuori dell'UE estesa (EU + CH, IS, LI, NO, UK), ad esempio gli USA.
+            - paragraph [ref=f27e720]: Per informazioni dettagliate sull'uso e la gestione dei cookie, fai clic su "Personalizza". Facendo clic su "Rifiuta Cookie", rifiuti l'uso dei cookie che richiedono il tuo consenso.
+        - generic [ref=f27e723]:
+          - button "Personalizza" [ref=f27e724] [cursor=pointer]
+          - button "Rifiuta" [ref=f27e725] [cursor=pointer]: Rifiuta Cookie
+          - button "Accetta tutti" [ref=f27e726] [cursor=pointer]: Accetta Cookie

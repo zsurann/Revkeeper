@@ -21,5 +21,8 @@ export const yearsOf = (make: string, name: string) => {
   return Array.from({ length: to - from + 1 }, (_, i) => to - i)
 }
 
-export const specsOf = (make: string, name: string, year?: number): Spec | undefined =>
-  model(make, name)?.specs?.find((s) => year === undefined || (s.from <= year && (s.to === null || year <= s.to)))
+// Senza anno vale la generazione più recente; con l'anno, quella che lo copre (o nessuna)
+export const specsOf = (make: string, name: string, year?: number): Spec | undefined => {
+  const specs = model(make, name)?.specs ?? []
+  return year === undefined ? specs.at(-1) : specs.find((s) => s.from <= year && (s.to === null || year <= s.to))
+}

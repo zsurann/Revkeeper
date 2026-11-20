@@ -2,7 +2,7 @@
 id: 100
 title: "Mappa: selezione moto guidata ed editor foto"
 labels: [wayfinder:map]
-status: open
+status: closed
 ---
 
 ## Destination
@@ -27,8 +27,11 @@ Online su revkeeper.pages.dev: nella scheda moto, marca → modello → anno, mi
 - [Costruire l'editor della foto](105-costruire-editor-foto.md): editor a schermo intero con trascina, pizzica e barra di zoom, export 1600×900 JPEG; logica del ritaglio testata.
 - [Generare il catalogo da vPIC e aggiunte europee](106-script-catalogo.md): script annuale che produce catalog.json (33 marche, 1.331 modelli, 60 KB) senza quad e con varianti unite.
 - [Costruire i menu a tendina della scheda moto](104-costruire-combobox.md): Combobox accessibile per marca → modello → anno, gomme e liquidi; precompilazione da `specsOf` pronta, in attesa dei dati.
+- [Specifiche tecniche dei 21 modelli](107-specifiche-modelli.md): Z650 in 3 generazioni + 15 modelli dalle pagine ufficiali; 9 saltati (siti bloccati o generazione cambiata); precompilazione verificata.
 
 ## Not yet specified
+
+- Completare le specifiche dei modelli saltati (Vespa, Piaggio, Benelli, Triumph, Africa Twin, Monster) quando i siti sono raggiungibili; aggiungere olio e liquido freni dai libretti.
 
 - Aggiornamento del catalogo curato nel tempo (nuovi modelli ogni anno).
 
