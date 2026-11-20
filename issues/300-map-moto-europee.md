@@ -18,6 +18,8 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 
 ## Decisions so far
 
+- [Scelta delle fonti e della pipeline](303-scelta-pipeline.md): Traficom + DGT subito, ASTRA dopo la conferma della licenza; un file per marca nell'app; libretti semi-automatici a tornate; aggiornamento ogni 3 mesi con PR.
+
 - [Open data dei registri veicoli europei per le moto](301-open-data-registri.md): ASTRA Svizzera (con gomme, licenza da confermare), Traficom Finlandia (CC BY 4.0) e DGT Spagna coprono migliaia di modelli con cc, kW e massa; RDW da provare; serbatoio solo manuale.
 
 - [Portali ufficiali dei libretti per marca](302-portali-libretti.md): libretti scaricabili da script per 11 marche (API per KTM/Husqvarna/GasGas e MV Agusta); Ducati e Gruppo Piaggio bloccati, Kawasaki/H-D/Benelli/SYM senza accesso libero; estrazione semi-automatica con verifica.
@@ -26,9 +28,6 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 
 ## Not yet specified
 
-- Come unire nomi diversi dello stesso modello tra fonti diverse (es. "Z650" e "Z 650 ABS" e codici di omologazione).
-- Peso del catalogo nell'app se passa da 1.300 a molte migliaia di modelli (caricamento per marca?).
-- Ogni quanto aggiornare e con quale automazione gratuita.
 
 ## Out of scope
 
