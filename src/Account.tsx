@@ -96,7 +96,8 @@ export const Account = ({ onClose }: { onClose: () => void }) => {
       ) : (
         <section className="grid gap-3 rounded-panel bg-panel p-4">
           <p className="m-0">Accedi per salvare il garage online e usarlo su più telefoni. Senza accesso l'app funziona lo stesso, solo su questo dispositivo.</p>
-          <div ref={btn} className="min-h-11" />
+          {/* stesso color-scheme dell'iframe di Google, altrimenti il browser gli dipinge dietro un fondo bianco */}
+          <div ref={btn} className="min-h-11 [color-scheme:light]" />
         </section>
       )}
       {msg && <p role="status" className="m-0 text-sm text-dim">{busy ? 'Attendi…' : msg}</p>}
