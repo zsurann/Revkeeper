@@ -1,11 +1,5 @@
 import type { Bike } from './types'
 
-// Marche curate per il selettore (ricerca 001): il modello resta testo libero
-export const BRANDS = [
-  'Aprilia', 'Benelli', 'BMW', 'CFMoto', 'Ducati', 'Fantic', 'Harley-Davidson', 'Honda', 'Husqvarna',
-  'Kawasaki', 'KTM', 'Kymco', 'Moto Guzzi', 'MV Agusta', 'Piaggio', 'Royal Enfield', 'Suzuki',
-  'SYM', 'Triumph', 'Vespa', 'Voge', 'Yamaha',
-] as const
 
 export type BikeDraft = Omit<Bike, 'id' | 'updatedAt' | 'deletedAt'>
 

@@ -1,5 +1,20 @@
 // Pulizia del catalogo da vPIC: usata dallo script scripts/build-catalog.ts e dai test
-export type CatalogModel = { name: string; aliases?: string[]; from: number; to: number | null; specs?: Record<string, unknown> }
+// Dati tecnici per generazione (anni da–a), presi dalla scheda ufficiale indicata in `source`
+export type Spec = {
+  from: number
+  to: number | null
+  cc?: number
+  hp?: number
+  kg?: number
+  tankLitres?: number
+  tyreFront?: string
+  tyreRear?: string
+  oilGrade?: string
+  oilLitres?: number
+  brakeFluid?: string
+  source: string
+}
+export type CatalogModel = { name: string; aliases?: string[]; from: number; to: number | null; specs?: Spec[] }
 export type Catalog = { generatedAt: string; brands: { name: string; models: CatalogModel[] }[] }
 export type Raw = { brand: string; year: number; names: string[] }
 export type Extra = { popular: string[]; brands: Record<string, { models?: CatalogModel[]; exclude?: string[] }> }

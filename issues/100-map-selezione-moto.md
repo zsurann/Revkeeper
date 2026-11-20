@@ -26,6 +26,7 @@ Online su revkeeper.pages.dev: nella scheda moto, marca → modello → anno, mi
 - [Forma e contenuto del catalogo curato](103-catalogo-curato.md): vPIC ripulito + aggiunte EU; varianti unite se i dati tecnici sono uguali; specifiche per Z650 + 20 più venduti; catalog.json generato da script.
 - [Costruire l'editor della foto](105-costruire-editor-foto.md): editor a schermo intero con trascina, pizzica e barra di zoom, export 1600×900 JPEG; logica del ritaglio testata.
 - [Generare il catalogo da vPIC e aggiunte europee](106-script-catalogo.md): script annuale che produce catalog.json (33 marche, 1.331 modelli, 60 KB) senza quad e con varianti unite.
+- [Costruire i menu a tendina della scheda moto](104-costruire-combobox.md): Combobox accessibile per marca → modello → anno, gomme e liquidi; precompilazione da `specsOf` pronta, in attesa dei dati.
 
 ## Not yet specified
 
