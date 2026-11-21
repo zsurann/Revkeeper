@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "dev:api": "wrangler pages dev dist --port 8788",
-    "catalog": "node scripts/build-catalog.ts"
+    "catalog": "node scripts/import-eu.ts && node scripts/build-catalog.ts"
   },
   "dependencies": {
     "@block65/webcrypto-web-push": "^2.0.0",

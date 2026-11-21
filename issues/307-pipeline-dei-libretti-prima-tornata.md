@@ -3,7 +3,7 @@ id: 307
 title: "Pipeline dei libretti, prima tornata"
 labels: [wayfinder:task]
 status: open
-assignee:
+assignee: claude
 blocked_by: []
 ---
 

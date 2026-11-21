@@ -1,0 +1,38 @@
+# Ogni 3 mesi rigenera il catalogo moto (vPIC, Traficom, DGT) e apre una PR da approvare.
+# Si può lanciare anche a mano da GitHub → Actions → "Aggiorna catalogo" → Run workflow.
+name: Aggiorna catalogo
+on:
+  schedule:
+    - cron: '17 3 1 1,4,7,10 *' # 1° gennaio, aprile, luglio, ottobre alle 3:17 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/import-eu.ts
+      - run: node scripts/build-catalog.ts
+      - run: npx vitest run
+      - name: Apri una PR se il catalogo è cambiato
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain -- data src/data)" ]; then echo "Catalogo invariato"; exit 0; fi
+          B="catalog/$(date +%Y-%m)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$B"
+          git add data src/data
+          git commit -m "Aggiorna catalogo $(date +%Y-%m)"
+          git push -u origin "$B"
+          gh pr create --base main --head "$B" --title "Aggiorna catalogo $(date +%Y-%m)" \
+            --body "Rigenerato automaticamente da vPIC, Traficom e DGT. Controlla il diff (modelli nuovi o spariti) prima di unire."
