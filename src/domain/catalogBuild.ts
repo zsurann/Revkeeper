@@ -1,3 +1,5 @@
+import type { EuModel } from './euImport'
+
 // Pulizia del catalogo da vPIC: usata dallo script scripts/build-catalog.ts e dai test
 // Dati tecnici per generazione (anni da–a), presi dalla scheda ufficiale indicata in `source`
 export type Spec = {
@@ -37,14 +39,14 @@ export const baseName = (raw: string) => {
 const key = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '')
 const keep = (n: string) => !DENY.test(n) && !/[/,]/.test(n) && n.length > 1
 
-const SOURCE: Record<string, string> = { traficom: 'Traficom (CC BY 4.0)', dgt: 'DGT' }
+const SOURCE: Record<string, string> = { traficom: 'Traficom (CC BY 4.0)', dgt: 'DGT', astra: 'ASTRA' }
 
 export const buildCatalog = (
   raw: Raw[],
   extra: Extra,
   currentYear: number,
   generatedAt: string,
-  eu: { make: string; model: string; from: number; to: number; cc: number; kw: number; kg?: number; sources: string[] }[] = [],
+  eu: Pick<EuModel, 'make' | 'model' | 'from' | 'to' | 'cc' | 'kw' | 'kg' | 'tyreFront' | 'tyreRear' | 'sources'>[] = [],
 ): Catalog => {
   const byBrand = new Map<string, Map<string, CatalogModel>>()
   const add = (brand: string, m: CatalogModel) => {
@@ -71,13 +73,16 @@ export const buildCatalog = (
     }
   const ongoing = (y: number) => (y >= currentYear - 1 ? null : y)
   for (const m of eu) {
+    if (extra.brands[m.make]?.exclude?.some((x) => key(x) === key(m.model))) continue
     const spec: Spec = {
       from: m.from,
       to: ongoing(m.to),
       cc: Math.round(m.cc),
       ...(m.kw > 0 && { hp: Math.round(m.kw * 1.36) }),
       ...(m.kg && { kg: Math.round(m.kg) }),
-      source: `Dati di immatricolazione: ${m.sources.map((s) => SOURCE[s] ?? s).join(', ')}`,
+      ...(m.tyreFront && { tyreFront: m.tyreFront }),
+      ...(m.tyreRear && { tyreRear: m.tyreRear }),
+      source: `Registri ufficiali: ${m.sources.map((s) => SOURCE[s] ?? s).join(', ')}`,
     }
     add(m.make, { name: m.model, from: m.from, to: ongoing(m.to), specs: [spec] })
   }

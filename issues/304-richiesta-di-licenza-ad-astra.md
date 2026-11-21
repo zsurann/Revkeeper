@@ -39,4 +39,4 @@ Destinatario: il contatto indicato nella pagina dei dati veicoli di ASTRA (https
 >
 > Vielen Dank und freundliche Grüsse
 
-Stato: in attesa che l'utente invii l'email e riporti la risposta.
+Stato: in attesa che l'utente invii l'email e riporti la risposta. Nel frattempo ASTRA è stato integrato su richiesta dell'utente (vedi [Aggiungere ASTRA al catalogo](309-aggiungere-astra-al-catalogo.md)): la panoramica ufficiale ASTRA classifica i dati di omologazione come open data gratuito, ma manca un testo di licenza. Se ASTRA rispondesse di no, basta togliere il blocco ASTRA da `scripts/import-eu.ts` e rigenerare.

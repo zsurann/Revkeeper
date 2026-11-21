@@ -18,6 +18,8 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 
 ## Decisions so far
 
+- [Aggiungere ASTRA al catalogo](309-aggiungere-astra-al-catalogo.md): omologazioni svizzere importate per gomme, cc, kW e anni (non il peso, che include il conducente); 6.187 modelli, 3.175 con le gomme; licenza scritta ancora da confermare.
+
 - [Pipeline dei libretti, prima tornata](307-pipeline-dei-libretti-prima-tornata.md): script di download ed estrazione; 7 modelli Honda/Yamaha aggiunti dai libretti; Yamaha limitata dall'assenza di un indice dei libretti.
 
 - [Aggiornamento trimestrale automatico](308-aggiornamento-trimestrale-automatico.md): workflow GitHub Actions ogni 3 mesi che rigenera il catalogo e apre una PR; serve abilitare i permessi delle Actions.
