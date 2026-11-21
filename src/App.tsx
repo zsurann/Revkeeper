@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Account } from './Account'
 import { BikeForm } from './BikeForm'
 import { DueList, NextServiceCard, ServiceArc, type Row } from './Dashboard'
@@ -28,6 +28,12 @@ const DOC_LABEL = { assicurazione: 'Assicurazione', bollo: 'Bollo', revisione: '
 
 type View = 'home' | 'garage' | 'new' | 'edit' | 'maintenance' | 'account'
 type Tab = 'dash' | 'services' | 'documents'
+// Icone a tratto 24 px, stesso spessore in tutta l'app
+const TAB_ICON: Record<Tab, ReactNode> = {
+  dash: <><path d="M4.5 17.5a8 8 0 1 1 15 0" /><path d="M12 14l4-4" /><circle cx="12" cy="14" r="1.2" /></>,
+  services: <><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3" /></>,
+  documents: <><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M10 12h5M10 16h5" /></>,
+}
 const TABS: { id: Tab; label: string }[] = [
   { id: 'dash', label: 'Cruscotto' },
   { id: 'services', label: 'Interventi' },
@@ -158,7 +164,7 @@ export const App = () => {
       {tab === 'dash' && (
         <>
           <div>
-            {next?.due && <ServiceArc key={`arc-${bike.id}-${km}`} progress={next.due.progress} label={next.label} />}
+            {next?.due && <ServiceArc key={`arc-${bike.id}-${km}`} due={next.due} label={next.label} />}
             <Odometer key={`${bike.id}-${km}`} value={km} from={prevKm ?? km - 120} />
           </div>
           {next?.due && <NextServiceCard label={next.label} due={next.due} />}
@@ -168,7 +174,10 @@ export const App = () => {
             <label htmlFor="km" className="text-sm text-dim">Km letti sul cruscotto</label>
             <div className="flex gap-2">
               <input id="km" name="km" required inputMode="numeric" pattern="[0-9]*" className={field} />
-              <button className={`shrink-0 ${primary}`}>+ Aggiorna km</button>
+              <button className={`flex shrink-0 items-center gap-1.5 animate-[pulse-once_1200ms_ease-out_1600ms] ${primary}`}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                Aggiorna km
+              </button>
             </div>
             {error && <p role="alert" className="text-sm text-red">{error}</p>}
           </form>
@@ -176,9 +185,10 @@ export const App = () => {
       )}
       {tab === 'services' && detail && <Services bike={bike} km={km} items={detail.items} services={detail.services} onChange={refresh} />}
       {tab === 'documents' && detail && <Documents bike={bike} documents={detail.documents} onChange={refresh} />}
-      <nav className="fixed inset-x-0 bottom-0 z-10 flex justify-around border-t border-rule bg-dash/95 pb-[max(14px,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+      <nav className="fixed inset-x-0 bottom-0 z-10 flex justify-around border-t border-rule bg-dash/95 pb-[max(14px,env(safe-area-inset-bottom))] pt-2 backdrop-blur">
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined} className={`px-3 py-1 font-gauge text-sm ${tab === t.id ? 'text-amber' : 'text-dim'}`}>
+          <button key={t.id} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined} className={`grid min-h-11 min-w-20 justify-items-center gap-1 px-3 text-xs transition-colors duration-[var(--duration-ui)] ${tab === t.id ? 'text-amber' : 'text-dim'}`}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{TAB_ICON[t.id]}</svg>
             {t.label}
           </button>
         ))}

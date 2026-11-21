@@ -40,3 +40,10 @@ export const localParts = (now: Date, tz: string) => {
   const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' }).format(now))
   return { date, hour }
 }
+
+// Il telefono mostra già "Revkeeper": il titolo è la scadenza, il testo la moto ("Kawasaki Z650: Catena scade tra 7 giorni")
+export const pushText = (lines: string[]) => {
+  if (lines.length !== 1) return { title: `${lines.length} scadenze in arrivo`, body: lines.join('\n') }
+  const i = lines[0]!.indexOf(': ')
+  return i < 0 ? { title: lines[0]!, body: '' } : { title: lines[0]!.slice(i + 2).replace(/^./, (c) => c.toUpperCase()), body: lines[0]!.slice(0, i) }
+}
