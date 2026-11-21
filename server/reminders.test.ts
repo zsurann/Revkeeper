@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { localParts, remindersFor, type Rec } from './reminders'
+import { localParts, pushText, remindersFor, type Rec } from './reminders'
 
 const bike = { id: 'b', updatedAt: 0, make: 'Kawasaki', model: 'Z650', year: 2017, startKm: 30000, startDate: '2026-01-01' }
 const recs = (today: string): Rec[] => [
@@ -21,4 +21,10 @@ it('avvisa a 7 giorni, a 30 giorni e per i km fermi da 30 giorni', () => {
 
 it("calcola data e ora locali nel fuso dell'utente", () => {
   expect(localParts(new Date('2026-11-20T23:30:00Z'), 'Europe/Rome')).toEqual({ date: '2026-11-21', hour: 0 })
+})
+
+it('testo della notifica: la scadenza nel titolo, la moto nel testo', () => {
+  expect(pushText(['Kawasaki Z650: Liquido freni scade tra 30 giorni'])).toEqual({ title: 'Liquido freni scade tra 30 giorni', body: 'Kawasaki Z650' })
+  expect(pushText(['Kawasaki Z650: aggiorna i km (23.418 km di 30 giorni fa)']).title).toBe('Aggiorna i km (23.418 km di 30 giorni fa)')
+  expect(pushText(['a', 'b'])).toEqual({ title: '2 scadenze in arrivo', body: 'a\nb' })
 })

@@ -15,3 +15,7 @@ body {
 }
 
 @keyframes arc { from { stroke-dashoffset: var(--arc-from); } }
+/* la lancetta parte da zero, supera il valore di 6° e torna giù */
+@keyframes needle { 0% { transform: rotate(-120deg); } 72% { transform: rotate(calc(var(--needle-to) + 6deg)); } 100% { transform: rotate(var(--needle-to)); } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes pulse-once { 0%, 100% { box-shadow: var(--shadow-fab), 0 0 0 0 rgb(255 181 71 / 0); } 50% { box-shadow: var(--shadow-fab), 0 0 0 7px rgb(255 181 71 / 0.22); } }

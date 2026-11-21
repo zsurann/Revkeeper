@@ -1,4 +1,4 @@
-import { localParts, remindersFor, type Rec } from '../server/reminders'
+import { localParts, pushText, remindersFor, type Rec } from '../server/reminders'
 import { sendPush, type PushEnv } from '../server/push'
 
 // Piano gratuito: 50 subrequest per esecuzione; ne teniamo margine
@@ -21,7 +21,7 @@ export const runReminders = async (env: PushEnv, now: Date) => {
     for (const sub of subs) {
       if (sent >= MAX_SENDS) return console.warn(`Limite di ${MAX_SENDS} invii raggiunto, altri utenti rimandati`)
       // Una sola notifica al giorno per dispositivo, con tutte le scadenze del giorno
-      await sendPush(env, sub, { title: lines.length === 1 ? 'Revkeeper' : `Revkeeper: ${lines.length} scadenze`, body: lines.join('\n') })
+      await sendPush(env, sub, pushText(lines))
       sent++
     }
   }

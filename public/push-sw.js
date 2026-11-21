@@ -6,7 +6,7 @@ self.addEventListener('push', (e) => {
   e.waitUntil(self.registration.showNotification(d.title || 'Revkeeper', {
     body: d.body || 'Hai una scadenza',
     icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    badge: '/icons/badge-96.png', // Android usa solo la trasparenza: sagoma bianca dell'arco
     tag: 'revkeeper-daily',
     data: { url: d.url || '/' },
   }))
