@@ -12,6 +12,7 @@ import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type Id, type Mainten
 import { Garage } from './Garage'
 import { Maintenance } from './Maintenance'
 import { Odometer } from './Odometer'
+import { Welcome } from './Welcome'
 import { dueShort, monthYear } from './format'
 import { Screen, field, ghost, primary } from './ui'
 
@@ -22,6 +23,13 @@ const readActive = () => {
 }
 const writeActive = (id: Id) => {
   try { localStorage.setItem(ACTIVE, id) } catch { /* preferenza per dispositivo, non critica */ }
+}
+const WELCOMED = 'revkeeper.welcomed'
+const readWelcomed = () => {
+  try { return localStorage.getItem(WELCOMED) === '1' } catch { return false }
+}
+const writeWelcomed = () => {
+  try { localStorage.setItem(WELCOMED, '1') } catch { /* al prossimo avvio senza moto si rivede il benvenuto */ }
 }
 const RANK: Record<Status, number> = { overdue: 0, warn: 1, ok: 2 }
 const DOC_LABEL = { assicurazione: 'Assicurazione', bollo: 'Bollo', revisione: 'Revisione' } as const
@@ -50,6 +58,7 @@ export const App = () => {
   const [prevKm, setPrevKm] = useState<number>()
   const [detail, setDetail] = useState<Detail>()
   const [error, setError] = useState('')
+  const [welcomed, setWelcomed] = useState(readWelcomed)
 
   const bike = bikes?.find((b) => b.id === activeId) ?? bikes?.[0]
   const km = bike ? (kms[bike.id] ?? bike.startKm) : 0
@@ -130,6 +139,17 @@ export const App = () => {
   }
 
   if (!bikes) return null
+  // Primo avvio senza moto: benvenuto (accesso, promemoria), poi la scheda della prima moto
+  if (!welcomed && bikes.length === 0)
+    return (
+      <Welcome
+        onDone={() => {
+          writeWelcomed()
+          setWelcomed(true)
+          void load()
+        }}
+      />
+    )
   if (!bike || view === 'new') return <BikeForm onDone={saved} onCancel={bike ? () => setView('garage') : undefined} />
   if (view === 'edit') return <BikeForm bike={bike} onDone={saved} onCancel={() => setView('home')} />
   if (view === 'account') return <Account onClose={() => setView('garage')} />

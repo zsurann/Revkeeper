@@ -2,12 +2,21 @@ import { useEffect, useState } from 'react'
 import { ghost, primary, field } from './ui'
 
 const key = () => Uint8Array.from(atob(import.meta.env.VITE_VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0))
-const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+export const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
 const post = async (path: string, body: unknown) => {
   const res = await fetch(`/api/push/${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
   const out = (await res.json().catch(() => ({}))) as { error?: string; sent?: number }
   if (!res.ok) throw new Error(out.error ?? `Errore ${res.status}`)
   return out
+}
+
+// Chiede il permesso (dentro il tocco dell'utente: obbligatorio su iOS), iscrive il dispositivo e salva l'ora sul server
+export const enablePush = async (hour: number) => {
+  if ((await Notification.requestPermission()) !== 'granted') throw new Error('Permesso negato: riattivalo dalle impostazioni del telefono')
+  const reg = await navigator.serviceWorker.ready
+  const s = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key() }))
+  await post('subscribe', { subscription: s.toJSON(), hour, tz: Intl.DateTimeFormat().resolvedOptions().timeZone })
+  return s
 }
 
 export const Notifications = () => {
@@ -16,10 +25,10 @@ export const Notifications = () => {
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
-    if (supported()) void navigator.serviceWorker.ready.then((r) => r.pushManager.getSubscription()).then(setSub)
+    if (pushSupported()) void navigator.serviceWorker.ready.then((r) => r.pushManager.getSubscription()).then(setSub)
   }, [])
 
-  if (!supported())
+  if (!pushSupported())
     return (
       <p className="m-0 text-sm text-dim">
         Questo browser non riceve notifiche. Su iPhone: Condividi → "Aggiungi alla schermata Home", poi apri Revkeeper da lì.
@@ -28,12 +37,7 @@ export const Notifications = () => {
 
   const enable = async () => {
     try {
-      // Il permesso va chiesto dentro il tocco dell'utente (obbligatorio su iOS)
-      if ((await Notification.requestPermission()) !== 'granted') return setMsg('Permesso negato: riattivalo dalle impostazioni del telefono')
-      const reg = await navigator.serviceWorker.ready
-      const s = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key() }))
-      await post('subscribe', { subscription: s.toJSON(), hour, tz: Intl.DateTimeFormat().resolvedOptions().timeZone })
-      setSub(s)
+      setSub(await enablePush(hour))
       setMsg(`Notifiche attive alle ${hour}:00`)
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Attivazione non riuscita')
