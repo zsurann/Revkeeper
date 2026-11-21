@@ -1,6 +1,10 @@
 import { expect, it } from 'vitest'
 import { baseName, buildCatalog, type Extra } from './catalogBuild'
-import catalog from '../data/catalog.json'
+import { readdirSync, readFileSync } from 'node:fs'
+
+const DIR = 'src/data/catalog'
+const index = JSON.parse(readFileSync(`${DIR}/_brands.json`, 'utf8')) as { brands: { name: string; slug: string }[] }
+const catalog = { brands: index.brands.map((b) => ({ name: b.name, models: JSON.parse(readFileSync(`${DIR}/b-${b.slug}.json`, 'utf8')) as { name: string; from: number; to: number | null }[] })) }
 
 it('toglie gli allestimenti che non cambiano la scheda', () => {
   expect(baseName('Z650 ABS')).toBe('Z650')
@@ -35,5 +39,8 @@ it('il catalogo generato è valido: niente marche doppie, anni sensati, la Z650 
     }
   const z = catalog.brands.find((b) => b.name === 'Kawasaki')?.models.find((m) => m.name === 'Z650')
   expect(z?.from).toBeLessThanOrEqual(2017)
-  expect(JSON.stringify(catalog).length).toBeLessThan(400_000)
+  // ogni marca è un file: l'indice resta piccolo e nessun file di marca è enorme
+  expect(readFileSync(`${DIR}/_brands.json`, 'utf8').length).toBeLessThan(20_000)
+  for (const f of readdirSync(DIR)) expect(readFileSync(`${DIR}/${f}`, 'utf8').length).toBeLessThan(150_000)
+  expect(new Set(index.brands.map((b) => b.slug)).size).toBe(index.brands.length)
 })

@@ -1,0 +1,97 @@
+// Moto dai registri europei (Traficom FI, DGT ES): normalizzazione dei nomi e raggruppamento per modello.
+// Usato da scripts/import-eu.ts; regole da issues/research/301-open-data.md.
+export type RegRow = { src: 'traficom' | 'dgt'; make: string; name: string; year: number; cc: number; kw: number; kg: number }
+export type EuModel = { make: string; model: string; key: string; from: number; to: number; cc: number; kw: number; kg?: number; n: number; sources: string[] }
+
+const SUFFIX = /\s*(\(X\)|ABS|A2|\d+\s?KW|E5\+?|E4|SE|TFT|CBS|(?<=\d) I)$/i
+// Lettere di allestimento Honda/Yamaha dopo il numero: SH125AD → SH125, WW125A → WW125
+const TRIM_AFTER_DIGIT = /(\d)(AD|A|D|I|IE)$/i
+
+export const normModel = (raw: string, make: string) => {
+  let n = raw.toUpperCase().split(',').map((s) => s.trim()).filter(Boolean).sort((a, b) => a.length - b.length)[0] ?? ''
+  n = n.replace(/\s+/g, ' ')
+  // "MTN690-A (MT-07)": il nome commerciale è tra parentesi, il resto è il codice di omologazione
+  const inner = /\(([^)]{3,})\)$/.exec(n)?.[1]
+  if (inner && /[A-Z]/.test(inner)) n = inner.trim()
+  if (n.startsWith(make.toUpperCase() + ' ')) n = n.slice(make.length + 1)
+  // "SH 125 I" → "SH125 I": unisce sigla e numero, poi i suffissi vengono tolti sotto
+  n = n.replace(/\b([A-Z]{1,4}) (\d{2,4})\b/g, '$1$2')
+  for (let prev = ''; prev !== n; ) {
+    prev = n
+    n = n.replace(SUFFIX, '').trim().replace(TRIM_AFTER_DIGIT, '$1')
+  }
+  return n
+}
+export const modelKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+// "VESPA GTS" → "Vespa GTS"; parole con cifre o sigle corte restano maiuscole
+export const display = (s: string) =>
+  s
+    .split(' ')
+    .map((w) => (/\d/.test(w) || w.length <= 3 ? w : w[0] + w.slice(1).toLowerCase()))
+    .join(' ')
+
+const median = (xs: number[]) => {
+  const s = xs.filter((x) => x > 0).sort((a, b) => a - b)
+  return s.length ? s[Math.floor(s.length / 2)]! : 0
+}
+
+// Potenza piena: la più alta tra i valori frequenti (≥10%), così le versioni A2 da 35 kW non la abbassano
+const fullPower = (kws: number[]) => {
+  const xs = kws.filter((x) => x > 0)
+  const count = new Map<number, number>()
+  for (const x of xs) count.set(x, (count.get(x) ?? 0) + 1)
+  const common = [...count.entries()].filter(([, c]) => c >= xs.length * 0.1).map(([k]) => k)
+  return common.length ? Math.max(...common) : median(xs)
+}
+
+export const groupModels = (rows: RegRow[], minVehicles = 5): EuModel[] => {
+  const groups = new Map<string, RegRow[]>()
+  for (const r of rows) {
+    if (!r.name || !r.make || r.cc <= 0) continue
+    const model = normModel(r.name, r.make)
+    if (!model) continue
+    // stesso nome con cilindrata molto diversa = modelli diversi (Z650 1977 ≠ 2017, Vespa GTS 125 ≠ 300)
+    const k = `${r.make}|${modelKey(model)}|${Math.round(r.cc / 25)}`
+    const g = groups.get(k) ?? []
+    g.push({ ...r, name: model })
+    groups.set(k, g)
+  }
+  // Un buco di più di 5 anni separa due modelli con lo stesso nome (Z650 1977–1983 e dal 2017)
+  const split: RegRow[][] = []
+  for (const g of groups.values()) {
+    const sorted = [...g].sort((a, b) => a.year - b.year)
+    let cur: RegRow[] = []
+    for (const r of sorted) {
+      if (cur.length && r.year - cur.at(-1)!.year > 5) split.push(cur), (cur = [])
+      cur.push(r)
+    }
+    split.push(cur)
+  }
+  const out: EuModel[] = []
+  for (const g of split) {
+    if (g.length < minVehicles) continue
+    const names = new Map<string, number>()
+    for (const r of g) names.set(r.name, (names.get(r.name) ?? 0) + 1)
+    const model = [...names.entries()].sort((a, b) => b[1] - a[1])[0]![0]
+    const years = g.map((r) => r.year).filter((y) => y > 1950).sort((a, b) => a - b)
+    if (years.length === 0) continue
+    // anni robusti: si scartano le code (1% di immatricolazioni tardive o dati sbagliati)
+    const lo = years[Math.floor(years.length * 0.01)] ?? years[0]!
+    const hi = years[Math.ceil(years.length * 0.99) - 1] ?? years.at(-1)!
+    const kg = median(g.map((r) => r.kg))
+    out.push({
+      make: g[0]!.make,
+      model: display(model),
+      key: modelKey(model),
+      from: lo,
+      to: hi,
+      cc: median(g.map((r) => r.cc)),
+      kw: fullPower(g.map((r) => r.kw)),
+      ...(kg && { kg }),
+      n: g.length,
+      sources: [...new Set(g.map((r) => r.src))].sort(),
+    })
+  }
+  return out.sort((a, b) => a.make.localeCompare(b.make) || a.model.localeCompare(b.model) || a.from - b.from)
+}

@@ -1,8 +1,8 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { save } from './db'
 import { Combobox } from './Combobox'
 import { bikeFromForm } from './domain/bikeForm'
-import { brands, modelsOf, specsOf, yearsOf } from './domain/catalog'
+import { brands, loadBrand, modelsOf, specsOf, yearsOf } from './domain/catalog'
 import type { Spec } from './domain/catalogBuild'
 import { BRAKE_FLUIDS, OIL_GRADES, OIL_TYPES, TYRES } from './domain/parts'
 import type { Bike } from './domain/types'
@@ -66,6 +66,13 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
   const [model, setModel] = useState(bike?.model ?? '')
   const [prefill, setPrefill] = useState<Spec>()
   const [rev, setRev] = useState(0)
+  // I modelli di una marca si scaricano alla scelta; `ready` ridisegna i menu quando arrivano
+  const [ready, setReady] = useState('')
+  useEffect(() => {
+    let live = true
+    void loadBrand(make).then(() => live && setReady(make))
+    return () => { live = false }
+  }, [make])
   const applySpecs = (mk: string, md: string, yr?: string) => {
     const s = specsOf(mk, md, yr ? Number(yr) : undefined)
     if (!s) return
@@ -99,12 +106,12 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
               onPick={(v) => { if (v !== make) { setMake(v); setModel('') } }} />
           </Field>
           <Field label="Modello">
-            <Combobox key={`model-${make}`} id="model" name="model" required options={modelsOf(make)} defaultValue={model}
+            <Combobox key={`model-${make}-${ready === make}`} id="model" name="model" required options={modelsOf(make)} defaultValue={model}
               disabled={!make} placeholder={make ? 'Modello' : 'Scegli prima la marca'}
               onPick={(v) => { setModel(v); applySpecs(make, v) }} />
           </Field>
           <Field label="Anno">
-            <Combobox key={`year-${make}-${model}`} id="year" name="year" required options={opts(yearsOf(make, model))}
+            <Combobox key={`year-${make}-${model}-${ready === make}`} id="year" name="year" required options={opts(yearsOf(make, model))}
               defaultValue={bike && bike.make === make && bike.model === model ? String(bike.year) : ''}
               disabled={!model} placeholder={model ? 'Anno' : 'Scegli prima il modello'}
               onPick={(v) => applySpecs(make, model, v)} />
@@ -144,7 +151,11 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
           <Txt name="sparkPlug" label="Candele" value={fl?.sparkPlug} />
         </Group>
         <Group key={`specs-${rev}`} title="Dati tecnici" open={!!(sp || p)}>
-          {p && <p className="col-span-2 m-0 text-xs text-dim">Compilati dalla scheda ufficiale: puoi modificarli.</p>}
+          {p && (
+            <p className="col-span-2 m-0 text-xs text-dim">
+              Compilati da {p.source.startsWith('http') ? 'scheda ufficiale' : p.source.replace('Dati di immatricolazione: ', 'dati di immatricolazione ')}: puoi modificarli.
+            </p>
+          )}
           <Num name="cc" label="Cilindrata (cc)" value={p?.cc ?? sp?.cc} />
           <Num name="hp" label="Potenza (CV)" value={p?.hp ?? sp?.hp} />
           <Num name="kg" label="Peso (kg)" value={p?.kg ?? sp?.kg} />
