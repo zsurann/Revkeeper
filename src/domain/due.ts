@@ -76,7 +76,14 @@ export const nextDue = (
   const estimatedDate =
     kmLeft !== undefined && rate !== undefined && rate > 0 ? addDays(today, Math.max(0, Math.ceil(kmLeft / rate))) : undefined
   const effectiveDate = minDate(dueDate, estimatedDate)
-  return { dueKm, kmLeft, dueDate, estimatedDate, effectiveDate, progress, status: statusOf(kmLeft, effectiveDate, today, t) }
+  // Avviso al massimo al 20% finale dell'intervallo: con soglie fisse (500 km, 30 giorni) una voce corta come la
+  // lubrificazione della catena ogni 600 km tornerebbe "in scadenza" subito dopo averla fatta
+  const toDue = effectiveDate ? daysBetween(base.date, effectiveDate) : 0
+  const near: Thresholds = {
+    warnKm: kmInterval ? Math.min(t.warnKm, kmInterval * 0.2) : t.warnKm,
+    warnDays: toDue > 0 ? Math.min(t.warnDays, toDue * 0.2) : t.warnDays,
+  }
+  return { dueKm, kmLeft, dueDate, estimatedDate, effectiveDate, progress, status: statusOf(kmLeft, effectiveDate, today, near) }
 }
 
 export const documentStatus = (doc: BikeDocument, today: IsoDate, t: Thresholds): Status =>
