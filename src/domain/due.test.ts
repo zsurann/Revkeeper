@@ -50,6 +50,14 @@ describe('nextDue', () => {
     expect(d.effectiveDate).toBe('2026-12-30')
     expect(d.status).toBe('ok')
   })
+  it('voce corta (catena ogni 600 km): appena fatta torna ok anche viaggiando tanto, ambra solo nel 20% finale', () => {
+    const chain: MaintenanceItem = { ...oil, id: 'chain', item: 'chain', km: 600, months: undefined, firstKm: undefined }
+    const done = { ...svc('2026-11-20', 23900), itemIds: ['chain'] }
+    // 30 km al giorno: la stima cade fra 20 giorni, dentro i 30 della soglia fissa
+    const readings = [read('2026-11-10', 23600), read('2026-11-20', 23900)]
+    expect(nextDue(chain, bike, [done], readings, '2026-11-20', T).status).toBe('ok')
+    expect(nextDue(chain, bike, [done], [...readings, read('2026-11-30', 24400)], '2026-11-30', T).status).toBe('warn')
+  })
   it('scaduta quando la data è superata', () => {
     const d = nextDue(oil, bike, [svc('2025-01-01', 14000)], [read('2025-02-01', 15000)], '2026-02-01', T)
     expect(d.status).toBe('overdue')
