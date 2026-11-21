@@ -1,17 +1,26 @@
-import data from '../data/catalog.json'
-import type { Catalog, Spec } from './catalogBuild'
+import index from '../data/catalog/_brands.json'
+import type { CatalogModel, Spec } from './catalogBuild'
 
-const CAT = data as Catalog
+// Ogni marca è un file a parte, caricato quando serve (Vite lo rende un chunk; il service worker lo tiene offline)
+const files = import.meta.glob<CatalogModel[]>('../data/catalog/b-*.json', { import: 'default' })
+const loaded = new Map<string, CatalogModel[]>()
 const key = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '')
 const thisYear = () => new Date().getFullYear()
 
-export const brands = () => CAT.brands.map((b) => b.name)
-const brand = (make: string) => CAT.brands.find((b) => key(b.name) === key(make))
-const model = (make: string, name: string) =>
-  brand(make)?.models.find((m) => key(m.name) === key(name) || m.aliases?.some((a) => key(a) === key(name)))
+export const brands = () => index.brands.map((b) => b.name)
+const entry = (make: string) => index.brands.find((b) => key(b.name) === key(make))
 
-export const modelsOf = (make: string) =>
-  (brand(make)?.models ?? []).map((m) => ({ label: m.name, hint: `${m.from}–${m.to ?? 'oggi'}`, aliases: m.aliases }))
+export const loadBrand = async (make: string) => {
+  const b = entry(make)
+  if (!b || loaded.has(b.slug)) return
+  const load = files[`../data/catalog/b-${b.slug}.json`]
+  if (load) loaded.set(b.slug, await load())
+}
+const modelsFor = (make: string) => loaded.get(entry(make)?.slug ?? '') ?? []
+const model = (make: string, name: string) =>
+  modelsFor(make).find((m) => key(m.name) === key(name) || m.aliases?.some((a) => key(a) === key(name)))
+
+export const modelsOf = (make: string) => modelsFor(make).map((m) => ({ label: m.name, hint: `${m.from}–${m.to ?? 'oggi'}`, aliases: m.aliases }))
 
 // Anni dal più recente; senza modello nel catalogo, tutti gli anni dal 1970
 export const yearsOf = (make: string, name: string) => {

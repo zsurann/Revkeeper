@@ -27,7 +27,14 @@ export default defineConfig({
       workbox: {
         navigateFallbackDenylist: [/^\/api\//],
         importScripts: ['push-sw.js'],
+        // I modelli di ogni marca non si scaricano all'installazione: solo quando la marca viene scelta
+        globIgnores: ['**/b-*.js'],
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => /\/assets\/b-[^/]+\.js$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'catalogo', expiration: { maxEntries: 200 } },
+          },
           {
             urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com',
             handler: 'CacheFirst',

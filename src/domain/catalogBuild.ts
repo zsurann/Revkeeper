@@ -24,6 +24,8 @@ const DENY = /\b(ATV|UTV|SxS|Quad|Brute Force|Mule|Teryx\w*|KFX\w*|Bayou|Prairie
 // Allestimenti che non cambiano i dati tecnici della scheda: si uniscono al modello base
 const TRIM = /\s+(non[- ]?abs|abs|se|krt( edition)?|special edition|limited( edition)?|\d+(th|st|nd|rd) anniversary( edition)?|anniversary( edition)?|edition|cbs)$/i
 
+export const brandSlug = (name: string) => name.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
 export const baseName = (raw: string) => {
   let n = raw.trim().replace(/\s+/g, ' ')
   for (let prev = ''; prev !== n; ) {

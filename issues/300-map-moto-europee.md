@@ -18,6 +18,8 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 
 ## Decisions so far
 
+- [Catalogo diviso per marca nell'app](306-catalogo-diviso-per-marca-nellapp.md): un chunk per marca caricato alla scelta e tenuto offline; bundle principale da 711 a 305 KB.
+
 - [Importare Traficom e DGT nel catalogo](305-importare-traficom-e-dgt-nel-catalogo.md): 3.758 modelli di 121 marche con dati tecnici dai registri; le specifiche ufficiali restano prioritarie; nomi normalizzati e testati.
 
 - [Scelta delle fonti e della pipeline](303-scelta-pipeline.md): Traficom + DGT subito, ASTRA dopo la conferma della licenza; un file per marca nell'app; libretti semi-automatici a tornate; aggiornamento ogni 3 mesi con PR.

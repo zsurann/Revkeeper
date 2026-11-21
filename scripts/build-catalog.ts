@@ -1,8 +1,8 @@
-// Genera src/data/catalog.json da vPIC (NHTSA) + data/catalog-extra.json. Da rilanciare una volta l'anno:
+// Genera src/data/catalog/ (un file per marca + _brands.json) da vPIC (NHTSA) + data/catalog-extra.json. Da rilanciare una volta l'anno:
 //   node scripts/build-catalog.ts            scarica da vPIC (circa 6 minuti) e salva la copia in .cache/
 //   node scripts/build-catalog.ts --offline  riusa la copia, per applicare solo modifiche a catalog-extra.json
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { buildCatalog, type Extra, type Raw } from '../src/domain/catalogBuild.ts'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { brandSlug, buildCatalog, type Extra, type Raw } from '../src/domain/catalogBuild.ts'
 import type { EuModel } from '../src/domain/euImport.ts'
 
 // Marca mostrata nell'app → nomi usati da vPIC (alcune marche compaiono con più nomi)
@@ -51,6 +51,11 @@ const extra = JSON.parse(readFileSync('data/catalog-extra.json', 'utf8')) as Ext
 // Modelli dai registri europei (scripts/import-eu.ts): aggiunti prima delle aggiunte manuali, che vincono
 const eu = existsSync('data/eu-models.json') ? (JSON.parse(readFileSync('data/eu-models.json', 'utf8')) as EuModel[]) : []
 const catalog = buildCatalog(raw, extra, NOW, new Date().toISOString().slice(0, 10), eu)
-writeFileSync('src/data/catalog.json', JSON.stringify(catalog) + '\n')
+// Un file per marca: l'app scarica solo la marca scelta (chunk separati di Vite, in cache offline)
+const OUT = 'src/data/catalog'
+rmSync(OUT, { recursive: true, force: true })
+mkdirSync(OUT, { recursive: true })
+writeFileSync(`${OUT}/_brands.json`, JSON.stringify({ generatedAt: catalog.generatedAt, brands: catalog.brands.map((b) => ({ name: b.name, slug: brandSlug(b.name) })) }) + '\n')
+for (const b of catalog.brands) writeFileSync(`${OUT}/b-${brandSlug(b.name)}.json`, JSON.stringify(b.models) + '\n')
 if (skipped.length) console.error(`\nSaltati (vPIC non ha risposto): ${skipped.join(', ')}`)
 console.error(`\n${catalog.brands.length} marche, ${catalog.brands.reduce((s, b) => s + b.models.length, 0)} modelli`)
