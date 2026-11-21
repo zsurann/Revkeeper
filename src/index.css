@@ -19,3 +19,14 @@ body {
 @keyframes needle { 0% { transform: rotate(-120deg); } 72% { transform: rotate(calc(var(--needle-to) + 6deg)); } 100% { transform: rotate(var(--needle-to)); } }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
 @keyframes pulse-once { 0%, 100% { box-shadow: var(--shadow-fab), 0 0 0 0 rgb(255 181 71 / 0); } 50% { box-shadow: var(--shadow-fab), 0 0 0 7px rgb(255 181 71 / 0.22); } }
+
+/* Installazione e benvenuto */
+@keyframes pop { from { opacity: 0; transform: scale(0.85); } }
+@keyframes draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(8px); } }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
+@keyframes tap { 0% { transform: scale(0.4); opacity: 0; } 25% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes slide-in { from { opacity: 0; transform: translateX(28px); } }
+@keyframes drop { from { opacity: 0; transform: translateY(-22px) scale(0.96); } }
+@keyframes ring { 0%, 60%, 100% { transform: rotate(0); } 66% { transform: rotate(14deg); } 72% { transform: rotate(-12deg); } 78% { transform: rotate(8deg); } 84% { transform: rotate(0); } }
+@keyframes trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }

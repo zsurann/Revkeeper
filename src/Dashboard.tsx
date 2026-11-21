@@ -5,43 +5,49 @@ import { dueRule, dueShort, monthYear, statusColor, statusText } from './format'
 const LEN = 502.65 // lunghezza dell'arco SVG da 240° con raggio 120
 const ARC = 'M 46.1 220 A 120 120 0 1 1 253.9 220'
 
-// Strumento a lancetta: arco che si riempie e lancetta che sale, supera di poco il valore e si assesta
+// Quadrante a lancetta: arco che si riempie e lancetta corta che sale, supera di poco il valore e si assesta.
+// Usato dal cruscotto, dalla pagina di installazione e dal benvenuto.
+export const Dial = ({ progress, color = 'var(--color-amber)', label, className = '' }: { progress: number; color?: string; label?: string; className?: string }) => {
+  const p = Math.min(1, Math.max(0, progress))
+  return (
+    <svg viewBox="0 0 300 236" className={className} {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}>
+      <defs>
+        <filter id="arc-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3.2" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+      <path d={ARC} fill="none" stroke="var(--color-well)" strokeWidth="16" strokeLinecap="round" />
+      <path d="M 59.9 212 A 104 104 0 1 1 240.1 212" fill="none" stroke="#3a4454" strokeWidth="5" strokeDasharray="1.5 34.8" />
+      <path
+        d={ARC}
+        fill="none"
+        stroke={color}
+        strokeWidth="10"
+        strokeLinecap="round"
+        strokeDasharray={LEN}
+        strokeDashoffset={LEN * (1 - p)}
+        filter="url(#arc-glow)"
+        className="animate-[arc_var(--duration-roll)_var(--ease-needle)]"
+        style={{ ['--arc-from' as string]: LEN }}
+      />
+      <g
+        className="animate-[needle_var(--duration-roll)_var(--ease-needle)] [transform-box:view-box] [transform-origin:150px_160px]"
+        style={{ transform: `rotate(${-120 + 240 * p}deg)`, ['--needle-to' as string]: `${-120 + 240 * p}deg` }}
+      >
+        {/* lancetta corta vicino all'arco, come sui cruscotti TFT: il centro resta libero per il numero */}
+        <path d="M146.6 84 L150 52 L153.4 84 Z" fill={color} filter="url(#arc-glow)" />
+      </g>
+    </svg>
+  )
+}
+
 export const ServiceArc = ({ due, label }: { due: Due; label: string }) => {
-  const p = Math.min(1, Math.max(0, due.progress))
   const over = due.status === 'overdue'
-  const color = over ? 'var(--color-red)' : 'var(--color-amber)'
   const big = due.kmLeft !== undefined ? `${Math.abs(due.kmLeft).toLocaleString('it-IT')} km` : due.dueDate ? monthYear(due.dueDate) : ''
   return (
     <section className="relative mx-auto w-full max-w-[340px]" aria-label="Prossima manutenzione">
-      <svg viewBox="0 0 300 236" className="w-full" role="img" aria-label={`${label}: ${Math.round(due.progress * 100)}% dell'intervallo`}>
-        <defs>
-          <filter id="arc-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3.2" result="b" />
-            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
-        <path d={ARC} fill="none" stroke="var(--color-well)" strokeWidth="16" strokeLinecap="round" />
-        <path d="M 59.9 212 A 104 104 0 1 1 240.1 212" fill="none" stroke="#3a4454" strokeWidth="5" strokeDasharray="1.5 34.8" />
-        <path
-          d={ARC}
-          fill="none"
-          stroke={color}
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={LEN}
-          strokeDashoffset={LEN * (1 - p)}
-          filter="url(#arc-glow)"
-          className="animate-[arc_var(--duration-roll)_var(--ease-needle)]"
-          style={{ ['--arc-from' as string]: LEN }}
-        />
-        <g
-          className="animate-[needle_var(--duration-roll)_var(--ease-needle)] [transform-box:view-box] [transform-origin:150px_160px]"
-          style={{ transform: `rotate(${-120 + 240 * p}deg)`, ['--needle-to' as string]: `${-120 + 240 * p}deg` }}
-        >
-          {/* lancetta corta vicino all'arco, come sui cruscotti TFT: il centro resta libero per il numero */}
-          <path d="M146.6 84 L150 52 L153.4 84 Z" fill={color} filter="url(#arc-glow)" />
-        </g>
-      </svg>
+      <Dial progress={due.progress} color={over ? 'var(--color-red)' : undefined} label={`${label}: ${Math.round(due.progress * 100)}% dell'intervallo`} className="w-full" />
       <div className="pointer-events-none absolute inset-x-0 top-[44%] grid justify-items-center animate-[rise_600ms_var(--ease-needle)_400ms_both]">
         <span className={`font-gauge text-[44px] font-semibold leading-none ${over ? 'text-red' : ''}`}>{big}</span>
         <span className="text-sm text-dim">{over ? `${label}, scaduta` : label}</span>

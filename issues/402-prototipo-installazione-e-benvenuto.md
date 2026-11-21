@@ -2,7 +2,7 @@
 id: 402
 title: "Prototipo: pagina di installazione e benvenuto"
 labels: [wayfinder:prototype]
-status: open
+status: closed
 assignee: claude
 blocked_by: [401]
 ---
@@ -16,4 +16,7 @@ Come appaiono e come si muovono, nello stile Cruscotto: la pagina di installazio
 Sul canvas di design, riga "Installazione e benvenuto, stile Cruscotto": https://claude.ai/artifact/BjU9qKG3CPBTxmqRQPQYYK (privato dell'utente).
 Quattro schermate: Android (interattiva: Scarica app → finestra di Chrome simulata → Installata), iPhone con Safari (quattro passi animati in sequenza), browser dentro un'app (interattiva: Copia link), Benvenuto (interattivo: Google → notifiche → prima moto).
 
-Stato: in attesa del parere dell'utente.
+
+## Risoluzione
+
+Approvato dall'utente così com'è ("va bene vai"). Unico ritocco in costruzione: il disegno della moto nel benvenuto, che sembrava una bicicletta, ora è una naked con serbatoio e forcella.

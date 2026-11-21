@@ -2,7 +2,7 @@
 id: 400
 title: "Mappa: Revkeeper solo come app installata"
 labels: [wayfinder:map]
-status: open
+status: closed
 ---
 
 ## Destination
@@ -18,6 +18,9 @@ Sul telefono Revkeeper si usa solo dalla schermata Home: il sito mostra una pagi
 
 ## Decisions so far
 
+- [Prototipo: pagina di installazione e benvenuto](402-prototipo-installazione-e-benvenuto.md): approvato così com'è sul canvas di design.
+- [Costruire la pagina di installazione e il blocco sui telefoni](403-costruire-la-pagina-di-installazione.md): blocco in `main.tsx`, pagina `Install` per Android/iPhone/browser interni, via d'uscita `?browser=1`, E2E su 6 casi.
+- [Costruire il benvenuto al primo avvio](404-costruire-il-benvenuto.md): Google o più tardi, promemoria solo dopo l'accesso, poi la prima moto; `GoogleButton` e `Dial` condivisi.
 - [Come riconoscere browser e app installata, e come installare su ogni telefono](401-come-riconoscere-e-installare.md): standalone + UA per il telefono (iPad = computer); Android popup con riserva manuale sempre presente; iPhone istruzioni per browser, Safari solo dai browser interni con "Copia link"; "già installata" rilevabile solo su Android.
 
 - Grilling iniziale: computer = sito normale; iPhone = istruzioni per browser, Safari solo se il browser non può; niente migrazione dati; benvenuto = accesso, notifiche, prima moto.
