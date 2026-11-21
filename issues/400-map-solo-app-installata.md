@@ -18,12 +18,13 @@ Sul telefono Revkeeper si usa solo dalla schermata Home: il sito mostra una pagi
 
 ## Decisions so far
 
+- [Come riconoscere browser e app installata, e come installare su ogni telefono](401-come-riconoscere-e-installare.md): standalone + UA per il telefono (iPad = computer); Android popup con riserva manuale sempre presente; iPhone istruzioni per browser, Safari solo dai browser interni con "Copia link"; "già installata" rilevabile solo su Android.
+
 - Grilling iniziale: computer = sito normale; iPhone = istruzioni per browser, Safari solo se il browser non può; niente migrazione dati; benvenuto = accesso, notifiche, prima moto.
 
 ## Not yet specified
 
-- Cosa vede chi ha già installato l'app e riapre il sito nel browser ("Apri l'app"? si può sapere da browser che è installata?).
-- Android quando il popup non arriva (rifiutato di recente, browser senza supporto, criteri non rispettati): istruzioni di riserva per browser.
+- Firefox/Edge/Opera Android creano una scorciatoia che si apre come scheda: va accettata come "installata" o servono le istruzioni per Chrome? Da provare su telefono.
 - Come tenere aggiornate le istruzioni iPhone quando Apple cambia le voci del menu Condividi.
 
 ## Out of scope
