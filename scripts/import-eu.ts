@@ -1,10 +1,11 @@
 // Importa le moto dai registri aperti europei e scrive data/eu-models.json, poi lo usa build-catalog.ts.
 //   node scripts/import-eu.ts
-// Fonti: Traficom (Finlandia, CC BY 4.0) e DGT (Spagna, microdati mensili, riuso citando la fonte).
+// Fonti: Traficom (Finlandia, CC BY 4.0), DGT (Spagna, microdati mensili, riuso citando la fonte)
+// e ASTRA (Svizzera, omologazioni di tipo, open data gratuito): da ASTRA si prendono soprattutto le gomme.
 // I file scaricati restano in .cache/ (fuori dal repo).
 import { execSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { display, groupModels, type RegRow } from '../src/domain/euImport.ts'
+import { display, groupModels, modelKey, modelYear, normModel, parseCsv, parseTyres, type RegRow } from '../src/domain/euImport.ts'
 
 const CACHE = '.cache'
 mkdirSync(CACHE, { recursive: true })
@@ -17,7 +18,7 @@ const fetchTo = (url: string, file: string) => {
 const BRAND_ALIAS: Record<string, string> = {
   BMW: 'BMW', KTM: 'KTM', SYM: 'SYM', SANYANG: 'SYM', CFMOTO: 'CFMoto', 'CF MOTO': 'CFMoto', NIU: 'NIU', SWM: 'SWM', MASH: 'Mash',
   'HARLEY DAVIDSON': 'Harley-Davidson', 'HARLEY-DAVIDSON': 'Harley-Davidson', 'MV AGUSTA': 'MV Agusta', 'MV-AGUSTA': 'MV Agusta',
-  'MOTO GUZZI': 'Moto Guzzi', GUZZI: 'Moto Guzzi', 'MOTO MORINI': 'Moto Morini', 'ROYAL ENFIELD': 'Royal Enfield', GASGAS: 'GasGas', 'GAS GAS': 'GasGas',
+  'MOTO GUZZI': 'Moto Guzzi', GUZZI: 'Moto Guzzi', 'MOTO MORINI': 'Moto Morini', 'ROYAL ENFIELD': 'Royal Enfield', 'ROYAL-ENFIELD': 'Royal Enfield', 'FANTIC MOTOR': 'Fantic', GASGAS: 'GasGas', 'GAS GAS': 'GasGas',
   'INDIAN MOTORCYCLE': 'Indian', ZERO: 'Zero Motorcycles', 'ZERO MOTORCYCLES': 'Zero Motorcycles', 'JAWA-CZ': 'Jawa',
 }
 const brand = (raw: string) => {
@@ -29,9 +30,9 @@ const splitVespa = (make: string, name: string) =>
   make === 'Piaggio' && /^VESPA\s/i.test(name) ? { make: 'Vespa', name: name.replace(/^VESPA\s+/i, '') } : { make, name }
 
 const rows: RegRow[] = []
-const push = (src: RegRow['src'], rawMake: string, name: string, year: number, cc: number, kw: number, kg: number) => {
+const push = (src: RegRow['src'], rawMake: string, name: string, year: number, cc: number, kw: number, kg: number, tyres?: { front?: string; rear?: string }) => {
   const v = splitVespa(brand(rawMake), name.trim())
-  rows.push({ src, make: v.make, name: v.name, year, cc, kw, kg })
+  rows.push({ src, make: v.make, name: v.name, year, cc, kw, kg, tyreFront: tyres?.front, tyreRear: tyres?.rear })
 }
 
 // Traficom: un CSV da ~1 GB dentro lo zip, letto in streaming; solo classi L1/L3 (moto e ciclomotori a due ruote)
@@ -60,13 +61,32 @@ for (let i = 1; i <= 12; i++) {
   }
 }
 
+// ASTRA: una riga per omologazione. Solo moto e ciclomotori a due ruote (L1e/L3e; le vecchie senza codice sono moto).
+// Il "peso a vuoto" svizzero include il conducente (75 kg): si lascia il peso a Traficom e DGT.
+const ASTRA = `${CACHE}/astra.csv`
+if (fetchTo('https://opendata.astra.admin.ch/ivzod/4000-Typengenehmigungen_TAS/4300-Datensaetze/TAS_Motorrad.csv', ASTRA)) {
+  const [head, ...data] = parseCsv(readFileSync(ASTRA, 'utf8').replace(/^\uFEFF/, ''))
+  const col = Object.fromEntries(head!.map((h, i) => [h, i]))
+  for (const r of data) {
+    const get = (k: string) => (r[col[k]!] ?? '').trim()
+    if (!/^(L1|L3|$)/.test(get('vehicleCategoryCode')) || get('cancelationDate')) continue
+    const kw = Number(get('maximumNetPower').replace(',', '.'))
+    // "CABALLERO500?", "X?F125 ?": caratteri persi nella codifica del file
+    push('astra', get('makeName'), get('commercialName').replace(/\?/g, ' '), modelYear(get('dateOfApproval')), Number(get('engineCapacity')), kw, 0, parseTyres(get('chTyreRims')))
+  }
+}
+
 // Marche con almeno 50 veicoli: le altre sono importatori minori o errori di battitura
 const perBrand = new Map<string, number>()
 for (const r of rows) perBrand.set(r.make, (perBrand.get(r.make) ?? 0) + 1)
-// DGT mescola alle moto le auto a 2 posti (Smart, Alpine, Z4…)
+// DGT mescola alle moto le auto a 2 posti (Smart, Alpine, Z4, furgoni Renault…)
+const motoModels = new Set(rows.filter((r) => r.src !== 'dgt').map((r) => `${r.make}|${modelKey(normModel(r.name, r.make))}`))
 const motoBrands = new Set(rows.filter((r) => r.src === 'traficom').map((r) => r.make))
-// con la massa si decide da quella (≤ 400 kg); senza, vale solo per marche già note come moto
-const isMoto = (r: RegRow) => r.src === 'traficom' || (r.kg > 0 ? r.kg <= 400 : motoBrands.has(r.make) && r.kw <= 150)
+// con la massa si decide da quella (≤ 400 kg); senza, serve un modello già noto come moto in Traficom o ASTRA,
+// oppure una marca di moto e meno di 1900 cc (le moto più grandi sono tutte già note; le auto lì sotto no)
+const isMoto = (r: RegRow) =>
+  r.src !== 'dgt' ||
+  (r.kg > 0 ? r.kg <= 400 : motoModels.has(`${r.make}|${modelKey(normModel(r.name, r.make))}`) || (motoBrands.has(r.make) && r.cc < 1900 && r.kw <= 150))
 // Nomi che sono codici di omologazione ("50 ET4-C26100/50") o vuoti ("---")
 const goodName = (n: string) => /[A-Za-z0-9]/.test(n) && !n.includes('/')
 const models = groupModels(

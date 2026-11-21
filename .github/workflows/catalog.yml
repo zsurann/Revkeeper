@@ -1,4 +1,4 @@
-# Ogni 3 mesi rigenera il catalogo moto (vPIC, Traficom, DGT) e apre una PR da approvare.
+# Ogni 3 mesi rigenera il catalogo moto (vPIC, Traficom, DGT, ASTRA) e apre una PR da approvare.
 # Si può lanciare anche a mano da GitHub → Actions → "Aggiorna catalogo" → Run workflow.
 name: Aggiorna catalogo
 on:
@@ -35,4 +35,4 @@ jobs:
           git commit -m "Aggiorna catalogo $(date +%Y-%m)"
           git push -u origin "$B"
           gh pr create --base main --head "$B" --title "Aggiorna catalogo $(date +%Y-%m)" \
-            --body "Rigenerato automaticamente da vPIC, Traficom e DGT. Controlla il diff (modelli nuovi o spariti) prima di unire."
+            --body "Rigenerato automaticamente da vPIC, Traficom, DGT e ASTRA. Controlla il diff (modelli nuovi o spariti) prima di unire."

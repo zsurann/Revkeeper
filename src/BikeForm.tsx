@@ -153,7 +153,7 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
         <Group key={`specs-${rev}`} title="Dati tecnici" open={!!(sp || p)}>
           {p && (
             <p className="col-span-2 m-0 text-xs text-dim">
-              Compilati da {p.source.startsWith('http') ? 'scheda ufficiale' : p.source.replace('Dati di immatricolazione: ', 'dati di immatricolazione ')}: puoi modificarli.
+              Compilati da {p.source.startsWith('http') ? 'scheda ufficiale' : p.source.replace('Registri ufficiali: ', 'registri ufficiali: ')}. Puoi modificarli.
             </p>
           )}
           <Num name="cc" label="Cilindrata (cc)" value={p?.cc ?? sp?.cc} />
