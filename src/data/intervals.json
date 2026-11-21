@@ -1059,6 +1059,663 @@
         "url": "https://manuals.bmw-motorrad.com/manuals/BA-Extern/IN/BA-INTERNET-COM/PDF/R_0M21_RM_0223_04.pdf",
         "verifiedAt": "2026-11-20"
       }
+    },
+    {
+      "id": "honda.forza125.2025",
+      "label": "Honda Forza 125",
+      "make": "Honda",
+      "model": "Forza 125",
+      "aliases": [
+        "Forza125",
+        "NSS125AD",
+        "NSS 125"
+      ],
+      "yearFrom": 2025,
+      "yearTo": null,
+      "category": "scooter",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 6000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 18000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "inspect",
+          "km": 6000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 12000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 6000
+        },
+        {
+          "item": "drive_belt",
+          "action": "inspect",
+          "km": 12000
+        },
+        {
+          "item": "drive_belt",
+          "action": "replace",
+          "km": 24000
+        },
+        {
+          "item": "final_drive_oil",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "brake_fluid",
+          "action": "inspect",
+          "km": 6000,
+          "months": 12
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "km": 6000,
+          "months": 12
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Honda NSS125AD (Forza 125) Manuale d'uso (3LK40L60)",
+        "edition": "2025, italiano (HMEI)",
+        "page": 110,
+        "url": "https://2rom-prd-data.hondamotopub.com/om/HMEI/NSS125AD/2025/NSS125AD_OM_3LK40L60_ita_WEB.pdf",
+        "verifiedAt": "2026-11-21"
+      }
+    },
+    {
+      "id": "honda.forza350.2025",
+      "label": "Honda Forza 350",
+      "make": "Honda",
+      "model": "Forza 350",
+      "aliases": [
+        "Forza350",
+        "NSS350",
+        "NSS350A",
+        "NSS 350"
+      ],
+      "yearFrom": 2025,
+      "yearTo": null,
+      "category": "scooter",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 24000,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 12000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "drive_belt",
+          "action": "inspect",
+          "km": 12000
+        },
+        {
+          "item": "drive_belt",
+          "action": "replace",
+          "km": 24000
+        },
+        {
+          "item": "final_drive_oil",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "brake_fluid",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Honda NSS250A/NSS350A (Forza 350) Manuale d'uso (3LK1BF300)",
+        "edition": "2025, italiano (HMEI)",
+        "page": 107,
+        "url": "https://2rom-prd-data.hondamotopub.com/om/HMEI/NSS250A_350A/2025/NSS250A_3LK1BF300_ita_WEB.pdf",
+        "verifiedAt": "2026-11-21"
+      }
+    },
+    {
+      "id": "honda.xadv.2025",
+      "label": "Honda X-ADV",
+      "make": "Honda",
+      "model": "X-ADV",
+      "aliases": [
+        "XADV",
+        "X ADV",
+        "ADV750"
+      ],
+      "yearFrom": 2025,
+      "yearTo": null,
+      "category": "adventure",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 24000,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 48000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "chain",
+          "action": "inspect",
+          "km": 1000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 1000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Honda ADV750 (X-ADV) Manuale d'uso (3LMKT700)",
+        "edition": "2025, italiano (HMEI), tabella versioni ED",
+        "page": 136,
+        "url": "https://2rom-prd-data.hondamotopub.com/om/HMEI/ADV750/2025/ADV750-S_3LMKT700_ita_WEB.pdf",
+        "verifiedAt": "2026-11-21"
+      }
+    },
+    {
+      "id": "honda.nc750x.2025",
+      "label": "Honda NC750X",
+      "make": "Honda",
+      "model": "NC750X",
+      "aliases": [
+        "NC 750 X",
+        "NC750XA",
+        "NC750XD"
+      ],
+      "yearFrom": 2025,
+      "yearTo": null,
+      "category": "adventure",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 24000,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 48000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "chain",
+          "action": "inspect",
+          "km": 1000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 1000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Honda NC750X Manuale d'uso (3LMKW620)",
+        "edition": "2025, italiano (HMEI)",
+        "page": 110,
+        "url": "https://2rom-prd-data.hondamotopub.com/om/HMEI/NC750X/2025/NC750_OM_3LMKW620_ita_WEB.pdf",
+        "verifiedAt": "2026-11-21"
+      }
+    },
+    {
+      "id": "honda.cb650r.2024",
+      "label": "Honda CB650R",
+      "make": "Honda",
+      "model": "CB650R",
+      "aliases": [
+        "CB 650 R",
+        "CB650RA"
+      ],
+      "yearFrom": 2024,
+      "yearTo": null,
+      "category": "naked",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 12000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 24000,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "inspect",
+          "km": 24000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 48000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 36000
+        },
+        {
+          "item": "chain",
+          "action": "inspect",
+          "km": 1000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 1000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Honda CB650RA/CBR650RA Manuale d'uso (3LMKYB20)",
+        "edition": "2024, italiano (HMEI), tabella versioni ED",
+        "page": 103,
+        "url": "https://2rom-prd-data.hondamotopub.com/om/HMEI/CB650R/2024/CB650RA_CBR650RA-R%20OM%203LMKYB20_ita_WEB.pdf",
+        "verifiedAt": "2026-11-21"
+      }
+    },
+    {
+      "id": "honda.pcx.2025",
+      "label": "Honda PCX",
+      "make": "Honda",
+      "model": "PCX",
+      "aliases": [
+        "PCX125",
+        "PCX 125",
+        "WW125A"
+      ],
+      "yearFrom": 2025,
+      "yearTo": null,
+      "category": "scooter",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 6000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 18000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "inspect",
+          "km": 6000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 12000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 6000
+        },
+        {
+          "item": "drive_belt",
+          "action": "inspect",
+          "km": 12000
+        },
+        {
+          "item": "drive_belt",
+          "action": "replace",
+          "km": 24000
+        },
+        {
+          "item": "final_drive_oil",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "brake_fluid",
+          "action": "inspect",
+          "km": 6000,
+          "months": 12
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "inspect",
+          "km": 12000,
+          "months": 12
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "km": 6000,
+          "months": 12
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Honda WW125A (PCX) Manuale d'uso (3LK1YC20)",
+        "edition": "2025, italiano (HMEI)",
+        "page": 88,
+        "url": "https://2rom-prd-data.hondamotopub.com/om/HMEI/WW125_A%20%28PCX%29/2025/WW125A_OM_3LK1YC20_ita_WEB.pdf",
+        "verifiedAt": "2026-11-21"
+      }
+    },
+    {
+      "id": "yamaha.mt09.2021",
+      "label": "Yamaha MT-09",
+      "make": "Yamaha",
+      "model": "MT-09",
+      "aliases": [
+        "MT09",
+        "MT 09",
+        "MTN890"
+      ],
+      "yearFrom": 2021,
+      "yearTo": 2023,
+      "category": "naked",
+      "intervals": [
+        {
+          "item": "engine_oil",
+          "action": "replace",
+          "km": 10000,
+          "months": 12,
+          "firstKm": 1000
+        },
+        {
+          "item": "oil_filter",
+          "action": "replace",
+          "km": 20000,
+          "firstKm": 1000
+        },
+        {
+          "item": "air_filter",
+          "action": "replace",
+          "km": 40000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "inspect",
+          "km": 10000
+        },
+        {
+          "item": "spark_plugs",
+          "action": "replace",
+          "km": 20000
+        },
+        {
+          "item": "valve_clearance",
+          "action": "inspect",
+          "km": 40000
+        },
+        {
+          "item": "chain",
+          "action": "lube",
+          "km": 1000
+        },
+        {
+          "item": "chain",
+          "action": "adjust",
+          "km": 1000
+        },
+        {
+          "item": "brake_fluid",
+          "action": "replace",
+          "months": 24
+        },
+        {
+          "item": "coolant",
+          "action": "inspect",
+          "km": 10000,
+          "months": 12
+        },
+        {
+          "item": "coolant",
+          "action": "replace",
+          "months": 36
+        },
+        {
+          "item": "tyres",
+          "action": "inspect",
+          "km": 10000,
+          "months": 12
+        }
+      ],
+      "source": {
+        "kind": "owner_manual",
+        "title": "Yamaha MTN890 (MT-09) Uso e manutenzione",
+        "edition": "B7N-28199-H1, 1a edizione agosto 2021 (italiano)",
+        "page": 64,
+        "url": "https://cdn2.yamaha-motor.eu/prod/owner-manuals/Motorcycles/PB7N28199H1H.PDF",
+        "verifiedAt": "2026-11-21"
+      }
     }
   ]
 }

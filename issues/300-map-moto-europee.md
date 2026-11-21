@@ -18,6 +18,8 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 
 ## Decisions so far
 
+- [Pipeline dei libretti, prima tornata](307-pipeline-dei-libretti-prima-tornata.md): script di download ed estrazione; 7 modelli Honda/Yamaha aggiunti dai libretti; Yamaha limitata dall'assenza di un indice dei libretti.
+
 - [Aggiornamento trimestrale automatico](308-aggiornamento-trimestrale-automatico.md): workflow GitHub Actions ogni 3 mesi che rigenera il catalogo e apre una PR; serve abilitare i permessi delle Actions.
 
 - [Catalogo diviso per marca nell'app](306-catalogo-diviso-per-marca-nellapp.md): un chunk per marca caricato alla scelta e tenuto offline; bundle principale da 711 a 305 KB.
@@ -33,6 +35,8 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 - Grilling iniziale: obiettivo "metodo scelto e costruito"; copertura modelli e anni, dati tecnici, intervalli; solo fonti gratuite; nessun dato dagli utenti.
 
 ## Not yet specified
+
+- Prossime tornate di libretti: indice dei libretti Yamaha (API del sito?), poi KTM e MV Agusta che hanno un'API, poi BMW, Triumph, Royal Enfield, Kymco, Voge, CFMoto.
 
 - Pulizia dei nomi poco leggibili e delle marche doppie per maiuscole; alias per i codici interni (WW125 = PCX, GPD125 = NMAX).
 

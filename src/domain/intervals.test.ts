@@ -62,3 +62,9 @@ describe('libretti seconda tornata', () => {
     expect(itemsFor({ id: 'b', make: 'Yamaha', model: 'MT-07', year: 2025, category: 'naked' })[0]?.origin).toBe('preset')
   })
 })
+
+it('libretti terza tornata: Honda Forza 350 2025 e Yamaha MT-09 2021–2023 dal libretto', () => {
+  expect(itemsFor({ id: 'b', make: 'Honda', model: 'Forza 350', year: 2025 }).every((i) => i.origin === 'model')).toBe(true)
+  expect(itemsFor({ id: 'b', make: 'Yamaha', model: 'MT-09', year: 2022 })[0]?.origin).toBe('model')
+  expect(itemsFor({ id: 'b', make: 'Yamaha', model: 'MT-09', year: 2024, category: 'naked' })[0]?.origin).toBe('preset')
+})

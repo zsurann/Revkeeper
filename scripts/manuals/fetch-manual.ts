@@ -27,7 +27,7 @@ else {
   console.error(`scaricato: ${pdf} (${buf.length} byte)`)
 }
 
-if (!existsSync(txt)) execFileSync('pdftotext', ['-layout', pdf, txt])
+if (!existsSync(txt)) execFileSync('pdftotext', ['-q', '-layout', pdf, txt])
 // pdftotext separa le pagine con il form feed
 const pages = readFileSync(txt, 'utf8').split('\f')
 
@@ -37,7 +37,7 @@ const scored = pages.map((text, i) => {
   const hits = KEYWORDS.filter((re) => re.test(text)).length
   const kmCols = (text.match(/\d{1,3}[ .,]?000\s?km|\d{1,3}[ .,]?000\b/g) ?? []).length // densità di colonne "N 000 km"
   return { page: i + 1, hits, kmCols, score: hits * 3 + Math.min(kmCols, 30) }
-}).filter((p) => p.hits >= 2 && p.kmCols >= 3)
+}).filter((p) => p.hits >= 2 || (p.hits >= 1 && p.kmCols >= 5)) // le pagine di seguito hanno solo "km" e i numeri
 
 console.log(`${pdf}: ${pages.length - 1} pagine, testo in ${txt}`)
 for (const p of scored.sort((a, b) => b.score - a.score).slice(0, 12).sort((a, b) => a.page - b.page))
