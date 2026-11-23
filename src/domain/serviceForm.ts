@@ -3,8 +3,10 @@ import type { Id, Service } from './types'
 export type ServiceDraft = Omit<Service, 'id' | 'updatedAt' | 'deletedAt' | 'attachmentIds'>
 
 const euro = (f: FormData, k: string) => {
-  const v = String(f.get(k) ?? '').trim().replace(/\./g, '').replace(',', '.')
-  if (v === '') return undefined
+  const raw = String(f.get(k) ?? '').trim()
+  if (raw === '') return undefined
+  // Con la virgola i punti sono migliaia (1.120,50); senza, un punto seguito da gruppi di 3 cifre è migliaia (1.200), altrimenti decimale (12.50)
+  const v = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : /^\d{1,3}(\.\d{3})+$/.test(raw) ? raw.replace(/\./g, '') : raw
   const n = Number(v)
   if (!Number.isFinite(n) || n < 0) throw new RangeError('Importo non valido')
   return Math.round(n * 100) / 100

@@ -20,6 +20,8 @@ I bug trovati nell'analisi del 23/11/2026 sono corretti, coperti da un test cias
 
 <!-- una riga per ticket chiuso -->
 
+- [Correggere gli importi in euro moltiplicati per 100](501-importi-in-euro-x100.md): punto decimale accettato, punti seguiti da gruppi di 3 cifre letti come migliaia; nessuna correzione automatica dei dati vecchi.
+
 ## Not yet specified
 
 - **Notifiche con più utenti**: il cron invia al massimo 40 notifiche all'ora, sempre agli utenti nello stesso ordine, quindi oltre i 40 iscritti alla stessa ora gli ultimi non le ricevono mai. Va affrontato quando gli utenti crescono: rotazione, code, piano a pagamento?
