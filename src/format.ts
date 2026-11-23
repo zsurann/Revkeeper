@@ -1,6 +1,9 @@
 import type { Due } from './domain/due'
 import type { Status } from './domain/types'
 
+// Data di oggi nel fuso del dispositivo, in formato AAAA-MM-GG
+export const today = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+
 const n = (x: number) => Math.abs(Math.round(x)).toLocaleString('it-IT')
 export const monthYear = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('it-IT', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 export const fullDate = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })

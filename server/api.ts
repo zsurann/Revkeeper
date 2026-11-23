@@ -97,6 +97,15 @@ const dropFile = async (env: Env, userId: string, id: string) => {
   ])
 }
 
+// Un lotto di push condivide un solo rev: una pagina piena va chiusa all'ultimo rev completo,
+// altrimenti il resto di quel lotto finisce oltre il cursore e non arriva mai (pushBatch < pullPage, quindi la pagina non si svuota)
+export const pageOf = <T extends { rev: number }>(rows: T[], limit: number, since: number) => {
+  if (rows.length < limit) return { rows, cursor: rows.at(-1)?.rev ?? since, more: false }
+  const last = rows.at(-1)!.rev
+  const kept = rows.filter((r) => r.rev !== last)
+  return { rows: kept, cursor: kept.at(-1)?.rev ?? since, more: true }
+}
+
 const pull = async (url: URL, env: Env, userId: string) => {
   const since = Number(url.searchParams.get('since') ?? 0)
   const { results } = await env.DB.prepare(
@@ -104,10 +113,11 @@ const pull = async (url: URL, env: Env, userId: string) => {
   )
     .bind(userId, Number.isFinite(since) ? since : 0, LIMITS.pullPage)
     .all<{ kind: string; id: string; data: string | null; updated_at: number; device_id: string; deleted: number; rev: number }>()
+  const page = pageOf(results, LIMITS.pullPage, Number.isFinite(since) ? since : 0)
   return json({
-    changes: results.map((r) => ({ kind: r.kind, id: r.id, data: r.data && JSON.parse(r.data), updatedAt: r.updated_at, deviceId: r.device_id, deleted: !!r.deleted })),
-    cursor: results.at(-1)?.rev ?? since,
-    more: results.length === LIMITS.pullPage,
+    changes: page.rows.map((r) => ({ kind: r.kind, id: r.id, data: r.data && JSON.parse(r.data), updatedAt: r.updated_at, deviceId: r.device_id, deleted: !!r.deleted })),
+    cursor: page.cursor,
+    more: page.more,
   })
 }
 
@@ -150,10 +160,19 @@ const putFile = async (req: Request, env: Env, userId: string, id: string) => {
   return json({ ok: true })
 }
 
+// Il tipo lo dichiara chi carica: si apre nel browser solo ciò che non può eseguire script
+const INLINE = /^(image\/(png|jpeg|gif|webp|avif|heic|heif)|application\/pdf)$/
+export const fileHeaders = (type = 'application/octet-stream') => ({
+  'content-type': type,
+  'content-disposition': INLINE.test(type) ? 'inline' : 'attachment',
+  'x-content-type-options': 'nosniff',
+  'cache-control': 'private, max-age=31536000, immutable',
+})
+
 const getFile = async (env: Env, userId: string, id: string) => {
   const obj = await env.FILES.get(`${userId}/${id}`)
   if (!obj) return fail(404, 'File non trovato')
-  return new Response(obj.body, { headers: { 'content-type': obj.httpMetadata?.contentType ?? 'application/octet-stream', 'cache-control': 'private, max-age=31536000, immutable' } })
+  return new Response(obj.body, { headers: fileHeaders(obj.httpMetadata?.contentType) })
 }
 
 export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>): Promise<Response> => {

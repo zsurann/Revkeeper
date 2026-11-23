@@ -3,10 +3,9 @@ import { AttachmentLink, AttachmentPicker, usePending } from './Attachments'
 import { addReading, remove, save } from './db'
 import { serviceFromForm } from './domain/serviceForm'
 import type { Bike, MaintenanceItem, Service } from './domain/types'
-import { fullDate } from './format'
+import { fullDate, today } from './format'
 import { Field, field, ghost, primary } from './ui'
 
-const today = () => new Date().toISOString().slice(0, 10)
 const eur = (n?: number) => (n === undefined ? '' : n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' }))
 
 const ServiceForm = ({ bike, km, items, onDone }: { bike: Bike; km: number; items: MaintenanceItem[]; onDone: () => void }) => {

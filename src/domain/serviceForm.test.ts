@@ -17,6 +17,18 @@ it('il totale scritto vince', () => {
   expect(serviceFromForm(fd({ ...base, costTotal: '210', costParts: '100' }), 'b', '2026-11-20').costTotal).toBe(210)
 })
 
+it('legge importi con punto o virgola decimale e migliaia', () => {
+  const total = (v: string) => serviceFromForm(fd({ ...base, costTotal: v }), 'b', '2026-11-20').costTotal
+  expect(total('12.50')).toBe(12.5)
+  expect(total('12,50')).toBe(12.5)
+  expect(total('12.5')).toBe(12.5)
+  expect(total('1.200')).toBe(1200)
+  expect(total('1.120,50')).toBe(1120.5)
+  expect(total('1.234.567')).toBe(1234567)
+  expect(total('80')).toBe(80)
+  expect(() => total('1,2,3')).toThrow(RangeError)
+})
+
 it('rifiuta data futura, nessuna voce, km non validi', () => {
   expect(() => serviceFromForm(fd({ ...base, date: '2026-12-01' }), 'b', '2026-11-20')).toThrow(RangeError)
   expect(() => serviceFromForm(fd({ ...base, itemIds: [] }), 'b', '2026-11-20')).toThrow(RangeError)

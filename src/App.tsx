@@ -13,10 +13,9 @@ import { Garage } from './Garage'
 import { Maintenance } from './Maintenance'
 import { Odometer } from './Odometer'
 import { Welcome } from './Welcome'
-import { dueShort, monthYear } from './format'
+import { dueShort, monthYear, today } from './format'
 import { Screen, field, ghost, primary } from './ui'
 
-const today = () => new Date().toISOString().slice(0, 10)
 const ACTIVE = 'revkeeper.activeBike'
 const readActive = () => {
   try { return localStorage.getItem(ACTIVE) ?? undefined } catch { return undefined }
