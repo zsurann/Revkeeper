@@ -99,9 +99,27 @@ export const startAccount = async (email: string) => {
   return syncNow()
 }
 
+// Modifiche locali non ancora arrivate al server: uscendo andrebbero perse
+export const unsynced = async () => {
+  const d = await db()
+  let n = 0
+  for (const kind of STORES) n += ((await d.getAll(kind)) as Rec[]).filter((r) => r.dirty).length
+  return n
+}
+
+// Uscita: notifiche disattivate, sessione chiusa, poi il telefono torna vuoto (può essere condiviso).
+// Senza rete si ferma prima di cancellare, così non resta un telefono vuoto con la sessione ancora aperta.
 export const logout = async () => {
-  await fetch('/api/auth/logout', { method: 'POST' })
-  await setMeta('account', undefined)
+  const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined
+  const sub = await reg?.pushManager.getSubscription()
+  if (sub) {
+    await fetch('/api/push/unsubscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) })
+    await sub.unsubscribe()
+  }
+  const res = await fetch('/api/auth/logout', { method: 'POST' })
+  if (!res.ok && res.status !== 401) throw new Error(`Uscita non riuscita: ${res.status}`)
+  const d = await db()
+  for (const s of [...STORES, 'meta'] as const) await d.clear(s)
 }
 
 let timer: ReturnType<typeof setTimeout> | undefined
