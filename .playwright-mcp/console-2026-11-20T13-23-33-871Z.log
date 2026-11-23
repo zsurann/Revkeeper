@@ -1,4 +1,0 @@
-[    1134ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack://yme-configurator/./node_modules/react-dom/cjs/react-dom.development.js?:29836
-[    1789ms] [ERROR] Warning: ReactDOM.render is no longer supported in React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17. Learn more: https://reactjs.org/link/switch-to-createroot @ webpack://yme-configurator/./node_modules/react-dom/cjs/react-dom.development.js?:86
-[    2534ms] Error: Failed to load script https://services.santanderconsumer.com/quoting-tool/scf-plugin.js?pluginId=685d1c4d-f4b9-4c62-af84-8c31464fd607
-    at o.onerror (https://www.yamaha-motor.eu/etc.clientlibs/yme/clientlibs/clientlib-react/resources/9715.1e3e985efb9e067b61b1.js:2:21964)
