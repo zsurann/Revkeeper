@@ -14,5 +14,8 @@ self.addEventListener('push', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close()
-  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ws) => (ws[0] ? ws[0].focus() : self.clients.openWindow(e.notification.data.url))))
+  const url = e.notification.data.url
+  // Finestra già aperta: in primo piano e alla pagina della notifica (navigate fallisce solo se non controllata: resta dov'è)
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ws) =>
+    ws[0] ? ws[0].focus().then((w) => w.navigate(url)).catch(() => {}) : self.clients.openWindow(url)))
 })
