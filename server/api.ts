@@ -160,10 +160,19 @@ const putFile = async (req: Request, env: Env, userId: string, id: string) => {
   return json({ ok: true })
 }
 
+// Il tipo lo dichiara chi carica: si apre nel browser solo ciò che non può eseguire script
+const INLINE = /^(image\/(png|jpeg|gif|webp|avif|heic|heif)|application\/pdf)$/
+export const fileHeaders = (type = 'application/octet-stream') => ({
+  'content-type': type,
+  'content-disposition': INLINE.test(type) ? 'inline' : 'attachment',
+  'x-content-type-options': 'nosniff',
+  'cache-control': 'private, max-age=31536000, immutable',
+})
+
 const getFile = async (env: Env, userId: string, id: string) => {
   const obj = await env.FILES.get(`${userId}/${id}`)
   if (!obj) return fail(404, 'File non trovato')
-  return new Response(obj.body, { headers: { 'content-type': obj.httpMetadata?.contentType ?? 'application/octet-stream', 'cache-control': 'private, max-age=31536000, immutable' } })
+  return new Response(obj.body, { headers: fileHeaders(obj.httpMetadata?.contentType) })
 }
 
 export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>): Promise<Response> => {

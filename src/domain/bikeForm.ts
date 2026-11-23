@@ -1,5 +1,5 @@
+import { today } from '../format'
 import type { Bike } from './types'
-
 
 export type BikeDraft = Omit<Bike, 'id' | 'updatedAt' | 'deletedAt'>
 
@@ -32,7 +32,7 @@ export const bikeFromForm = (f: FormData, prev?: Partial<Bike>): BikeDraft => {
     model,
     year,
     startKm,
-    startDate: prev?.startDate ?? new Date().toISOString().slice(0, 10),
+    startDate: prev?.startDate ?? today(),
     category: text(f, 'category') ?? prev?.category,
     plate: text(f, 'plate')?.toUpperCase(),
     vin: text(f, 'vin')?.toUpperCase(),
