@@ -2,7 +2,7 @@
 id: 500
 title: "Mappa: bug e miglioramenti dall'analisi del codice"
 labels: [wayfinder:map]
-status: open
+status: closed
 ---
 
 ## Destination
@@ -23,9 +23,11 @@ I bug trovati nell'analisi del 23/11/2026 sono corretti, coperti da un test cias
 - [Correggere gli importi in euro moltiplicati per 100](501-importi-in-euro-x100.md): punto decimale accettato, punti seguiti da gruppi di 3 cifre letti come migliaia; nessuna correzione automatica dei dati vecchi.
 - [Correggere il pull che salta record a cavallo di pagina](502-pull-salta-record.md): la pagina piena si chiude all'ultimo `rev` completo; nessun cambio al client.
 - [Recuperare i record già persi dal pull?](503-recuperare-record-persi.md): no, deciso dallo sviluppatore.
+- [Cosa succede quando si esce dall'account](504-cosa-succede-uscendo.md): notifiche spente e dati locali cancellati, con conferma se ci sono modifiche non ancora online.
 - [Usare la data locale invece di quella UTC](505-data-locale-non-utc.md): un solo `today()` locale in `src/format.ts`.
 - [Allineare client e server sul pareggio di orario nel sync](506-pareggio-sync.md): a pari orario il client segue la scelta del server (`deviceId` più grande).
 - [Rinforzi piccoli: file scaricati e clic sulla notifica](507-rinforzi-piccoli.md): `nosniff` sempre, `inline` solo immagini raster e PDF; il clic porta la finestra alla pagina della notifica.
+- [Togliere dal repo i file generati](508-pulizia-repo.md): `.playwright-mcp/` e `*.tsbuildinfo` ignorati e tolti dall'indice; `.env` resta.
 
 ## Not yet specified
 
