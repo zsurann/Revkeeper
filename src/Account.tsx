@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { getMeta } from './db'
 import { GoogleButton } from './GoogleButton'
 import { Notifications } from './Notifications'
-import { logout, syncNow } from './sync'
+import { logout, syncNow, unsynced } from './sync'
 import { Screen, ghost, primary } from './ui'
 
 const ago = (ms?: number) => (ms ? new Date(ms).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) : 'mai')
@@ -32,6 +32,21 @@ export const Account = ({ onClose }: { onClose: () => void }) => {
     }
   }
 
+  const exit = async () => {
+    setBusy(true)
+    try {
+      await syncNow().catch(() => undefined) // prima prova a salvare online le ultime modifiche
+      const n = await unsynced()
+      if (n && !confirm(`${n} modifiche non sono ancora online e andranno perse. Esci lo stesso?`)) return
+      await logout()
+      location.reload() // l'app riparte vuota
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Uscita non riuscita')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <Screen>
       <header className="flex items-center justify-between">
@@ -43,8 +58,8 @@ export const Account = ({ onClose }: { onClose: () => void }) => {
           <p className="m-0">Accesso con <b>{email}</b></p>
           <p className="m-0 text-sm text-dim">Ultima sincronizzazione: {ago(lastSync)}</p>
           <button onClick={() => void sync()} disabled={busy} className={primary}>Sincronizza ora</button>
-          <button onClick={() => void logout().then(refresh)} className={`justify-self-start ${ghost}`}>Esci</button>
-          <p className="m-0 text-xs text-dim">Uscendo, i dati restano su questo telefono ma smettono di sincronizzarsi.</p>
+          <button onClick={() => void exit()} disabled={busy} className={`justify-self-start ${ghost}`}>Esci</button>
+          <p className="m-0 text-xs text-dim">Uscendo, i dati restano online ma vengono tolti da questo telefono e le notifiche si spengono.</p>
         </section>
       ) : null}
       {email ? (
