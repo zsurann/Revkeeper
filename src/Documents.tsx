@@ -3,7 +3,7 @@ import { AttachmentLink, AttachmentPicker, usePending } from './Attachments'
 import { save } from './db'
 import { documentStatus } from './domain/due'
 import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type DocKind } from './domain/types'
-import { statusColor, statusText } from './format'
+import { statusColor, statusText, today } from './format'
 import { field, ghost } from './ui'
 
 const KINDS: { kind: DocKind; label: string }[] = [
@@ -11,7 +11,6 @@ const KINDS: { kind: DocKind; label: string }[] = [
   { kind: 'bollo', label: 'Bollo' },
   { kind: 'revisione', label: 'Revisione' },
 ]
-const today = () => new Date().toISOString().slice(0, 10)
 
 const DocCard = ({ bike, kind, label, doc, onChange }: { bike: Bike; kind: DocKind; label: string; doc?: BikeDocument; onChange: () => void }) => {
   const files = usePending()

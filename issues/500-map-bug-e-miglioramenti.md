@@ -22,6 +22,8 @@ I bug trovati nell'analisi del 23/11/2026 sono corretti, coperti da un test cias
 
 - [Correggere gli importi in euro moltiplicati per 100](501-importi-in-euro-x100.md): punto decimale accettato, punti seguiti da gruppi di 3 cifre letti come migliaia; nessuna correzione automatica dei dati vecchi.
 - [Correggere il pull che salta record a cavallo di pagina](502-pull-salta-record.md): la pagina piena si chiude all'ultimo `rev` completo; nessun cambio al client.
+- [Recuperare i record già persi dal pull?](503-recuperare-record-persi.md): no, deciso dallo sviluppatore.
+- [Usare la data locale invece di quella UTC](505-data-locale-non-utc.md): un solo `today()` locale in `src/format.ts`.
 
 ## Not yet specified
 
