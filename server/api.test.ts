@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { LIMITS, pageOf } from './api'
+import { fileHeaders, LIMITS, pageOf } from './api'
 
 // Simula il server: lotti di push con un rev ciascuno, pull a pagine come il client
 it('il pull a pagine non salta record di un lotto a cavallo di pagina', () => {
@@ -14,4 +14,12 @@ it('il pull a pagine non salta record di un lotto a cavallo di pagina', () => {
     if (!page.more) break
   }
   expect(got.size).toBe(rows.length)
+})
+
+it('i file si aprono nel browser solo se immagini raster o PDF, mai con sniffing', () => {
+  expect(fileHeaders('image/jpeg')).toMatchObject({ 'content-disposition': 'inline', 'x-content-type-options': 'nosniff' })
+  expect(fileHeaders('application/pdf')['content-disposition']).toBe('inline')
+  expect(fileHeaders('text/html')['content-disposition']).toBe('attachment')
+  expect(fileHeaders('image/svg+xml')['content-disposition']).toBe('attachment') // l'SVG può eseguire script
+  expect(fileHeaders(undefined)['content-type']).toBe('application/octet-stream')
 })
