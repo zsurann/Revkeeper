@@ -25,6 +25,7 @@ I bug trovati nell'analisi del 23/11/2026 sono corretti, coperti da un test cias
 - [Recuperare i record già persi dal pull?](503-recuperare-record-persi.md): no, deciso dallo sviluppatore.
 - [Usare la data locale invece di quella UTC](505-data-locale-non-utc.md): un solo `today()` locale in `src/format.ts`.
 - [Allineare client e server sul pareggio di orario nel sync](506-pareggio-sync.md): a pari orario il client segue la scelta del server (`deviceId` più grande).
+- [Rinforzi piccoli: file scaricati e clic sulla notifica](507-rinforzi-piccoli.md): `nosniff` sempre, `inline` solo immagini raster e PDF; il clic porta la finestra alla pagina della notifica.
 
 ## Not yet specified
 
