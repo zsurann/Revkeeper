@@ -48,7 +48,12 @@ const pushAll = async (device: string) => {
   }
 }
 
-const pullAll = async () => {
+// Stessa regola del server: vince l'orario più recente; a pari orario la copia del server è già la vincitrice,
+// salvo una modifica locale non ancora inviata, che vince se il suo deviceId è più grande (come farà il server)
+export const keepLocal = (local: Pick<Rec, 'updatedAt' | 'dirty'> | undefined, c: Pick<Change, 'updatedAt' | 'deviceId'>, device: string) =>
+  !!local && (local.updatedAt > c.updatedAt || (local.updatedAt === c.updatedAt && !!local.dirty && device >= (c.deviceId ?? '')))
+
+const pullAll = async (device: string) => {
   const d = await db()
   let applied = 0
   for (;;) {
@@ -56,7 +61,7 @@ const pullAll = async () => {
     const page = (await api(`/sync/pull?since=${since}`)) as { changes: Change[]; cursor: number; more: boolean }
     for (const c of page.changes) {
       const local = (await d.get(c.kind, c.id)) as Rec | undefined
-      if (local && local.updatedAt >= c.updatedAt) continue // vince la copia locale (last-write-wins)
+      if (keepLocal(local, c, device)) continue
       const base = c.deleted ? { ...local, id: c.id, deletedAt: c.updatedAt } : (c.data as Rec)
       await d.put(c.kind, { ...base, updatedAt: c.updatedAt, dirty: undefined, blob: local?.blob, uploaded: c.kind === 'attachments' ? 1 : undefined } as never)
       applied++
@@ -73,7 +78,7 @@ export const syncNow = () =>
       if (!navigator.onLine || !(await getMeta<string>('account'))) return 0
       const device = await deviceId()
       await pushAll(device)
-      const applied = await pullAll()
+      const applied = await pullAll(device)
       await setMeta('lastSync', Date.now())
       if (applied) dispatchEvent(new Event('revkeeper:synced'))
       return applied

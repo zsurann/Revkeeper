@@ -24,6 +24,7 @@ I bug trovati nell'analisi del 23/11/2026 sono corretti, coperti da un test cias
 - [Correggere il pull che salta record a cavallo di pagina](502-pull-salta-record.md): la pagina piena si chiude all'ultimo `rev` completo; nessun cambio al client.
 - [Recuperare i record già persi dal pull?](503-recuperare-record-persi.md): no, deciso dallo sviluppatore.
 - [Usare la data locale invece di quella UTC](505-data-locale-non-utc.md): un solo `today()` locale in `src/format.ts`.
+- [Allineare client e server sul pareggio di orario nel sync](506-pareggio-sync.md): a pari orario il client segue la scelta del server (`deviceId` più grande).
 
 ## Not yet specified
 
