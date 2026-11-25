@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "dev:api": "wrangler pages dev dist --port 8788",
-    "catalog": "node scripts/import-eu.ts && node scripts/build-catalog.ts"
+    "catalog": "node scripts/import-eu.ts && node scripts/build-catalog.ts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@block65/webcrypto-web-push": "^2.0.0",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261120.1",
+    "@playwright/test": "^1.65.1",
     "@sentry/vite-plugin": "^11.17.0",
     "@tailwindcss/vite": "^4.3.5",
     "@types/react": "^19.3.0",

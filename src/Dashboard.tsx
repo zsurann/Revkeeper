@@ -1,4 +1,4 @@
-import { motion } from 'motion/react'
+import { m } from 'motion/react'
 import { ChevronRight, FileText, Plus, Wrench } from 'lucide-react'
 import { DisplayChip, Odometer, RevBar } from './Cluster'
 import { daysBetween, type Due } from './domain/due'
@@ -14,13 +14,13 @@ export type DocRow = { kind: DocKind; doc?: BikeDocument; status?: Status; days?
 const bigTone: Record<Status, string> = { ok: 'text-[#D4FF3A]', warn: 'text-[#FFC24D]', overdue: 'text-[#FF8A75]' }
 
 // Il "vetro" del cruscotto: l'unico pannello scuro dell'app chiara. Prossima scadenza, contagiri a segmenti, contachilometri.
-export const Cluster = ({ next, km, from, onKm }: { next?: Row; km: number; from?: number; onKm: () => void }) => {
+export const Cluster = ({ next, km, from, rate, onKm }: { next?: Row; km: number; from?: number; rate?: number; onKm: () => void }) => {
   const due = next?.due
   const days = due?.dueDate ? daysBetween(today(), due.dueDate) : undefined
   const over = due?.status === 'overdue'
   const big = due ? (due.kmLeft !== undefined ? int(Math.abs(due.kmLeft)) : days !== undefined ? String(Math.abs(days)) : '') : ''
   const unit = due?.kmLeft !== undefined ? (over ? 'km oltre' : 'km mancanti') : days === 1 || days === -1 ? (over ? 'giorno di ritardo' : 'giorno') : over ? 'giorni di ritardo' : 'giorni'
-  const when = over ? undefined : due?.estimatedDate ? { k: 'stima', v: dayMonth(due.estimatedDate) } : due?.kmLeft !== undefined && due.dueDate ? { k: 'entro', v: monthYear(due.dueDate) } : undefined
+  const when = over ? undefined : due?.estimatedDate ? { k: 'previsto il', v: dayMonth(due.estimatedDate) } : due?.kmLeft !== undefined && due.dueDate ? { k: 'entro', v: monthYear(due.dueDate) } : undefined
   return (
     <section aria-label="Prossima manutenzione" className="relative overflow-hidden rounded-xl bg-display p-5 text-display-ink shadow-3 dark:ring-1 dark:ring-white/8 lg:p-7">
       <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full bg-[#D4FF3A]/[0.07] blur-3xl" />
@@ -32,14 +32,14 @@ export const Cluster = ({ next, km, from, onKm }: { next?: Row; km: number; from
           </div>
           <h2 className="t-title relative m-0 mt-3 text-[20px] lg:text-[24px]">{next.item.label}</h2>
           <div className="relative mt-1 flex items-end gap-2">
-            <motion.span
+            <m.span
               className={`t-num text-[72px] leading-[0.9] lg:text-[92px] ${bigTone[due.status]}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9, duration: 0.42 }}
             >
               {big}
-            </motion.span>
+            </m.span>
             <span className="mb-2 max-w-[6.5em] text-[15px] leading-tight text-display-dim">{unit}</span>
             {when && (
               <span className="mb-2 ml-auto text-right text-[13px] leading-snug text-display-dim">
@@ -68,6 +68,8 @@ export const Cluster = ({ next, km, from, onKm }: { next?: Row; km: number; from
             <Odometer key={km} value={km} from={from} />
             <span className="ml-1.5 text-[15px] font-medium text-display-dim">km</span>
           </span>
+          {/* Media degli ultimi 90 giorni: è lei a stimare le date delle scadenze a km */}
+          <span className="text-[12px] text-display-dim">{rate !== undefined && rate > 0 ? rate < 1 ? 'meno di 1 km al giorno' : `circa ${int(Math.round(rate))} km al giorno` : 'Aggiorna i km per stimare le date'}</span>
         </div>
         <button type="button" onClick={onKm} className={`${btn.primary} shrink-0 px-5`}>
           <Plus size={18} strokeWidth={2.6} />Aggiorna km
@@ -82,7 +84,7 @@ export const ItemRow = ({ row, onOpen }: { row: Row; onOpen?: () => void }) => {
   const s = row.status
   const tone = s === 'overdue' ? 'text-red-ink' : s === 'warn' ? 'text-amber-ink' : 'text-ink-2'
   return (
-    <motion.li variants={listItem}>
+    <m.li variants={listItem}>
       <button type="button" onClick={onOpen} className="grid w-full grid-cols-[40px_1fr_auto] items-center gap-x-3 gap-y-2 rounded-md px-3 py-3 text-left transition-colors hover:bg-sunken/70">
         <span className={`grid size-10 place-items-center rounded-[12px] ${s === 'overdue' ? 'bg-red-soft text-red-ink' : s === 'warn' ? 'bg-amber-soft text-amber-ink' : 'bg-sunken text-ink'}`}>
           <Icon size={19} strokeWidth={2} />
@@ -97,7 +99,7 @@ export const ItemRow = ({ row, onOpen }: { row: Row; onOpen?: () => void }) => {
         </span>
         <span className="col-start-2 col-end-4"><MiniBar progress={row.due.progress} status={s} /></span>
       </button>
-    </motion.li>
+    </m.li>
   )
 }
 
@@ -105,7 +107,7 @@ const DocTile = ({ d, onOpen }: { d: DocRow; onOpen: () => void }) => {
   const meta = DOC[d.kind]
   const Icon = meta.icon
   return (
-    <motion.button type="button" variants={listItem} onClick={onOpen}
+    <m.button type="button" variants={listItem} onClick={onOpen}
       className={`${d.doc ? card : 'rounded-lg border border-dashed border-line-strong'} grid min-w-[148px] flex-1 gap-3 p-4 text-left transition-shadow hover:shadow-2`}>
       <span className="flex items-center justify-between gap-2">
         <span className="grid size-9 place-items-center rounded-[10px] bg-sunken text-ink"><Icon size={18} /></span>
@@ -116,11 +118,11 @@ const DocTile = ({ d, onOpen }: { d: DocRow; onOpen: () => void }) => {
         <span className="t-title text-[17px]">{d.doc ? fullDate(d.doc.dueDate) : 'Aggiungi'}</span>
         {d.doc && d.days !== undefined && d.status === 'ok' && <span className="text-[12px] text-ink-3">{daysText(d.days, d.kind === 'bollo')}</span>}
       </span>
-    </motion.button>
+    </m.button>
   )
 }
 
-export const Dashboard = ({ next, rows, docs, last, labelOf, km, from, onKm, go }: {
+export const Dashboard = ({ next, rows, docs, last, labelOf, km, from, rate, onKm, go }: {
   next?: Row
   rows: Row[]
   docs: DocRow[]
@@ -128,24 +130,25 @@ export const Dashboard = ({ next, rows, docs, last, labelOf, km, from, onKm, go 
   labelOf: (id: string) => string
   km: number
   from?: number
+  rate?: number
   onKm: () => void
   go: (to: 'maint' | 'services' | 'documents') => void
 }) => (
   <div className="grid gap-6 lg:grid-cols-12">
-    <div className="lg:col-span-7"><Cluster next={next} km={km} from={from} onKm={onKm} /></div>
-    <motion.section aria-labelledby="h-docs" className="grid content-start gap-3 lg:col-span-5" variants={list} initial="initial" animate="animate">
+    <div className="lg:col-span-7"><Cluster next={next} km={km} from={from} rate={rate} onKm={onKm} /></div>
+    <m.section aria-labelledby="h-docs" className="grid content-start gap-3 lg:col-span-5" variants={list} initial="initial" animate="animate">
       <SectionTitle id="h-docs" action={<button type="button" onClick={() => go('documents')} className={link}>Documenti<ChevronRight size={16} /></button>}>Scadenze</SectionTitle>
       <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 no-scrollbar lg:mx-0 lg:grid lg:overflow-visible lg:px-0">
         {DOC_KINDS.map((k) => <DocTile key={k} d={docs.find((d) => d.kind === k) ?? { kind: k }} onOpen={() => go('documents')} />)}
       </div>
-    </motion.section>
+    </m.section>
     {rows.length > 0 && (
       <section aria-labelledby="h-watch" className="grid content-start gap-3 lg:col-span-7">
         <SectionTitle id="h-watch" action={<button type="button" onClick={() => go('maint')} className={link}>Intervalli<ChevronRight size={16} /></button>}>Da tenere d'occhio</SectionTitle>
         <div className={`${card} p-1.5`}>
-          <motion.ul className="m-0 grid list-none divide-y divide-line p-0" variants={list} initial="initial" animate="animate">
+          <m.ul className="m-0 grid list-none divide-y divide-line p-0" variants={list} initial="initial" animate="animate">
             {rows.map((r) => <ItemRow key={r.id} row={r} onOpen={() => go('maint')} />)}
-          </motion.ul>
+          </m.ul>
         </div>
       </section>
     )}

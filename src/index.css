@@ -57,3 +57,23 @@
 @keyframes drop { from { opacity: 0; transform: translateY(-22px) scale(0.96); } }
 @keyframes ring { 0%, 60%, 100% { transform: rotate(0); } 66% { transform: rotate(14deg); } 72% { transform: rotate(-12deg); } 78% { transform: rotate(8deg); } 84% { transform: rotate(0); } }
 @keyframes trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/* Stampa del libretto: solo la tabella, sempre chiara, anche col tema Notte */
+.rk-print { display: none; }
+@media print {
+  @page { margin: 14mm; }
+  body > :not(.rk-print) { display: none !important; }
+  body { background: #fff !important; color: #111 !important; }
+  .rk-print { display: block; font: 10.5pt/1.4 var(--font-sans); color: #111; }
+  .rk-print h1 { font-size: 17pt; margin: 0 0 2pt; font-variation-settings: "wdth" 106; }
+  .rk-print header p { margin: 0 0 12pt; color: #555; }
+  .rk-print table { width: 100%; border-collapse: collapse; }
+  .rk-print th { text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .05em; color: #555; border-bottom: 1.5pt solid #111; padding: 4pt 6pt 4pt 0; }
+  .rk-print td { vertical-align: top; border-bottom: .5pt solid #ccc; padding: 5pt 6pt 5pt 0; }
+  .rk-print tr { break-inside: avoid; }
+  .rk-print .num { text-align: right; white-space: nowrap; }
+  .rk-print th:nth-child(4) { width: 34%; }
+  .rk-print td:first-child, .rk-print td:nth-child(2) { white-space: nowrap; }
+  .rk-print tfoot td { font-weight: 700; border-bottom: 0; border-top: 1.5pt solid #111; }
+  .rk-print footer { margin-top: 14pt; font-size: 8pt; color: #888; }
+}

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useDragControls, useReducedMotion, type HTMLMotionProps } from 'motion/react'
+import { AnimatePresence, m, useDragControls, useReducedMotion, type HTMLMotionProps } from 'motion/react'
 import { ChevronLeft, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { getAttachment } from './db'
@@ -24,19 +24,19 @@ export const card = 'rounded-lg bg-surface shadow-1 ring-1 ring-line'
 export const link = 'inline-flex items-center gap-1 text-[13px] font-semibold text-ink-2 hover:text-ink'
 
 export const Card = ({ className = '', children, ...p }: { className?: string; children: ReactNode } & HTMLMotionProps<'div'>) => (
-  <motion.div className={`${card} ${className}`} {...p}>{children}</motion.div>
+  <m.div className={`${card} ${className}`} {...p}>{children}</m.div>
 )
 
 // Contenitore delle pagine: entra con una dissolvenza breve dal basso
 export const Screen = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <motion.main
+  <m.main
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: dur.slow, ease: ease.out }}
     className={`mx-auto grid w-full max-w-[480px] content-start gap-6 px-4 pb-32 pt-[max(20px,env(safe-area-inset-top))] lg:max-w-[760px] lg:px-8 lg:pb-16 lg:pt-10 ${className}`}
   >
     {children}
-  </motion.main>
+  </m.main>
 )
 
 // Titolo di pagina con indietro facoltativo e un'azione a destra
@@ -71,7 +71,7 @@ export const Field = ({ label, children, hint, className = '' }: { label: string
 )
 
 export const ErrorText = ({ children }: { children: ReactNode }) => (
-  <motion.p role="alert" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="m-0 text-[14px] font-medium text-red-ink">{children}</motion.p>
+  <m.p role="alert" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="m-0 text-[14px] font-medium text-red-ink">{children}</m.p>
 )
 
 const pill: Record<Status, string> = { ok: 'bg-sunken text-ink-2', warn: 'bg-amber-soft text-amber-ink', overdue: 'bg-red-soft text-red-ink' }
@@ -90,7 +90,7 @@ export const MiniBar = ({ progress, status, segments = 24 }: { progress: number;
   return (
     <span className="grid h-1.5 w-full gap-[2px]" style={{ gridTemplateColumns: `repeat(${segments},1fr)` }} aria-hidden="true">
       {Array.from({ length: segments }, (_, i) => (
-        <motion.i
+        <m.i
           key={i}
           className={`block rounded-[1px] ${i < lit ? on : 'bg-line'}`}
           initial={{ scaleY: 0.2, opacity: 0 }}
@@ -111,7 +111,7 @@ export function Segmented<T extends string>({ value, options, onChange, label, i
         return (
           <button key={o.value} type="button" role="radio" aria-checked={on} onClick={() => onChange(o.value)}
             className={`relative flex h-10 items-center justify-center gap-1.5 rounded-full text-[14px] font-semibold transition-colors ${on ? 'text-black' : 'text-ink-2 hover:text-ink'}`}>
-            {on && <motion.span layoutId={`seg-${id}`} className="absolute inset-0 rounded-full bg-lime shadow-[0_2px_8px_-2px_rgb(120_150_0/0.5)]" transition={spring.snappy} />}
+            {on && <m.span layoutId={`seg-${id}`} className="absolute inset-0 rounded-full bg-lime shadow-[0_2px_8px_-2px_rgb(120_150_0/0.5)]" transition={spring.snappy} />}
             <span className="relative flex items-center gap-1.5">{o.icon}{o.label}</span>
           </button>
         )
@@ -143,8 +143,8 @@ export const Sheet = ({ open, onClose, title, children }: { open: boolean; onClo
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-40 grid items-end lg:place-items-center" role="dialog" aria-modal="true" aria-label={title}>
-          <motion.div className="absolute inset-0 bg-[#0E1116]/45 backdrop-blur-[2px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: dur.base }} onClick={onClose} />
-          <motion.div
+          <m.div className="absolute inset-0 bg-[#0E1116]/45 backdrop-blur-[2px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: dur.base }} onClick={onClose} />
+          <m.div
             ref={panel}
             className="relative mx-auto flex max-h-[92dvh] w-full max-w-[520px] flex-col rounded-t-xl bg-surface shadow-3 lg:rounded-xl"
             initial={reduce ? { opacity: 0 } : { y: '100%' }}
@@ -167,7 +167,7 @@ export const Sheet = ({ open, onClose, title, children }: { open: boolean; onClo
               <button type="button" data-close onClick={onClose} className={btn.icon} aria-label="Chiudi"><X size={20} /></button>
             </div>
             <div className="overflow-y-auto overscroll-contain px-5 pb-[max(20px,env(safe-area-inset-bottom))]">{children}</div>
-          </motion.div>
+          </m.div>
         </div>
       )}
     </AnimatePresence>
@@ -181,18 +181,18 @@ export const Celebrate = ({ size = 96 }: { size?: number }) => {
       {!reduce && Array.from({ length: 14 }, (_, i) => {
         const a = (i / 14) * Math.PI * 2, d = size * (0.85 + (i % 3) * 0.12)
         return (
-          <motion.i key={i} className={`absolute block h-[5px] w-4 rounded-full ${i % 4 === 0 ? 'bg-ink' : 'bg-lime'}`} style={{ rotate: `${(a * 180) / Math.PI}deg` }}
+          <m.i key={i} className={`absolute block h-[5px] w-4 rounded-full ${i % 4 === 0 ? 'bg-ink' : 'bg-lime'}`} style={{ rotate: `${(a * 180) / Math.PI}deg` }}
             initial={{ x: 0, y: 0, opacity: 0, scaleX: 0.4 }}
             animate={{ x: Math.cos(a) * d, y: Math.sin(a) * d, opacity: [0, 1, 0], scaleX: [0.4, 1.2, 0.6] }}
             transition={{ duration: 0.9, delay: 0.32, ease: ease.out }} />
         )
       })}
-      <motion.span className="absolute rounded-full border-2 border-lime" style={{ width: size, height: size }} initial={{ scale: 0.6, opacity: 0 }} animate={reduce ? { opacity: 0 } : { scale: [0.6, 1.7], opacity: [0.9, 0] }} transition={{ duration: 0.8, delay: 0.25, ease: ease.out }} />
-      <motion.span className="relative grid place-items-center rounded-full bg-lime shadow-[0_18px_50px_-12px_rgb(170_210_0/0.9)]" style={{ width: size, height: size }} initial={reduce ? false : { scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 18 }}>
+      <m.span className="absolute rounded-full border-2 border-lime" style={{ width: size, height: size }} initial={{ scale: 0.6, opacity: 0 }} animate={reduce ? { opacity: 0 } : { scale: [0.6, 1.7], opacity: [0.9, 0] }} transition={{ duration: 0.8, delay: 0.25, ease: ease.out }} />
+      <m.span className="relative grid place-items-center rounded-full bg-lime shadow-[0_18px_50px_-12px_rgb(170_210_0/0.9)]" style={{ width: size, height: size }} initial={reduce ? false : { scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 380, damping: 18 }}>
         <svg width={size * 0.46} height={size * 0.46} viewBox="0 0 24 24" fill="none" stroke="#0E1116" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-          <motion.path d="M4.5 12.5l5 5L19.5 7" initial={reduce ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.45, delay: 0.2, ease: ease.out }} />
+          <m.path d="M4.5 12.5l5 5L19.5 7" initial={reduce ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.45, delay: 0.2, ease: ease.out }} />
         </svg>
-      </motion.span>
+      </m.span>
     </div>
   )
 }
@@ -201,12 +201,12 @@ export const Skeleton = ({ className = '' }: { className?: string }) => <div cla
 
 // Stato vuoto: icona in un tondo, titolo, testo e un'azione
 export const Empty = ({ icon, title, text, action }: { icon: ReactNode; title: string; text: string; action?: ReactNode }) => (
-  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: dur.slow, ease: ease.out }} className={`${card} grid justify-items-center gap-3 px-6 py-10 text-center`}>
+  <m.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: dur.slow, ease: ease.out }} className={`${card} grid justify-items-center gap-3 px-6 py-10 text-center`}>
     <span className="grid size-16 place-items-center rounded-full bg-lime-soft text-lime-ink">{icon}</span>
     <h2 className="t-title m-0 text-[19px]">{title}</h2>
     <p className="m-0 max-w-[30ch] text-[14px] text-ink-3">{text}</p>
     {action && <div className="mt-2">{action}</div>}
-  </motion.div>
+  </m.div>
 )
 
 // Object URL della foto salvata in IndexedDB, revocato quando cambia o si smonta

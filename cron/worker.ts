@@ -2,6 +2,7 @@ import { localParts, pushText, remindersFor, type Rec } from '../server/reminder
 import * as Sentry from '@sentry/cloudflare'
 import { sendPush, type PushEnv } from '../server/push'
 import { sentryOptions, type SentryEnv } from '../server/sentry'
+import { runBackup, type BackupEnv } from './backup'
 
 // Piano gratuito: 50 subrequest per esecuzione; ne teniamo margine.
 // Chi non entra in questo giro resta in coda (last_reminded_at) e passa davanti all'ora successiva.
@@ -90,15 +91,18 @@ export const runReminders = async (env: PushEnv, now: Date) => {
   }
 }
 
-// Sentry segue il giro orario: errori, e un monitor del cron che avvisa se un giro salta o fallisce
-export default Sentry.withSentry<PushEnv & SentryEnv>((env) => sentryOptions(env), {
-  scheduled: (_, env, ctx) =>
+export const BACKUP_CRON = '30 2 * * *' // 03:30 in Italia d'inverno, 04:30 d'estate
+
+type CronEnv = PushEnv & SentryEnv & BackupEnv
+// Stessi valori dei monitor creati su Sentry (il primo check-in li riscrive): il promemoria orario apre un problema dopo 2 giri persi, la copia notturna subito
+const monitor = { checkinMargin: 10, maxRuntime: 5, timezone: 'Etc/UTC', recoveryThreshold: 1 } as const
+
+// Sentry segue i due giri: errori, e un monitor per ciascuno che avvisa se un giro salta o fallisce
+export default Sentry.withSentry<CronEnv>((env) => sentryOptions(env), {
+  scheduled: (controller, env, ctx) =>
     ctx.waitUntil(
-      Sentry.withMonitor('revkeeper-cron', () => runReminders(env, new Date()), {
-        schedule: { type: 'crontab', value: '0 * * * *' },
-        checkinMargin: 10,
-        maxRuntime: 5,
-        timezone: 'Etc/UTC',
-      }),
+      controller.cron === BACKUP_CRON
+        ? Sentry.withMonitor('revkeeper-backup', () => runBackup(env, new Date()), { ...monitor, failureIssueThreshold: 1, schedule: { type: 'crontab', value: BACKUP_CRON } })
+        : Sentry.withMonitor('revkeeper-cron', () => runReminders(env, new Date()), { ...monitor, failureIssueThreshold: 2, schedule: { type: 'crontab', value: '0 * * * *' } }),
     ),
-} satisfies ExportedHandler<PushEnv & SentryEnv>)
+} satisfies ExportedHandler<CronEnv>)

@@ -1,4 +1,4 @@
-import { motion } from 'motion/react'
+import { m } from 'motion/react'
 import { Check, Pencil, Plus } from 'lucide-react'
 import type { Bike, Id } from './domain/types'
 import { km as fmtKm } from './format'
@@ -16,7 +16,7 @@ export const Plate = ({ plate }: { plate: string }) => (
 const Row = ({ bike, km, active, onPick, onEdit }: { bike: Bike; km: number; active: boolean; onPick: () => void; onEdit: () => void }) => {
   const photo = usePhoto(bike.photoId)
   return (
-    <motion.li variants={listItem} className={`${card} relative overflow-hidden ${active ? 'ring-2 ring-ink dark:ring-lime' : ''}`}>
+    <m.li variants={listItem} className={`${card} relative overflow-hidden ${active ? 'ring-2 ring-ink dark:ring-lime' : ''}`}>
       <button type="button" onClick={onPick} aria-current={active} className="grid w-full text-left">
         <span className="relative block aspect-[16/7] overflow-hidden bg-sunken">
           {photo ? <img src={photo} alt="" className="h-full w-full object-cover" /> : (
@@ -32,7 +32,7 @@ const Row = ({ bike, km, active, onPick, onEdit }: { bike: Bike; km: number; act
         </span>
       </button>
       <button type="button" onClick={onEdit} className="absolute bottom-4 right-4 grid size-11 place-items-center rounded-full bg-surface text-ink shadow-1 ring-1 ring-line transition-shadow hover:ring-line-strong active:scale-95" aria-label={`Modifica ${bike.make} ${bike.model}`}><Pencil size={17} /></button>
-    </motion.li>
+    </m.li>
   )
 }
 
@@ -47,8 +47,8 @@ export const Garage = ({ bikes, kms, activeId, onPick, onEdit, onAdd, onClose }:
 }) => (
   <Screen>
     <PageHead title="Garage" sub={bikes.length === 1 ? '1 moto' : `${bikes.length} moto`} onBack={onClose} action={<button type="button" onClick={onAdd} className={`${btn.primary} h-11 px-5`}><Plus size={18} strokeWidth={2.6} />Moto</button>} />
-    <motion.ul className="m-0 grid list-none gap-4 p-0 lg:grid-cols-2" variants={list} initial="initial" animate="animate">
+    <m.ul className="m-0 grid list-none gap-4 p-0 lg:grid-cols-2" variants={list} initial="initial" animate="animate">
       {bikes.map((b) => <Row key={b.id} bike={b} km={kms[b.id] ?? b.startKm} active={b.id === activeId} onPick={() => onPick(b.id)} onEdit={() => onEdit(b.id)} />)}
-    </motion.ul>
+    </m.ul>
   </Screen>
 )

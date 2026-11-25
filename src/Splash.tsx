@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, m, useReducedMotion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { IgnitionMark } from './Mark'
 import { ease } from './motion'
@@ -22,20 +22,20 @@ export const Splash = () => {
   return (
     <AnimatePresence>
       {show && !reduce && (
-        <motion.div
+        <m.div
           className="fixed inset-0 z-[60] grid place-items-center bg-bg"
           exit={{ opacity: 0, transition: { duration: 0.32, ease: ease.inOut } }}
           aria-hidden="true"
         >
           <div className="grid justify-items-center gap-5">
-            <motion.div exit={{ scale: 0.92, transition: { duration: 0.3 } }}>
+            <m.div exit={{ scale: 0.92, transition: { duration: 0.3 } }}>
               <IgnitionMark size={128} onDone={() => setTimeout(() => setShow(false), 280)} />
-            </motion.div>
-            <motion.span className="t-display text-[26px]" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.42, ease: ease.out }}>
+            </m.div>
+            <m.span className="t-display text-[26px]" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.42, ease: ease.out }}>
               revkeeper
-            </motion.span>
+            </m.span>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   )

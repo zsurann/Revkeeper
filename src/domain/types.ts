@@ -39,6 +39,7 @@ export type MaintenanceItem = Meta & {
   months?: number
   firstKm?: number
   origin: 'model' | 'preset' | 'user'
+  notes?: string // appunti della persona (ricambio usato, coppia di serraggio…)
 }
 
 export type Service = Meta & {

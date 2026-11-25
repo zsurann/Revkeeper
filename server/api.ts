@@ -1,6 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 import { AuthError, verifyIdToken, type Jwk } from './google'
 import { sendPush, type PushEnv } from './push'
+import { hit, ipKey, type RateName } from './ratelimit'
 import { isId, recordError } from './schema'
 import { zipStoreStream, type ZipEntry } from './zip'
 
@@ -56,7 +57,16 @@ const sameOrigin = (req: Request) => {
 
 type Change = { kind: string; id: string; data: unknown; updatedAt: number; deleted?: boolean }
 
+// Troppe richieste: 429 con Retry-After. L'IP serve solo come chiave e si salva come hash.
+const limited = async (env: Env, name: RateName, who: string) => {
+  const r = await hit(env.DB, name, who)
+  return r.ok ? undefined : json({ error: 'Troppe richieste: riprova tra qualche minuto' }, 429, { 'retry-after': String(r.retryAfter) })
+}
+
 const login = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>) => {
+  const ip = req.headers.get('cf-connecting-ip') ?? 'sconosciuto'
+  const stop = await limited(env, 'login', await sha256(`ip:${ipKey(ip)}`))
+  if (stop) return stop
   const { credential } = (await req.json()) as { credential?: string }
   if (!credential) return fail(400, 'Credenziale mancante')
   const user = await verifyIdToken(credential, env.GOOGLE_CLIENT_ID, keys)
@@ -388,6 +398,8 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
       return json({ ok: true })
     }
     if (req.method === 'POST' && path === '/push/test') {
+      const stop = await limited(env, 'pushTest', userId)
+      if (stop) return stop
       const { results } = await env.DB.prepare('SELECT endpoint, p256dh, auth FROM push_subs WHERE user_id = ?').bind(userId).all<{ endpoint: string; p256dh: string; auth: string }>()
       const status = await Promise.all(results.map((sub) => sendPush(env, sub, { title: 'Revkeeper', body: 'Le notifiche funzionano.' })))
       return json({ sent: status.filter((x) => x < 300).length, status })
@@ -395,7 +407,7 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
     if (req.method === 'GET' && path === '/sync/pull') return await pull(url, env, userId)
     const file = /^\/files\/(.+)$/.exec(path)?.[1]
     if (file && FILE_ID.test(file)) {
-      if (req.method === 'PUT') return await putFile(req, env, userId, file)
+      if (req.method === 'PUT') return (await limited(env, 'upload', userId)) ?? (await putFile(req, env, userId, file))
       if (req.method === 'GET') return await getFile(env, userId, file)
     }
     return fail(404, 'Non trovato')

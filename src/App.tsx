@@ -1,10 +1,10 @@
-import { AnimatePresence, LayoutGroup, motion, MotionConfig } from 'motion/react'
+import { AnimatePresence, LayoutGroup, LazyMotion, m, MotionConfig } from 'motion/react'
 import { ChevronDown, FileText, Gauge, NotebookPen, Settings2, UserRound, Warehouse, WifiOff, Wrench, type LucideIcon } from 'lucide-react'
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Dashboard, DashboardSkeleton, type DocRow, type Row } from './Dashboard'
 import { startAutoSync } from './sync'
 import { findDuplicateBikes, getMeta, listBikes, listByBike, mergeBikes, save } from './db'
-import { currentKm, daysBetween, documentStatus, nextDue } from './domain/due'
+import { currentKm, daysBetween, documentStatus, kmPerDay, nextDue } from './domain/due'
 import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type Id, type MaintenanceItem, type OdometerReading, type Service, type Status } from './domain/types'
 import { Garage } from './Garage'
 import { KmSheet } from './KmSheet'
@@ -14,6 +14,7 @@ import { Welcome } from './Welcome'
 import { eur, today } from './format'
 import { watchSystemTheme } from './theme'
 import { toast, Toaster } from './toast'
+import { UpdatePrompt } from './UpdatePrompt'
 import { btn, usePhoto } from './ui'
 
 // Schermate che non servono all'avvio: si scaricano a parte (restano nel precache, quindi vanno anche offline).
@@ -93,14 +94,20 @@ const BikeThumb = ({ bike, className }: { bike: Bike; className: string }) => {
     : <span className={`${className} t-title grid place-items-center bg-[#0E1116] text-[12px] text-[#D4FF3A]`}>{bike.make.slice(0, 2).toUpperCase()}</span>
 }
 
+// Solo i componenti "m" leggeri nel blocco iniziale; le funzioni di Motion arrivano in un file a parte
+const motionFeatures = () => import('./motionFeatures').then((x) => x.default)
+
 export const App = () => (
-  <MotionConfig reducedMotion="user">
-    <Boundary>
-      <Main />
-      <Toaster />
-      <Splash />
-    </Boundary>
-  </MotionConfig>
+  <LazyMotion features={motionFeatures} strict>
+    <MotionConfig reducedMotion="user">
+      <Boundary>
+        <Main />
+        <Toaster />
+        <UpdatePrompt />
+        <Splash />
+      </Boundary>
+    </MotionConfig>
+  </LazyMotion>
 )
 
 const toTop = () => {
@@ -238,9 +245,9 @@ const Main = () => {
       return <Garage bikes={bikes} kms={kms} activeId={bike.id} onPick={pick} onEdit={(id) => { writeActive(id); setActiveId(id); setView('edit') }} onAdd={() => setView('new')} onClose={() => setView('home')} />
     if (!detail) return <DashboardSkeleton />
     if (tab === 'maint') return <Maintenance bike={bike} items={detail.items} rows={rows} onChange={() => void loadDetail(bike)} />
-    if (tab === 'services') return <Services bike={bike} km={km} items={detail.items} services={detail.services} onChange={refresh} />
+    if (tab === 'services') return <Services bike={bike} km={km} items={detail.items} services={detail.services} readings={detail.readings} onChange={refresh} />
     if (tab === 'documents') return <Documents bike={bike} documents={detail.documents} onChange={refresh} />
-    return <Dashboard next={next} rows={rest} docs={docs} last={last} labelOf={labelOf} km={km} from={prevKm ?? Math.max(0, km - 120)} onKm={() => setKmOpen(true)} go={go} />
+    return <Dashboard next={next} rows={rest} docs={docs} last={last} labelOf={labelOf} km={km} from={prevKm ?? Math.max(0, km - 120)} rate={detail ? kmPerDay(detail.readings, today()) : undefined} onKm={() => setKmOpen(true)} go={go} />
   })()
   const pageKey = inTabs ? tab : view
 
@@ -261,7 +268,7 @@ const Main = () => {
               return (
                 <button key={t.id} type="button" onClick={() => (t.id === 'garage' || t.id === 'account' ? setView(t.id) : go(t.id))} aria-current={on ? 'page' : undefined}
                   className={`relative flex h-11 items-center gap-3 rounded-full px-4 text-[14px] font-semibold transition-colors ${on ? 'text-black' : 'text-ink-2 hover:bg-sunken'}`}>
-                  {on && <motion.span layoutId="side-pill" className="absolute inset-0 rounded-full bg-lime" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
+                  {on && <m.span layoutId="side-pill" className="absolute inset-0 rounded-full bg-lime" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
                   <t.icon size={19} className="relative" /><span className="relative">{t.label}</span>
                 </button>
               )
@@ -300,13 +307,13 @@ const Main = () => {
             </div>
           )}
           <AnimatePresence mode="wait" initial={false} onExitComplete={toTop}>
-            <motion.div key={pageKey} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
+            <m.div key={pageKey} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
               <Suspense fallback={<div className="mx-auto max-w-[480px] px-4 pt-2"><DashboardSkeleton /></div>}>
                 {inTabs ? (
                   <main className="mx-auto grid max-w-[480px] content-start gap-6 px-4 pb-32 pt-2 lg:max-w-[1100px] lg:px-10 lg:pb-16 lg:pt-8">{content}</main>
                 ) : content}
               </Suspense>
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
       </div>
@@ -319,7 +326,7 @@ const Main = () => {
               return (
                 <button key={t.id} type="button" onClick={() => go(t.id)} aria-current={on ? 'page' : undefined} className={`grid min-h-12 justify-items-center gap-1 py-1 text-[11px] font-semibold transition-colors ${on ? 'text-ink' : 'text-ink-3'}`}>
                   <span className="relative grid h-8 w-14 place-items-center">
-                    {on && <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-lime" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+                    {on && <m.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-lime" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
                     <t.icon size={20} strokeWidth={on ? 2.3 : 1.9} className={`relative ${on ? 'text-black' : ''}`} />
                   </span>
                   {t.label}
@@ -329,7 +336,7 @@ const Main = () => {
           </div>
         </nav>
       )}
-      <KmSheet open={kmOpen} bike={bike} km={km} onClose={() => setKmOpen(false)} onSaved={async (prev) => { setPrevKm(prev); await load() }} />
+      <KmSheet open={kmOpen} bike={bike} km={km} onClose={() => setKmOpen(false)} onSaved={async (prev) => { setPrevKm(prev); await load() }} onChange={async () => { setPrevKm(undefined); await load() }} />
     </LayoutGroup>
   )
 }

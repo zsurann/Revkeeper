@@ -22,8 +22,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'script', // file esterno: la CSP non ammette script inline
+      registerType: 'prompt', // "Aggiornamento disponibile" invece del ricaricamento silenzioso
+      injectRegister: false, // lo registra main.tsx (nel bundle: la CSP non ammette script inline)
       manifest: {
         name: 'Revkeeper',
         short_name: 'Revkeeper',

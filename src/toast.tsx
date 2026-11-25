@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import { Check, CircleAlert, CloudOff, Info } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { dur, spring } from './motion'
@@ -21,7 +21,7 @@ const Toast = ({ t, onClose }: { t: Item; onClose: () => void }) => {
     return () => clearTimeout(id)
   }, [t.id]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <motion.div
+    <m.div
       layout
       role="status"
       initial={{ opacity: 0, y: -24, scale: 0.96 }}
@@ -39,7 +39,7 @@ const Toast = ({ t, onClose }: { t: Item; onClose: () => void }) => {
         <b className="truncate text-[14px] font-semibold">{t.title}</b>
         {t.body && <span className="text-[13px] text-[#AEB6C2]">{t.body}</span>}
       </span>
-    </motion.div>
+    </m.div>
   )
 }
 

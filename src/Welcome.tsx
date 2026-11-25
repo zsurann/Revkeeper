@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import { Bell, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { getMeta, listBikes } from './db'
@@ -19,13 +19,13 @@ const slide = { initial: { opacity: 0, x: 28 }, animate: { opacity: 1, x: 0 }, e
 const NotificationPreview = () => (
   <div className="relative grid h-[210px] content-center gap-2 overflow-hidden rounded-xl bg-[linear-gradient(160deg,#2B3A1A_0%,#0E1116_70%)] px-3.5" aria-hidden="true">
     <span className="absolute left-0 right-0 top-4 text-center text-[13px] font-medium text-white/70">martedì 9 dicembre</span>
-    <motion.div initial={{ opacity: 0, y: -22, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.9, delay: 0.25, ease: ease.out }}
+    <m.div initial={{ opacity: 0, y: -22, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.9, delay: 0.25, ease: ease.out }}
       className="mt-6 grid gap-0.5 rounded-[20px] bg-white/80 px-3.5 py-3 text-[#0E1116] shadow-[0_12px_30px_-12px_rgb(0_0_0/0.6)] backdrop-blur-xl">
       <span className="flex items-center gap-2 text-[12px] text-[#474F5C]"><Mark size={18} className="rounded-[5px]" />REVKEEPER<span className="ml-auto">ora</span></span>
       <b className="text-[15px] font-semibold">L'assicurazione scade tra 7 giorni</b>
       <span className="text-[14px] text-[#2B313A]">La tua moto</span>
-    </motion.div>
-    <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 0.55, y: 0 }} transition={{ duration: 0.7, delay: 0.7, ease: ease.out }}
+    </m.div>
+    <m.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 0.55, y: 0 }} transition={{ duration: 0.7, delay: 0.7, ease: ease.out }}
       className="mx-3 h-3 rounded-b-[14px] bg-white/50" />
   </div>
 )
@@ -73,14 +73,14 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
       <div role="progressbar" aria-label="Benvenuto" aria-valuemin={1} aria-valuemax={3} aria-valuenow={at + 1} className="grid grid-cols-3 gap-1.5">
         {steps.map((s, i) => (
           <span key={s} className="relative h-1.5 overflow-hidden rounded-full bg-line">
-            <motion.i className="absolute inset-0 origin-left rounded-full bg-ink dark:bg-lime" initial={false} animate={{ scaleX: i <= at ? 1 : 0 }} transition={{ duration: 0.5, ease: ease.out }} />
+            <m.i className="absolute inset-0 origin-left rounded-full bg-ink dark:bg-lime" initial={false} animate={{ scaleX: i <= at ? 1 : 0 }} transition={{ duration: 0.5, ease: ease.out }} />
           </span>
         ))}
       </div>
 
       <AnimatePresence mode="wait">
         {step === 'login' && (
-          <motion.section key="login" {...slide} className="flex flex-1 flex-col">
+          <m.section key="login" {...slide} className="flex flex-1 flex-col">
             <div className="mt-12 grid justify-items-start gap-6">
               <IgnitionMark size={96} />
               <h1 className="t-display m-0 text-[40px]">Ogni scadenza, al momento giusto.</h1>
@@ -91,11 +91,11 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
               <button type="button" onClick={() => void after('login')} className={later}>Più tardi</button>
               <p className="m-0 text-center text-[12px] text-ink-3">Puoi accedere quando vuoi da Account.</p>
             </div>
-          </motion.section>
+          </m.section>
         )}
 
         {step === 'push' && (
-          <motion.section key="push" {...slide} className="flex flex-1 flex-col">
+          <m.section key="push" {...slide} className="flex flex-1 flex-col">
             <div className="mt-10"><NotificationPreview /></div>
             <h1 className="t-display m-0 mt-8 flex items-center gap-3 text-[34px]">
               <Bell size={30} className="shrink-0 origin-[50%_10%] animate-[ring_2.4s_ease-in-out_600ms_infinite] text-lime-ink" strokeWidth={2.2} />
@@ -110,18 +110,18 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
               <button type="button" onClick={() => void enable()} disabled={busy} className={big}><Bell size={19} />Attiva notifiche</button>
               <button type="button" onClick={() => void after('push')} className={later}>Non ora</button>
             </div>
-          </motion.section>
+          </m.section>
         )}
 
         {step === 'bike' && (
-          <motion.section key="bike" {...slide} className="flex flex-1 flex-col">
+          <m.section key="bike" {...slide} className="flex flex-1 flex-col">
             <BikeDrawing />
             <h1 className="t-display m-0 mt-4 text-[38px]">Aggiungi la tua moto</h1>
             <p className="m-0 mt-3 text-[16px] leading-relaxed text-ink-2">Scegli marca, modello e anno: intervalli, gomme e dati tecnici si compilano da soli.</p>
             <div className="mt-auto grid pt-8">
               <button type="button" onClick={onDone} className={big}><Plus size={20} strokeWidth={2.6} />Aggiungi moto</button>
             </div>
-          </motion.section>
+          </m.section>
         )}
       </AnimatePresence>
 

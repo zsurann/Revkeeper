@@ -7,6 +7,7 @@ import { App } from './App'
 import { browserAllowed, detectPlatform, isInstalled } from './domain/platform'
 import { captureInstallPrompt } from './installPrompt'
 import { THEME_KEY } from './theme'
+import { offerUpdate } from './UpdatePrompt'
 
 // La pagina di installazione si vede solo nel browser del telefono: non pesa sull'app installata
 const Install = lazy(() => import('./Install').then((m) => ({ default: m.Install })))
@@ -43,7 +44,12 @@ const resetLocalData = () =>
   })
 
 // Anche sulla pagina di installazione: senza service worker Chrome non offre il popup
-registerSW({ immediate: true })
+// Una nuova versione non si attiva da sola: App mostra "Aggiornamento disponibile". Controllo ogni ora per chi tiene l'app aperta.
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh: () => offerUpdate(() => updateSW(true)),
+  onRegisteredSW: (_url, reg) => { if (reg) setInterval(() => void reg.update().catch(() => undefined), 3_600_000) },
+})
 void resetLocalData().then(() =>
   createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode>{gate ? <Suspense><Install platform={platform} /></Suspense> : <App />}</StrictMode>),
 )
