@@ -14,7 +14,9 @@ const euro = (f: FormData, k: string) => {
 
 export const serviceFromForm = (f: FormData, bikeId: Id, today: string): ServiceDraft => {
   const date = String(f.get('date') ?? '')
-  const km = Number(String(f.get('km') ?? '').trim())
+  // "8.836" o "8 836" come li scrive chi legge il cruscotto: i separatori delle migliaia non contano
+  const rawKm = String(f.get('km') ?? '').trim()
+  const km = Number(/^\d{1,3}([.\s\u00a0']\d{3})+$/.test(rawKm) ? rawKm.replace(/\D/g, '') : rawKm)
   const itemIds = f.getAll('itemIds').map(String)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > today) throw new RangeError('Data non valida o nel futuro')
   if (!Number.isInteger(km) || km < 0) throw new RangeError('Km non validi')

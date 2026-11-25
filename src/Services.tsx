@@ -34,7 +34,7 @@ const ServiceForm = ({ bike, km, items, onSaved }: { bike: Bike; km: number; ite
     <form onSubmit={submit} className="grid gap-4 pb-1">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Data"><input id="svc-date" name="date" type="date" required max={today()} defaultValue={today()} className={field} /></Field>
-        <Field label="Km"><input id="svc-km" name="km" required inputMode="numeric" pattern="[0-9]*" defaultValue={km} className={field} /></Field>
+        <Field label="Km"><input id="svc-km" name="km" required inputMode="numeric" pattern="[0-9. ]*" defaultValue={km} className={field} /></Field>
       </div>
       <fieldset className="m-0 grid gap-2 border-0 p-0">
         <legend className="mb-2 text-[13px] font-medium text-ink-2">Cosa hai fatto</legend>

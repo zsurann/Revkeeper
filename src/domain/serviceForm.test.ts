@@ -40,3 +40,9 @@ it('accetta foto e PDF fino a 15 MB', () => {
   expect(() => checkFile({ size: MAX_FILE + 1, type: 'image/jpeg' })).toThrow('15 MB')
   expect(() => checkFile({ size: 10, type: 'text/plain' })).toThrow('Solo foto o PDF')
 })
+
+it('accetta i km con il punto delle migliaia, ma non un decimale', () => {
+  expect(serviceFromForm(fd({ ...base, km: '8.836' }), 'b', '2026-11-20').km).toBe(8836)
+  expect(serviceFromForm(fd({ ...base, km: '23 500' }), 'b', '2026-11-20').km).toBe(23500)
+  expect(() => serviceFromForm(fd({ ...base, km: '12.5' }), 'b', '2026-11-20')).toThrow('Km non validi')
+})

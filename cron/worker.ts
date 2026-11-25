@@ -1,22 +1,27 @@
 import { localParts, pushText, remindersFor, type Rec } from '../server/reminders'
+import * as Sentry from '@sentry/cloudflare'
 import { sendPush, type PushEnv } from '../server/push'
+import { sentryOptions, type SentryEnv } from '../server/sentry'
 
 // Piano gratuito: 50 subrequest per esecuzione; ne teniamo margine.
 // Chi non entra in questo giro resta in coda (last_reminded_at) e passa davanti all'ora successiva.
 export const MAX_SENDS = 40
 const MAX_USERS = 40
+// Recupero: chi è rimasto fuori alla sua ora (tetto raggiunto, giro del cron saltato) viene avvisato
+// in una delle ore successive dello stesso giorno, non oltre questa finestra. Un solo avviso al giorno.
+export const CATCH_UP_HOURS = 6
 
 const mark = (env: PushEnv, id: string, now: Date) =>
   env.DB.prepare('UPDATE users SET last_reminded_at = ? WHERE id = ?').bind(now.getTime(), id).run()
 
 export const runReminders = async (env: PushEnv, now: Date) => {
   const { results: users } = await env.DB.prepare(
-    `SELECT u.id AS id, u.tz AS tz, u.notify_hour AS notify_hour
+    `SELECT u.id AS id, u.tz AS tz, u.notify_hour AS notify_hour, u.last_reminded_at AS last
      FROM users u
      WHERE u.notify_hour IS NOT NULL
        AND EXISTS (SELECT 1 FROM push_subs p WHERE p.user_id = u.id)
      ORDER BY (u.last_reminded_at IS NULL) DESC, u.last_reminded_at ASC, u.id ASC`,
-  ).all<{ id: string; tz: string; notify_hour: number }>()
+  ).all<{ id: string; tz: string; notify_hour: number; last: number | null }>()
   let sent = 0
   let seen = 0
   for (const u of users) {
@@ -32,7 +37,9 @@ export const runReminders = async (env: PushEnv, now: Date) => {
       console.error(`Fuso non valido per ${u.id}`, e)
       continue
     }
-    if (hour !== u.notify_hour) continue
+    const late = hour - u.notify_hour
+    if (late < 0 || late >= CATCH_UP_HOURS) continue
+    if (u.last != null && localParts(new Date(u.last), u.tz).date === date) continue // già avvisato oggi
     seen++
     const { results } = await env.DB.prepare(
       "SELECT kind, data FROM records WHERE user_id = ? AND deleted = 0 AND kind IN ('bikes','readings','items','services','documents')",
@@ -83,6 +90,15 @@ export const runReminders = async (env: PushEnv, now: Date) => {
   }
 }
 
-export default {
-  scheduled: (_: ScheduledController, env: PushEnv, ctx: ExecutionContext) => ctx.waitUntil(runReminders(env, new Date())),
-}
+// Sentry segue il giro orario: errori, e un monitor del cron che avvisa se un giro salta o fallisce
+export default Sentry.withSentry<PushEnv & SentryEnv>((env) => sentryOptions(env), {
+  scheduled: (_, env, ctx) =>
+    ctx.waitUntil(
+      Sentry.withMonitor('revkeeper-cron', () => runReminders(env, new Date()), {
+        schedule: { type: 'crontab', value: '0 * * * *' },
+        checkinMargin: 10,
+        maxRuntime: 5,
+        timezone: 'Etc/UTC',
+      }),
+    ),
+} satisfies ExportedHandler<PushEnv & SentryEnv>)

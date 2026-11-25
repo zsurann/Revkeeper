@@ -1,12 +1,17 @@
-import { StrictMode } from 'react'
+import { lazy, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
+import { initSentry, reactErrorHandlers } from './sentry'
 import { App } from './App'
 import { browserAllowed, detectPlatform, isInstalled } from './domain/platform'
-import { Install } from './Install'
 import { captureInstallPrompt } from './installPrompt'
 import { THEME_KEY } from './theme'
+
+// La pagina di installazione si vede solo nel browser del telefono: non pesa sull'app installata
+const Install = lazy(() => import('./Install').then((m) => ({ default: m.Install })))
+
+initSentry()
 
 // Sui telefoni Revkeeper si usa solo installata: nel browser c'è la pagina di installazione. Computer e tablet: sito normale
 const platform = detectPlatform(navigator.userAgent)
@@ -40,5 +45,5 @@ const resetLocalData = () =>
 // Anche sulla pagina di installazione: senza service worker Chrome non offre il popup
 registerSW({ immediate: true })
 void resetLocalData().then(() =>
-  createRoot(document.getElementById('root')!).render(<StrictMode>{gate ? <Install platform={platform} /> : <App />}</StrictMode>),
+  createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode>{gate ? <Suspense><Install platform={platform} /></Suspense> : <App />}</StrictMode>),
 )

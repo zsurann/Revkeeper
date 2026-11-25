@@ -1,4 +1,5 @@
 import { currentKm, daysBetween, nextDue } from '../src/domain/due'
+import { int } from '../src/domain/num'
 import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type MaintenanceItem, type OdometerReading, type Service } from '../src/domain/types'
 
 export type Rec = { kind: string; data: unknown }
@@ -30,7 +31,7 @@ export const remindersFor = (records: Rec[], today: string): string[] => {
     }
     const last = r.reduce((m, x) => (x.date > m ? x.date : m), bike.startDate)
     const idle = daysBetween(last, today)
-    if (idle > 0 && idle % 30 === 0) out.push(`${name}: aggiorna i km (${currentKm(bike, r).toLocaleString('it-IT')} km di ${idle} giorni fa)`)
+    if (idle > 0 && idle % 30 === 0) out.push(`${name}: aggiorna i km (${int(currentKm(bike, r))} km di ${idle} giorni fa)`)
   }
   return out
 }

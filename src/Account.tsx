@@ -188,7 +188,7 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
         </Section>
       )}
 
-      {msg && <p role="status" className="m-0 rounded-md bg-red-soft px-4 py-3 text-[14px] font-medium text-red-ink">{busy ? 'Attendi…' : msg}</p>}
+      {msg && !busy && <p role="alert" className="m-0 rounded-md bg-red-soft px-4 py-3 text-[14px] font-medium text-red-ink">{msg}</p>}
       <p className="m-0 px-1 text-[12px] text-ink-3">Elenco dei modelli: NHTSA vPIC, Traficom (CC BY 4.0), DGT, ASTRA/USTRA (Ufficio federale delle strade), schede e libretti ufficiali dei costruttori.</p>
 
       <Sheet open={ask === 'del'} onClose={() => setAsk(undefined)} title="Eliminare l'account?">
@@ -203,7 +203,7 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
       </Sheet>
       <Sheet open={ask === 'out'} onClose={() => setAsk(undefined)} title="Uscire da tutti i dispositivi?">
         <div className="grid gap-4 pb-1">
-          <p className="m-0 text-[14px] text-ink-2">Chiude l'accesso su tutti i telefoni. I dati online restano; su questo vengono tolti. Le notifiche degli altri dispositivi restano finché non le disattivi.</p>
+          <p className="m-0 text-[14px] text-ink-2">Chiude l'accesso su tutti i telefoni. I dati online restano; su questo vengono tolti. Si spengono anche le notifiche su tutti i dispositivi.</p>
           <button type="button" onClick={() => void exitAll()} disabled={busy} className={`${btn.danger} w-full`}><LogOut size={17} />Esci ovunque</button>
           <button type="button" onClick={() => setAsk(undefined)} disabled={busy} className={`${btn.secondary} w-full`}>Annulla</button>
         </div>

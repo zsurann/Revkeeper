@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import { currentKm } from './domain/due'
+import { int } from './domain/num'
 import type { Attachment, Bike, BikeDocument, Id, MaintenanceItem, OdometerReading, Service } from './domain/types'
 
 type Rec<T> = { key: Id; value: T; indexes: { bikeId: Id } }
@@ -65,7 +66,7 @@ export class KmDecreasingError extends Error {}
 export const addReading = async (bike: Bike, date: string, km: number) => {
   if (!Number.isFinite(km) || km < 0) throw new RangeError('Km non validi')
   const now = currentKm(bike, await listByBike('readings', bike.id))
-  if (km < now) throw new KmDecreasingError(`I km non possono scendere sotto ${now}`)
+  if (km < now) throw new KmDecreasingError(`I km non possono scendere sotto ${int(now)}`)
   return save('readings', { bikeId: bike.id, date, km })
 }
 

@@ -1,8 +1,12 @@
 name = "revkeeper"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-11-01"
+# Sentry usa AsyncLocalStorage
+compatibility_flags = ["nodejs_compat"]
 
 [vars]
+# DSN pubblico del progetto Sentry "revkeeper-api"
+SENTRY_DSN = "https://3198cfd0a3547a793223b94a02d4f8c0@o4512444032352256.ingest.de.sentry.io/4512490393829456"
 VAPID_SUBJECT = "https://revkeeper.pages.dev"
 VAPID_PUBLIC_KEY = "BCuIILVL_fqPhBQ3QuT-qiYNLyj0Vn_9lcpRv3PrQ_rCBP5FcP91ezdYRwE3kpWK9o_aOL2cF_mUc7V1hg97PsQ"
 GOOGLE_CLIENT_ID = "517496172383-1l7otafbhost3ubro8ei3qqnlgsa77ma.apps.googleusercontent.com"

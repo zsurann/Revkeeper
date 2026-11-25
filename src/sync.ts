@@ -1,4 +1,5 @@
 import { db, getMeta, setMeta, STORES, type StoreName } from './db'
+import { toast } from './toast'
 
 type Change = { kind: StoreName; id: string; data: unknown; updatedAt: number; deleted?: boolean; deviceId?: string }
 type Rec = { id: string; updatedAt: number; deletedAt?: number; dirty?: 1; blob?: Blob; uploaded?: 1; type?: string }
@@ -24,18 +25,33 @@ const toChange = (kind: StoreName, r: Rec): Change => {
   return { kind, id: r.id, data: r.deletedAt ? null : data, updatedAt: r.updatedAt, deleted: !!r.deletedAt }
 }
 
+// File che il server rifiuta per sempre (troppo grande, spazio esaurito, tipo non valido): riprovare non serve
+const REJECTED = new Set([400, 411, 413, 415, 507])
+
 const pushAll = async (device: string) => {
   const d = await db()
+  const rejected: string[] = []
   for (const kind of STORES) {
-    const dirty = ((await d.getAll(kind)) as Rec[]).filter((r) => r.dirty)
-    if (kind === 'attachments')
+    let dirty = ((await d.getAll(kind)) as Rec[]).filter((r) => r.dirty)
+    if (kind === 'attachments') {
+      const held = new Set<string>()
       for (const a of dirty.filter((a) => a.blob && !a.uploaded && !a.deletedAt)) {
         const res = await fetch(`/api/files/${a.id}`, { method: 'PUT', body: a.blob, headers: { 'content-type': a.type ?? 'application/octet-stream' } })
         if (res.status === 401) throw new LoggedOut()
-        if (!res.ok) throw new Error(`Upload ${a.id}: ${res.status} ${(await res.json().catch(() => ({}))).error ?? ''}`)
+        const why = res.ok ? '' : String((await res.json().catch(() => ({}))).error ?? '')
+        // Un file rifiutato resta sul telefono e non blocca il resto: prima un solo allegato troppo grande
+        // fermava ogni sincronizzazione, e il telefono non riceveva più le modifiche degli altri
+        if (REJECTED.has(res.status)) {
+          held.add(a.id)
+          rejected.push(why || `${(a as { name?: string }).name ?? 'Allegato'}: errore ${res.status}`)
+          continue
+        }
+        if (!res.ok) throw new Error(`Upload ${a.id}: ${res.status} ${why}`)
         a.uploaded = 1
         await d.put('attachments', a as never)
       }
+      dirty = dirty.filter((a) => !held.has(a.id)) // senza file sul server, il record non va inviato
+    }
     for (let i = 0; i < dirty.length; i += BATCH) {
       const batch = dirty.slice(i, i + BATCH)
       await api('/sync/push', { method: 'POST', body: JSON.stringify({ deviceId: device, changes: batch.map((r) => toChange(kind, r)) }) })
@@ -47,7 +63,10 @@ const pushAll = async (device: string) => {
       await tx.done
     }
   }
+  return rejected
 }
+
+export class FilesRejected extends Error {}
 
 // Stessa regola del server: vince l'orario più recente; a pari orario la copia del server è già la vincitrice,
 // salvo una modifica locale non ancora inviata, che vince se il suo deviceId è più grande (come farà il server)
@@ -78,10 +97,11 @@ export const syncNow = () =>
     try {
       if (!navigator.onLine || !(await getMeta<string>('account'))) return 0
       const device = await deviceId()
-      await pushAll(device)
+      const rejected = await pushAll(device)
       const applied = await pullAll(device)
       await setMeta('lastSync', Date.now())
       if (applied) dispatchEvent(new Event('revkeeper:synced'))
+      if (rejected.length) throw new FilesRejected(`Allegati non caricati: ${[...new Set(rejected)].join('; ')}`)
       return applied
     } catch (e) {
       if (e instanceof LoggedOut) {
@@ -169,13 +189,21 @@ export const downloadAccountExport = async () => {
   setTimeout(() => URL.revokeObjectURL(url), 1500)
 }
 
+// In automatico gli errori restano in console, tranne i file rifiutati: lì serve che la persona lo sappia (una volta)
+let warned = ''
+const quiet = (e: unknown) => {
+  if (e instanceof FilesRejected && e.message !== warned) {
+    warned = e.message
+    toast('Alcuni allegati restano sul telefono', { kind: 'warn', body: e.message })
+  } else console.warn(e)
+}
 let timer: ReturnType<typeof setTimeout> | undefined
 const later = () => {
   clearTimeout(timer)
-  timer = setTimeout(() => void syncNow().catch(console.warn), 2000) // debounce: un solo invio per raffica di modifiche
+  timer = setTimeout(() => void syncNow().catch(quiet), 2000) // debounce: un solo invio per raffica di modifiche
 }
 export const startAutoSync = () => {
   addEventListener('revkeeper:changed', later)
   addEventListener('online', later)
-  void syncNow().catch(console.warn)
+  void syncNow().catch(quiet)
 }

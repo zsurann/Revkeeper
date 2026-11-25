@@ -62,8 +62,8 @@ export const SectionTitle = ({ children, action, id }: { children: ReactNode; ac
   </div>
 )
 
-export const Field = ({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) => (
-  <label className="grid content-start gap-1.5 text-[13px] font-medium text-ink-2">
+export const Field = ({ label, children, hint, className = '' }: { label: string; children: ReactNode; hint?: string; className?: string }) => (
+  <label className={`grid min-w-0 content-start gap-1.5 text-[13px] font-medium text-ink-2 ${className}`}>
     {label}
     {children}
     {hint && <span className="text-[12px] font-normal text-ink-3">{hint}</span>}

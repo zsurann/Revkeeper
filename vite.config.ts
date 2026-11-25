@@ -2,8 +2,22 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
+
+// Cloudflare Pages passa ramo e commit alla build: diventano ambiente e release di Sentry
+const sha = process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA
+const branch = process.env.CF_PAGES_BRANCH
+const sentryEnv = !sha ? 'local' : branch === 'main' ? 'production' : 'preview'
+// Le mappe dei sorgenti si generano solo se c'è il token per caricarle su Sentry, poi si cancellano da dist:
+// non finiscono mai online
+const uploadMaps = !!process.env.SENTRY_AUTH_TOKEN && !!sha
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_SENTRY_RELEASE': JSON.stringify(sha ?? 'dev'),
+    'import.meta.env.VITE_SENTRY_ENVIRONMENT': JSON.stringify(sentryEnv),
+  },
+  build: { sourcemap: uploadMaps ? 'hidden' : false },
   plugins: [
     react(),
     tailwindcss(),
@@ -43,6 +57,15 @@ export default defineConfig({
           },
         ],
       },
+    }),
+    // Ultimo plugin: carica le mappe della build finale e lega la release al commit
+    uploadMaps && sentryVitePlugin({
+      org: 'grok-bot-w1',
+      project: 'revkeeper',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: { name: sha, deploy: { env: sentryEnv } }, // il token dell'organizzazione sa già che Sentry è nella regione UE
+      sourcemaps: { filesToDeleteAfterUpload: ['dist/**/*.map'] },
+      telemetry: false,
     }),
   ],
 })

@@ -1,9 +1,10 @@
 import type { Due } from './domain/due'
+import { euro, int } from './domain/num'
 
 // Data di oggi nel fuso del dispositivo, in formato AAAA-MM-GG
 export const today = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
 
-const n = (x: number) => Math.abs(Math.round(x)).toLocaleString('it-IT')
+const n = (x: number) => int(Math.abs(x))
 export const monthYear = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('it-IT', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 export const fullDate = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
 
@@ -18,8 +19,9 @@ export const dueRule = (d: Due) => {
 }
 
 
-export const km = (x: number) => `${Math.round(x).toLocaleString('it-IT')} km`
-export const eur = (x?: number) => (x === undefined ? '' : x.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' }))
+export const km = (x: number) => `${int(x)} km`
+export { int }
+export const eur = (x?: number) => (x === undefined ? '' : euro(x))
 export const dayMonth = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', timeZone: 'UTC' })
 
 // "ogni 6.000 km o 12 mesi"
