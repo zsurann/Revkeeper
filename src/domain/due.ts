@@ -18,7 +18,7 @@ const addDays = (d: IsoDate, days: number) => toIso(toMs(d) + days * DAY)
 const minDate = (a?: IsoDate, b?: IsoDate) => (a && b ? (a < b ? a : b) : (a ?? b))
 
 export const currentKm = (bike: Bike, readings: OdometerReading[]) =>
-  readings.reduce((max, r) => Math.max(max, r.km), bike.startKm)
+  readings.reduce((max, r) => (r.deletedAt ? max : Math.max(max, r.km)), bike.startKm)
 
 // Media km/giorno sulle letture degli ultimi 90 giorni; serve almeno 2 letture in giorni diversi
 export const kmPerDay = (readings: OdometerReading[], today: IsoDate): number | undefined => {
