@@ -56,7 +56,7 @@ const TRIM_AFTER_DIGIT = /(\d)(AD|A|D|I|IE)$/i
 
 export const normModel = (raw: string, make: string) => {
   let n = raw.toUpperCase().split(',').map((s) => s.trim()).filter(Boolean).sort((a, b) => a.length - b.length)[0] ?? ''
-  n = n.replace(/\s+/g, ' ')
+  n = n.replace(/\(\s*\)/g, ' ').replace(/\s+/g, ' ').trim()
   // "MTN690-A (MT-07)": il nome commerciale è tra parentesi, il resto è il codice di omologazione
   const inner = /\(([^)]{3,})\)$/.exec(n)?.[1]
   if (inner && /[A-Z]/.test(inner)) n = inner.trim()

@@ -15,15 +15,22 @@ const touchSwipe = async (page: Page, x1: number, y1: number, x2: number, y2: nu
   await cdp.detach()
 }
 
+const fillCombo = async (page: Page, id: string, text: string) => {
+  const el = page.locator(id)
+  await el.tap()
+  await el.tap()
+  await el.fill(text)
+}
+
 const setupBike = async (page: Page, url = '/?browser=1') => {
   await page.goto(url)
   await page.getByRole('button', { name: 'Più tardi' }).click()
   await page.getByRole('button', { name: 'Aggiungi moto' }).click()
-  await page.locator('#make').fill('Kawasaki')
+  await fillCombo(page, '#make', 'Kawasaki')
   await page.getByRole('option', { name: 'Kawasaki', exact: true }).click()
-  await page.locator('#model').fill('1400 GTR')
+  await fillCombo(page, '#model', '1400 GTR')
   await page.getByRole('option', { name: /^1400 GTR\b/ }).first().click()
-  await page.locator('#year').fill('2015')
+  await fillCombo(page, '#year', '2015')
   await page.getByRole('option', { name: '2015', exact: true }).click()
   // Verifica citazione USTRA nel form moto
   await expect(page.getByText(/Ufficio federale delle strade \(USTRA\)/)).toBeVisible()

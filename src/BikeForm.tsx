@@ -40,6 +40,25 @@ const Txt = ({ name, label, value, placeholder }: { name: string; label: string;
   </Field>
 )
 
+const CC_BY_4 = 'https://creativecommons.org/licenses/by/4.0/'
+const linkCls = 'underline decoration-ink-3 underline-offset-2 hover:text-ink'
+const SpecSource = ({ source }: { source: string }) => {
+  if (/^https?:\/\//.test(source)) {
+    return (
+      <p className="col-span-2 m-0 text-[12px] text-ink-3">
+        Compilati da <a href={source} target="_blank" rel="noopener noreferrer" className={linkCls}>scheda ufficiale</a>. Puoi modificarli.
+      </p>
+    )
+  }
+  const text = source.replace('Registri ufficiali: ', 'registri ufficiali: ').replace(/\bASTRA\b/g, 'Ufficio federale delle strade (USTRA)')
+  const parts = text.split('CC BY 4.0')
+  return (
+    <p className="col-span-2 m-0 text-[12px] text-ink-3">
+      Compilati da {parts.length > 1 ? <>{parts[0]}<a href={CC_BY_4} target="_blank" rel="noopener noreferrer" className={linkCls}>CC BY 4.0</a>{parts.slice(1).join('CC BY 4.0')}</> : text}. Puoi modificarli.
+    </p>
+  )
+}
+
 export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: Bike) => void; onCancel?: () => void }) => {
   const [error, setError] = useState('')
   const [photo, setPhoto] = useState<Blob>()
@@ -79,7 +98,7 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
   }, [make])
   const applySpecs = (mk: string, md: string, yr?: string) => {
     const s = specsOf(mk, md, yr ? Number(yr) : undefined)
-    if (!s) return
+    if (!s && !prefill) return
     setPrefill(s)
     setRev((r) => r + 1)
   }
@@ -111,15 +130,15 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
         <Group title="Dati base" open>
           <Field label="Marca">
             <Combobox id="make" name="make" required options={opts(brands())} defaultValue={bike?.make} placeholder="es. Kawasaki"
-              onPick={(v) => { if (v !== make) { setMake(v); setModel('') } }} />
+              onPick={(v) => { if (v !== make) { setMake(v); setModel(''); if (prefill) { setPrefill(undefined); setRev((r) => r + 1) } } }} />
           </Field>
           <Field label="Modello">
-            <Combobox key={`model-${make}-${ready === make}`} id="model" name="model" required options={modelsOf(make)} defaultValue={model}
+            <Combobox key={`model-${make}`} id="model" name="model" required options={modelsOf(make)} defaultValue={model}
               disabled={!make} placeholder={make ? 'Modello' : 'Scegli prima la marca'}
               onPick={(v) => { setModel(v); applySpecs(make, v) }} />
           </Field>
           <Field label="Anno">
-            <Combobox key={`year-${make}-${model}-${ready === make}`} id="year" name="year" required options={opts(yearsOf(make, model))}
+            <Combobox key={`year-${make}-${model}`} id="year" name="year" required options={opts(yearsOf(make, model))}
               defaultValue={bike && bike.make === make && bike.model === model ? String(bike.year) : ''}
               disabled={!model} placeholder={model ? 'Anno' : 'Scegli prima il modello'}
               onPick={(v) => applySpecs(make, model, v)} />
@@ -163,11 +182,7 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
           <Txt name="sparkPlug" label="Candele" value={fl?.sparkPlug} />
         </Group>
         <Group key={`specs-${rev}`} title="Dati tecnici" open={!!(sp || p)}>
-          {p && (
-            <p className="col-span-2 m-0 text-[12px] text-ink-3">
-              Compilati da {p.source.startsWith('http') ? 'scheda ufficiale' : p.source.replace('Registri ufficiali: ', 'registri ufficiali: ').replace(/\bASTRA\b/g, 'Ufficio federale delle strade (USTRA)')}. Puoi modificarli.
-            </p>
-          )}
+          {p && <SpecSource source={p.source} />}
           <Num name="cc" label="Cilindrata (cc)" value={p?.cc ?? sp?.cc} />
           <Num name="hp" label="Potenza (CV)" value={p?.hp ?? sp?.hp} />
           <Num name="kg" label="Peso (kg)" value={p?.kg ?? sp?.kg} />

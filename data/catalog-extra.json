@@ -357,7 +357,7 @@
               "tankLitres": 18,
               "tyreFront": "120/70 ZR17",
               "tyreRear": "180/55 R17",
-              "oilLitres": 3.0,
+              "oilLitres": 3,
               "source": "https://www.yamaha-motor.eu/it/it/motorcycles/sport-touring/pdp/tracer-7/"
             }
           ]
@@ -376,7 +376,7 @@
               "tankLitres": 14,
               "tyreFront": "120/70 ZR17",
               "tyreRear": "180/55 ZR17",
-              "oilLitres": 3.0,
+              "oilLitres": 3,
               "source": "https://www.yamaha-motor.eu/it/it/motorcycles/hyper-naked/pdp/mt-07/"
             }
           ]
@@ -404,7 +404,8 @@
               "tankLitres": 15,
               "tyreFront": "120/70 ZR17",
               "tyreRear": "160/60 ZR17",
-              "source": "https://www.kawasaki.com/en-us/products/ProductSpecSheetPDF/2019-z650-abs"
+              "source": "https://www.kawasaki.com/en-us/products/ProductSpecSheetPDF/2019-z650-abs",
+              "hp": 68
             },
             {
               "from": 2020,
@@ -414,7 +415,8 @@
               "tankLitres": 15,
               "tyreFront": "120/70 ZR17",
               "tyreRear": "160/60 ZR17",
-              "source": "https://www.kawasaki.com/en-us/products/ProductSpecSheetPDF/2023-z650"
+              "source": "https://www.kawasaki.com/en-us/products/ProductSpecSheetPDF/2023-z650",
+              "hp": 68
             },
             {
               "from": 2024,
@@ -496,9 +498,19 @@
       "models": [
         {
           "name": "390 Duke",
-          "from": 2024,
+          "from": 2013,
           "to": null,
           "specs": [
+            {
+              "from": 2013,
+              "to": 2023,
+              "cc": 373,
+              "hp": 44,
+              "kg": 162,
+              "tyreFront": "110/70 R17",
+              "tyreRear": "150/60 R17",
+              "source": "Registri ufficiali: Ufficio federale delle strade (USTRA), DGT, Traficom (CC BY 4.0)"
+            },
             {
               "from": 2024,
               "to": null,

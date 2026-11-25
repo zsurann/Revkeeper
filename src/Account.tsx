@@ -189,7 +189,15 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
       )}
 
       {msg && !busy && <p role="alert" className="m-0 rounded-md bg-red-soft px-4 py-3 text-[14px] font-medium text-red-ink">{msg}</p>}
-      <p className="m-0 px-1 text-[12px] text-ink-3">Elenco dei modelli: NHTSA vPIC, Traficom (CC BY 4.0), DGT, Ufficio federale delle strade (USTRA/ASTRA), schede e libretti ufficiali dei costruttori.</p>
+      <p className="m-0 px-1 text-[12px] leading-relaxed text-ink-3">
+        Elenco dei modelli e dati tecnici elaborati da{' '}
+        <a href="https://vpic.nhtsa.dot.gov/" target="_blank" rel="noopener noreferrer" className="underline decoration-ink-3 underline-offset-2 hover:text-ink">NHTSA vPIC</a>,{' '}
+        <a href="https://avoindata.suomi.fi/data/en/dataset/ajoneuvojen-avoin-data" target="_blank" rel="noopener noreferrer" className="underline decoration-ink-3 underline-offset-2 hover:text-ink">Traficom</a>{' '}
+        (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="underline decoration-ink-3 underline-offset-2 hover:text-ink">CC BY 4.0</a>),{' '}
+        <a href="https://www.dgt.es/menusecundario/dgt-en-cifras/dgt-en-cifras-resultados/dgt-en-cifras-detalle/Microdatos-de-Matriculaciones-de-Vehiculos-mensual/" target="_blank" rel="noopener noreferrer" className="underline decoration-ink-3 underline-offset-2 hover:text-ink">DGT</a>,{' '}
+        <a href="https://opendata.astra.admin.ch/ivzod/4000-Typengenehmigungen_TAS/4300-Datensaetze/TAS_Motorrad.csv" target="_blank" rel="noopener noreferrer" className="underline decoration-ink-3 underline-offset-2 hover:text-ink">Ufficio federale delle strade (USTRA/ASTRA)</a>,{' '}
+        schede tecniche e libretti ufficiali dei costruttori.
+      </p>
 
       <Sheet open={ask === 'del'} onClose={() => setAsk(undefined)} title="Eliminare l'account?">
         <div className="grid gap-4 pb-1">

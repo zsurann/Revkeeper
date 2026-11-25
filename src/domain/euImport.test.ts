@@ -58,3 +58,8 @@ it("l'anno modello di un'omologazione", () => {
   expect(modelYear('2016-10-24')).toBe(2017)
   expect(modelYear('2020-03-04')).toBe(2020)
 })
+
+it('ripulisce le parentesi vuote rimaste dalla sostituzione dei caratteri persi', () => {
+  expect(normModel('( ) Scrambler ( )', 'Triumph')).toBe('SCRAMBLER')
+  expect(normModel('GTV310( )', 'Vespa')).toBe('GTV310')
+})

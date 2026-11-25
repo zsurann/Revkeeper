@@ -39,6 +39,20 @@ export const baseName = (raw: string) => {
 const key = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '')
 const keep = (n: string) => !DENY.test(n) && !/[/,]/.test(n) && n.length > 1
 
+const mergeSpecs = (oldSpecs?: Spec[], newSpecs?: Spec[]): Spec[] | undefined => {
+  if (!newSpecs?.length) return oldSpecs
+  if (!oldSpecs?.length) return newSpecs
+  const firstNewFrom = Math.min(...newSpecs.map((n) => n.from))
+  const kept = oldSpecs
+    .map((o): Spec | undefined => {
+      if (o.from >= firstNewFrom) return undefined
+      const cappedTo = o.to === null || o.to >= firstNewFrom ? firstNewFrom - 1 : o.to
+      return cappedTo >= o.from ? { ...o, to: cappedTo } : undefined
+    })
+    .filter((x): x is Spec => !!x)
+  return [...kept, ...newSpecs].sort((a, b) => a.from - b.from)
+}
+
 const SOURCE: Record<string, string> = { traficom: 'Traficom (CC BY 4.0)', dgt: 'DGT', astra: 'Ufficio federale delle strade (USTRA)' }
 
 export const buildCatalog = (
@@ -56,9 +70,10 @@ export const buildCatalog = (
     const old = models.get(k)
     if (!old) return void models.set(k, { ...m })
     const aliases = [...new Set([...(old.aliases ?? []), ...(m.aliases ?? [])])].filter((a) => key(a) !== k)
+    const specs = mergeSpecs(old.specs, m.specs)
     models.set(k, {
       ...old,
-      ...(m.specs && { specs: m.specs }),
+      ...(specs && { specs }),
       aliases: aliases.length ? aliases : undefined,
       from: Math.min(old.from, m.from),
       to: old.to === null || m.to === null ? null : Math.max(old.to, m.to),

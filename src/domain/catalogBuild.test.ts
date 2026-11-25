@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 import { baseName, buildCatalog, type Extra } from './catalogBuild'
+import { loadBrand, specsOf, yearsOf } from './catalog'
 import { readdirSync, readFileSync } from 'node:fs'
 
 const DIR = 'src/data/catalog'
@@ -62,4 +63,38 @@ it('cita Ufficio federale delle strade (USTRA) per le specifiche ASTRA', () => {
       for (const sp of m.specs ?? [])
         if (sp.source?.includes('ASTRA')) expect(sp.source).toContain('Ufficio federale delle strade')
   }
+})
+
+it('mantiene le specifiche dei registri europei per gli anni precedenti quando extra copre solo la generazione nuova', () => {
+  const extra: Extra = {
+    popular: ['Yamaha'],
+    brands: {
+      Yamaha: {
+        models: [{ name: 'MT-07', from: 2025, to: null, specs: [{ from: 2025, to: null, cc: 689, hp: 73, source: 'https://www.yamaha-motor.eu/' }] }],
+      },
+    },
+  }
+  const c = buildCatalog([], extra, 2026, 'x', [
+    { make: 'Yamaha', model: 'MT-07', from: 2014, to: 2026, cc: 689, kw: 55, kg: 182, sources: ['astra', 'traficom'] },
+  ])
+  const mt07 = c.brands[0]?.models[0]
+  expect(mt07?.from).toBe(2014)
+  expect(mt07?.specs).toHaveLength(2)
+  expect(mt07?.specs?.[0]).toMatchObject({ from: 2014, to: 2024, kg: 182 })
+  expect(mt07?.specs?.[1]).toMatchObject({ from: 2025, to: null, source: 'https://www.yamaha-motor.eu/' })
+})
+
+it('nessun modello con parentesi vuote, anni futuri restano selezionabili e prefill multi-generazione funziona', async () => {
+  for (const b of catalog.brands) {
+    for (const m of b.models) expect(m.name).not.toMatch(/\(\s*\)/)
+  }
+  await loadBrand('Yamaha')
+  expect(yearsOf('Yamaha', 'XSR155').length).toBeGreaterThan(0)
+  expect(specsOf('Yamaha', 'MT-07', 2020)?.cc).toBe(689)
+  expect(specsOf('Yamaha', 'MT-07', 2025)?.source).toMatch(/^https:\/\//)
+  await loadBrand('Suzuki')
+  expect(specsOf('Suzuki', 'V-Strom 650', 2020)?.cc).toBe(645)
+  expect(specsOf('Suzuki', 'GSX-8S', 2024)?.cc).toBe(776)
+  await loadBrand('Kawasaki')
+  expect(specsOf('Kawasaki', 'Z650', 2018)?.hp).toBe(68)
 })
