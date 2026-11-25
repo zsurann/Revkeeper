@@ -1,10 +1,11 @@
-import { useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { field } from './ui'
 
 export type Option = { label: string; hint?: string; aliases?: string[] }
 
 const norm = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '')
+const TAP = 8 // oltre 8 px è uno scorrimento, non una scelta
 
 // Evidenzia la parte che corrisponde; il nome resta un solo blocco (prototipo: "Kawa|saki" spezzato era un bug)
 const Mark = ({ text, q }: { text: string; q: string }) => {
@@ -20,7 +21,8 @@ const Mark = ({ text, q }: { text: string; q: string }) => {
 }
 
 /** Menu a tendina con ricerca (ARIA combobox + listbox). Si apre al tocco, filtra mentre scrivi,
- *  «Usa …» solo quando nessuna voce corrisponde. Il valore va nel form con `name`. */
+ *  «Usa …» solo quando nessuna voce corrisponde. Il valore va nel form con `name`.
+ *  La lista si scorre con il dito e con la rotella: la scelta avviene al tocco fermo, non all'inizio del gesto. */
 export const Combobox = ({ id, name, options, defaultValue = '', placeholder, disabled, required, onPick }: {
   id: string
   name: string
@@ -32,6 +34,9 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
   onPick?: (value: string) => void
 }) => {
   const listId = useId()
+  const root = useRef<HTMLDivElement>(null)
+  const closeTimer = useRef<number>(undefined)
+  const gesture = useRef<{ x: number; y: number; moved: boolean } | null>(null)
   const [value, setValue] = useState(defaultValue)
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
@@ -50,8 +55,46 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
   }
   const show = open && items.length > 0
 
+  const cancelClose = () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current)
+    closeTimer.current = undefined
+  }
+  useEffect(() => () => cancelClose(), [])
+
+  // Un tocco fuori chiude; durante lo scorrimento l'input può perdere il focus e non deve chiudere la lista
+  useEffect(() => {
+    if (!show) return
+    const onDown = (e: PointerEvent) => {
+      if (root.current?.contains(e.target as Node)) return
+      setOpen(false)
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
+  }, [show])
+
+  const onListPointerDown = (e: ReactPointerEvent) => {
+    cancelClose()
+    // Col mouse, evita che l'input perda il focus. Sul tocco preventDefault bloccherebbe lo scorrimento.
+    if (e.pointerType !== 'touch') e.preventDefault()
+    gesture.current = { x: e.clientX, y: e.clientY, moved: false }
+  }
+  const onListPointerMove = (e: ReactPointerEvent) => {
+    const g = gesture.current
+    if (g && Math.hypot(e.clientX - g.x, e.clientY - g.y) > TAP) g.moved = true
+  }
+  const onListPointerUp = (e: ReactPointerEvent) => {
+    const g = gesture.current
+    gesture.current = null
+    if (!g || g.moved) return
+    const li = (e.target as HTMLElement).closest('[role="option"]')
+    if (!li) return
+    const i = Number(li.getAttribute('data-index'))
+    const item = items[i]
+    if (item) pick(item)
+  }
+
   return (
-    <div className="relative">
+    <div ref={root} className="relative">
       <input
         ref={input}
         id={id}
@@ -68,6 +111,7 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
         disabled={disabled}
         required={required}
         onFocus={() => {
+          cancelClose()
           setActive(-1)
           setOpen(true)
         }}
@@ -77,7 +121,11 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
           setOpen(true)
           onPick?.(e.target.value) // anche il testo libero vale come scelta
         }}
-        onBlur={() => setOpen(false)}
+        onBlur={() => {
+          closeTimer.current = window.setTimeout(() => {
+            if (!gesture.current) setOpen(false)
+          }, 200)
+        }}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') {
             setOpen(true)
@@ -98,19 +146,19 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
         <ul
           id={listId}
           role="listbox"
-          className="absolute inset-x-0 top-[calc(100%+4px)] z-20 m-0 max-h-60 list-none overflow-auto rounded-md bg-surface p-1 shadow-3 ring-1 ring-line"
+          onPointerDown={onListPointerDown}
+          onPointerMove={onListPointerMove}
+          onPointerUp={onListPointerUp}
+          onPointerCancel={() => { gesture.current = null }}
+          className="absolute inset-x-0 top-[calc(100%+4px)] z-20 m-0 max-h-60 list-none overflow-auto overscroll-contain rounded-md bg-surface p-1 shadow-3 ring-1 ring-line"
         >
           {items.map((o, i) => (
             <li
               key={`${o.label}-${i}`}
               id={`${listId}-${i}`}
+              data-index={i}
               role="option"
               aria-selected={i === active}
-              // pointerdown + preventDefault: la scelta avviene prima che il blur chiuda la lista
-              onPointerDown={(e) => {
-                e.preventDefault()
-                pick(o)
-              }}
               className={`flex cursor-pointer justify-between gap-2 rounded-lg p-2.5 ${i === active ? 'bg-sunken' : ''} ${'free' in o ? 'font-semibold text-lime-ink' : 'text-ink'}`}
             >
               {'free' in o ? <span>Usa «{o.label}»</span> : <Mark text={o.label} q={value.trim()} />}

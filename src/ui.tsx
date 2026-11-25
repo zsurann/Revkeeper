@@ -147,6 +147,7 @@ export const Sheet = ({ open, onClose, title, children }: { open: boolean; onClo
           <m.div
             ref={panel}
             className="relative mx-auto flex max-h-[92dvh] w-full max-w-[520px] flex-col rounded-t-xl bg-surface shadow-3 lg:rounded-xl"
+            style={{ touchAction: 'pan-y' }}
             initial={reduce ? { opacity: 0 } : { y: '100%' }}
             animate={reduce ? { opacity: 1 } : { y: 0 }}
             exit={reduce ? { opacity: 0 } : { y: '100%', transition: { duration: 0.2, ease: ease.inOut } }}
@@ -158,15 +159,15 @@ export const Sheet = ({ open, onClose, title, children }: { open: boolean; onClo
             dragElastic={{ top: 0.04, bottom: 0.6 }}
             onDragEnd={(_, i) => { if (i.offset.y > 110 || i.velocity.y > 600) onClose() }}
           >
-            {/* la maniglia avvia il trascinamento; il resto del foglio scorre normalmente */}
+            {/* Maniglia e titolo chiudono trascinando; il corpo del foglio e le liste restano scorrevoli */}
             <div onPointerDown={(e) => drag.start(e)} className="grid cursor-grab touch-none place-items-center pb-1 pt-2.5 active:cursor-grabbing" aria-hidden="true">
               <i className="h-1.5 w-10 rounded-full bg-line-strong" />
             </div>
             <div className="flex items-center justify-between px-5 pb-2 pt-1">
-              <h2 className="t-title m-0 text-[20px]">{title}</h2>
+              <h2 className="t-title m-0 flex-1 cursor-grab touch-none text-[20px] active:cursor-grabbing" onPointerDown={(e) => drag.start(e)}>{title}</h2>
               <button type="button" data-close onClick={onClose} className={btn.icon} aria-label="Chiudi"><X size={20} /></button>
             </div>
-            <div className="overflow-y-auto overscroll-contain px-5 pb-[max(20px,env(safe-area-inset-bottom))]">{children}</div>
+            <div className="overflow-y-auto overscroll-contain px-5 pb-[max(20px,env(safe-area-inset-bottom))]" style={{ touchAction: 'pan-y' }}>{children}</div>
           </m.div>
         </div>
       )}

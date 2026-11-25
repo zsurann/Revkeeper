@@ -57,7 +57,7 @@ test('interventi: registra, modifica, cerca, spese', async ({ page }) => {
   await page.locator('#svc-notes').fill('Officina Rossi')
   await page.locator('#svc-files').setInputFiles(png)
   await page.getByRole('button', { name: 'Salva intervento' }).click()
-  await expect(page.getByRole('heading', { name: 'Intervento registrato' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Intervento registrato', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Chiudi', exact: true }).last().click()
   await expect(page.getByText('200,50 €').filter({ visible: true }).first()).toBeVisible()
   await expect(page.getByText('In tutto')).toBeVisible()
