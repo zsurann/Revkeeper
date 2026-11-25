@@ -9,6 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'script', // file esterno: la CSP non ammette script inline
       manifest: {
         name: 'Revkeeper',
         short_name: 'Revkeeper',
@@ -27,8 +28,9 @@ export default defineConfig({
       workbox: {
         navigateFallbackDenylist: [/^\/api\//],
         importScripts: ['push-sw.js'],
+        inlineWorkboxRuntime: true, // il service worker non carica script da storage.googleapis.com
         // I modelli di ogni marca non si scaricano all'installazione: solo quando la marca viene scelta
-        globIgnores: ['**/b-*.js'],
+        globIgnores: ['**/b-*.js', '**/_headers'],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => /\/assets\/b-[^/]+\.js$/.test(url.pathname),

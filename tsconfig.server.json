@@ -11,5 +11,5 @@
     "types": ["@cloudflare/workers-types"]
   },
   "include": ["server", "functions", "cron"],
-  "exclude": ["server/**/*.test.ts"]
+  "exclude": ["**/*.test.ts", "server/testing/**"]
 }

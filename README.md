@@ -59,8 +59,22 @@ Scrivi marca e modello a mano: funziona lo stesso. L'elenco dei modelli si aggio
 Quando l'app li prende dal libretto ufficiale lo indica. In ogni caso fa fede il libretto della tua moto: puoi modificare ogni intervallo.
 
 **Che fine fanno i miei dati?**
-Restano tuoi. Non vengono venduti né condivisi, e quelli salvati online restano su server in Europa.
+Restano tuoi. Non vengono venduti né condivisi, e quelli salvati online restano su server in Europa. Dalla schermata Account puoi scaricare una copia (moto, interventi, documenti e file) ed eliminare l'account quando vuoi. Senza account, dallo stesso schermo scarichi una copia di ciò che è solo su questo telefono.
 
 ---
 
 <sub>Elenco dei modelli basato su dati pubblici: NHTSA vPIC, Traficom (CC BY 4.0), DGT, ASTRA/USTRA (Ufficio federale delle strade, Svizzera).</sub>
+
+## Per pubblicare gli aggiornamenti
+
+La build su Cloudflare Pages legge da sola `.env.production`: ci sono solo l'identificativo pubblico di Google e la chiave pubblica delle notifiche, gli stessi che finiscono nel JavaScript dell'app. Non va copiato niente nel pannello di Cloudflare. `.env` e `.env.local` sono ignorati da git, così un segreto messo lì per sbaglio non finisce nel repository.
+
+I promemoria orari stanno in un Worker separato (`revkeeper-cron`). Dopo l'unione su `main`, GitHub lo pubblica da solo se nelle impostazioni del repository (Settings → Secrets and variables → Actions) c'è il secret **`CLOUDFLARE_API_TOKEN`**. Senza quel secret il passaggio viene saltato e online resta il Worker già pubblicato. Se il token vede più di un account Cloudflare, aggiungi anche **`CLOUDFLARE_ACCOUNT_ID`**.
+
+Prima che il Worker nuovo parta, applica una volta la migrazione del database (dal computer, nella cartella del progetto):
+
+```
+npx wrangler d1 migrations apply revkeeper --remote
+```
+
+La chiave privata delle notifiche (`VAPID_PRIVATE_KEY`) è già un secret del Worker: la pubblicazione non la cancella.
