@@ -13,7 +13,9 @@ export const initSentry = () => {
     release: import.meta.env.VITE_SENTRY_RELEASE,
     environment: env,
     dataCollection: { userInfo: false, cookies: false, httpHeaders: false, httpBodies: [], urlQueryParams: false },
-    // Solo errori, niente tracing: pesava sull'avvio (Lighthouse: LCP da 2,2 a 2,8 s) per un'app così piccola
+    // Solo errori: niente tracing e niente sessioni (la sessione partiva con una richiesta a Sentry all'avvio,
+    // e Lighthouse la contava nel percorso critico: LCP da 2,2 a 2,7 s)
+    integrations: (defaults) => defaults.filter((i) => i.name !== 'BrowserSession'),
     // Rumore che non dipende dall'app: rete assente, estensioni del browser
     ignoreErrors: ['Failed to fetch', 'NetworkError when attempting to fetch resource.', 'Load failed', /^AbortError/],
     denyUrls: [/^chrome-extension:\/\//, /^moz-extension:\/\//, /^safari-web-extension:\/\//],
