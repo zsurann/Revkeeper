@@ -158,7 +158,13 @@ const iosSteps = (p: Platform): Step[] => {
   if (p.browser === 'edge') return [{ text: <>Tocca <B>···</B> in basso, poi <B>Condividi</B></>, chip: <Dots /> }, ...common]
   if (p.browser === 'firefox') return [{ text: <>Tocca <B>≡</B> in basso a destra, poi <B>Condividi</B></>, chip: <Icon d={<path d="M4 7h16M4 12h16M4 17h16" />} /> }, ...common]
   if ((p.safariVersion ?? 26) < 26) return [{ text: <>Tocca <B>Condividi</B> nella barra in basso</>, chip: ShareIcon }, ...common]
-  return [{ text: <>Tocca <B>···</B> in basso a destra</>, chip: <Dots /> }, { text: <>Tocca <B>Condividi</B></>, chip: ShareIcon }, ...common]
+  // Safari 26: ··· → Condividi → Visualizza altro → Aggiungi alla schermata Home
+  return [
+    { text: <>Tocca <B>···</B> in basso a destra</>, chip: <Dots /> },
+    { text: <>Tocca <B>Condividi</B></>, chip: ShareIcon },
+    { text: <>Tocca <B>Visualizza altro</B></>, chip: <Icon d={<path d="M6 9l6 6 6-6" />} /> },
+    { text: <>Tocca <B>Aggiungi alla schermata Home</B></>, chip: AddIcon },
+  ]
 }
 
 const readViewport = (): ViewportBox & { layoutHeight: number } => {
