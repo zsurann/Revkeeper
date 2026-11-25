@@ -133,12 +133,12 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
               onPick={(v) => { if (v !== make) { setMake(v); setModel(''); if (prefill) { setPrefill(undefined); setRev((r) => r + 1) } } }} />
           </Field>
           <Field label="Modello">
-            <Combobox key={`model-${make}-${ready === make}`} id="model" name="model" required options={modelsOf(make)} defaultValue={model}
+            <Combobox key={`model-${make}`} id="model" name="model" required options={modelsOf(make)} defaultValue={model}
               disabled={!make} placeholder={make ? 'Modello' : 'Scegli prima la marca'}
               onPick={(v) => { setModel(v); applySpecs(make, v) }} />
           </Field>
           <Field label="Anno">
-            <Combobox key={`year-${make}-${model}-${ready === make}`} id="year" name="year" required options={opts(yearsOf(make, model))}
+            <Combobox key={`year-${make}-${model}`} id="year" name="year" required options={opts(yearsOf(make, model))}
               defaultValue={bike && bike.make === make && bike.model === model ? String(bike.year) : ''}
               disabled={!model} placeholder={model ? 'Anno' : 'Scegli prima il modello'}
               onPick={(v) => applySpecs(make, model, v)} />
