@@ -20,3 +20,13 @@ export const hit = async (db: D1Database, name: RateName, who: string, nowMs = D
   const ok = (row?.count ?? 1) <= max
   return { ok, retryAfter: ok ? 0 : window + seconds - Math.floor(nowMs / 1000) }
 }
+
+// IPv6: chi ha un /64 può cambiare indirizzo a piacere, quindi conta il prefisso; IPv4 resta intero
+export const ipKey = (ip: string) => {
+  if (!ip.includes(':')) return ip
+  const [head = '', tail = ''] = ip.toLowerCase().split('::')
+  const h = head ? head.split(':') : []
+  const t = tail ? tail.split(':') : []
+  const full = ip.includes('::') ? [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t] : h
+  return `${full.slice(0, 4).map((x) => x.replace(/^0+(?=.)/, '')).join(':')}::/64`
+}

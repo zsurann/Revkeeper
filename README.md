@@ -99,7 +99,7 @@ I file allegati stanno già su R2 nel bucket `revkeeper-files`.
 
 ## Limiti di frequenza
 
-Per evitare abusi: 20 tentativi di accesso ogni 10 minuti per rete, 5 notifiche di prova all'ora e 120 file caricati all'ora per utente.
+Per evitare abusi: 20 tentativi di accesso ogni 10 minuti per rete (IPv6: per blocco /64), 5 notifiche di prova all'ora e 120 file caricati all'ora per utente.
 Oltre il limite il server risponde 429 con `Retry-After`. Gli indirizzi IP non si salvano: il contatore usa un'impronta (hash).
 
 ## Aggiornamenti dell'app

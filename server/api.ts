@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 import { AuthError, verifyIdToken, type Jwk } from './google'
 import { sendPush, type PushEnv } from './push'
-import { hit, type RateName } from './ratelimit'
+import { hit, ipKey, type RateName } from './ratelimit'
 import { isId, recordError } from './schema'
 import { zipStoreStream, type ZipEntry } from './zip'
 
@@ -65,7 +65,7 @@ const limited = async (env: Env, name: RateName, who: string) => {
 
 const login = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>) => {
   const ip = req.headers.get('cf-connecting-ip') ?? 'sconosciuto'
-  const stop = await limited(env, 'login', await sha256(`ip:${ip}`))
+  const stop = await limited(env, 'login', await sha256(`ip:${ipKey(ip)}`))
   if (stop) return stop
   const { credential } = (await req.json()) as { credential?: string }
   if (!credential) return fail(400, 'Credenziale mancante')
