@@ -8,12 +8,16 @@ import { BRAKE_FLUIDS, OIL_GRADES, OIL_TYPES, TYRES } from './domain/parts'
 import type { Bike } from './domain/types'
 import { CATEGORIES } from './domain/intervals'
 import { PhotoEditor } from './PhotoEditor'
-import { Field, Screen, field, ghost, primary, usePhoto } from './ui'
+import { Camera, Check, ChevronDown } from 'lucide-react'
+import { ErrorText, Field, PageHead, Screen, btn, card, field, usePhoto } from './ui'
 
 const Group = ({ title, children, open }: { title: string; children: ReactNode; open?: boolean }) => (
-  <details open={open} className="rounded-panel bg-panel p-4 [&_summary]:cursor-pointer">
-    <summary className="font-gauge text-lg">{title}</summary>
-    <div className="mt-3 grid grid-cols-2 gap-3">{children}</div>
+  <details open={open} className={`${card} group p-4`}>
+    <summary className="flex list-none items-center justify-between gap-3">
+      <span className="t-title text-[17px]">{title}</span>
+      <ChevronDown size={18} className="text-ink-3 transition-transform duration-[var(--duration-base)] group-open:rotate-180" />
+    </summary>
+    <div className="mt-4 grid grid-cols-2 gap-3">{children}</div>
   </details>
 )
 
@@ -88,13 +92,17 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
   return (
     <Screen>
       {editing && <PhotoEditor file={editing} onDone={edited} onCancel={() => setEditing(undefined)} />}
-      <header className="flex items-center justify-between">
-        <h1 className="font-gauge text-2xl">{bike ? 'Scheda moto' : 'Aggiungi moto'}</h1>
-        {onCancel && <button type="button" onClick={onCancel} className={ghost}>Annulla</button>}
-      </header>
+      <PageHead title={bike ? 'Scheda moto' : 'Aggiungi moto'} sub={bike ? `${bike.make} ${bike.model}` : 'Marca, modello e anno bastano: il resto si compila dal catalogo.'} onBack={onCancel} />
       <form onSubmit={submit} className="grid gap-4">
-        <label className="grid aspect-[16/9] max-w-full cursor-pointer place-items-center overflow-hidden rounded-panel border border-dashed border-edge bg-well text-sm text-dim">
-          {preview ?? saved ? <img src={preview ?? saved} alt="Foto della moto" className="h-full w-full object-cover" /> : 'Aggiungi una foto'}
+        <label className="group relative grid aspect-[16/9] max-w-full cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed border-line-strong bg-sunken text-[14px] font-medium text-ink-2">
+          {preview ?? saved ? (
+            <>
+              <img src={preview ?? saved} alt="Foto della moto" className="h-full w-full object-cover" />
+              <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-[#0E1116]/80 px-3 py-1.5 text-[13px] text-white backdrop-blur"><Camera size={15} />Cambia foto</span>
+            </>
+          ) : (
+            <span className="grid justify-items-center gap-2"><span className="grid size-12 place-items-center rounded-full bg-surface shadow-1"><Camera size={20} /></span>Aggiungi una foto</span>
+          )}
           <input id="photo" type="file" accept="image/*" className="sr-only" onChange={(e) => {
             setEditing(e.target.files?.[0])
             e.target.value = ''
@@ -152,7 +160,7 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
         </Group>
         <Group key={`specs-${rev}`} title="Dati tecnici" open={!!(sp || p)}>
           {p && (
-            <p className="col-span-2 m-0 text-xs text-dim">
+            <p className="col-span-2 m-0 text-[12px] text-ink-3">
               Compilati da {p.source.startsWith('http') ? 'scheda ufficiale' : p.source.replace('Registri ufficiali: ', 'registri ufficiali: ')}. Puoi modificarli.
             </p>
           )}
@@ -162,8 +170,8 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
           <Num name="tankLitres" label="Serbatoio (l)" value={p?.tankLitres ?? sp?.tankLitres} decimal />
           <Num name="consumption" label="Consumo (km/l)" value={sp?.consumption} decimal />
         </Group>
-        {error && <p role="alert" className="text-sm text-red">{error}</p>}
-        <button className={primary}>Salva moto</button>
+        {error && <ErrorText>{error}</ErrorText>}
+        <button className={`${btn.primary} w-full`}><Check size={18} strokeWidth={2.6} />Salva moto</button>
       </form>
     </Screen>
   )

@@ -1,40 +1,103 @@
-/* Revkeeper · Strumentazione — token Tailwind v4 (importare dopo `@import "tailwindcss";`).
-   Solo tema scuro: il cruscotto è scuro anche con il telefono in modalità chiara. */
+/* Revkeeper · design system "Hi-Vis" — token Tailwind v4 (importato da src/index.css dopo `@import "tailwindcss";`).
+   Chiaro di default; "Notte" (scuro) si sceglie da Account → Aspetto e mette la classe .dark su <html>.
+   L'accento lime è il giallo-verde dei gilet ad alta visibilità: si usa solo per azioni e segmenti accesi,
+   mai come testo su fondo chiaro (lì c'è --rk-lime-ink). Contrasti verificati WCAG AA. */
+@import "@fontsource-variable/archivo/wdth.css";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --rk-bg: #F4F5F7;
+  --rk-surface: #FFFFFF;
+  --rk-sunken: #ECEEF1;
+  --rk-line: #E2E5EA;
+  --rk-line-strong: #CDD2D9;
+  --rk-ink: #0E1116;
+  --rk-ink-2: #474F5C;      /* 8,2:1 su bianco */
+  --rk-ink-3: #5F6673;      /* 5,7:1 su bianco, 5,2:1 su bg, 4,9:1 su sunken */
+  --rk-lime: #D4FF3A;       /* riempimenti: testo #0E1116 sopra = 16,9:1 */
+  --rk-lime-ink: #4A6400;   /* lime come testo su chiaro: 6,6:1 */
+  --rk-lime-soft: #F1FFC2;
+  --rk-amber: #F5A300;
+  --rk-amber-ink: #8A4E00;  /* 6,3:1 su bianco */
+  --rk-amber-soft: #FFF3D6;
+  --rk-red: #E5372A;
+  --rk-red-ink: #B4231A;    /* 6,4:1 su bianco; fondo del pulsante distruttivo (testo bianco 6,4:1) */
+  --rk-red-soft: #FFE6E3;
+  --rk-display: #0E1116;    /* il "vetro" del cruscotto resta nero anche in chiaro */
+  --rk-display-2: #171B22;
+  --rk-display-off: #262C35;
+  --rk-display-ink: #F2F4F7;
+  --rk-display-dim: #9AA3B0; /* 7,1:1 su display */
+  --rk-shadow-1: 0 1px 0 rgb(14 17 22 / 0.04), 0 1px 2px rgb(14 17 22 / 0.06);
+  --rk-shadow-2: 0 1px 0 rgb(14 17 22 / 0.04), 0 8px 24px -8px rgb(14 17 22 / 0.14);
+  --rk-shadow-3: 0 24px 64px -16px rgb(14 17 22 / 0.28), 0 2px 6px rgb(14 17 22 / 0.08);
+  color-scheme: light;
+}
+.dark {
+  --rk-bg: #0B0D10;
+  --rk-surface: #14171C;
+  --rk-sunken: #1B1F26;
+  --rk-line: #252A32;
+  --rk-line-strong: #343B45;
+  --rk-ink: #F2F4F7;
+  --rk-ink-2: #B4BCC8;
+  --rk-ink-3: #8F98A6;      /* 6,1:1 su surface, 5,5:1 su sunken */
+  --rk-lime-ink: #D4FF3A;
+  --rk-lime-soft: #232B0E;
+  --rk-amber-ink: #FFB938;
+  --rk-amber-soft: #2E2410;
+  --rk-red-ink: #FF7A6E;
+  --rk-red-soft: #331614;
+  --rk-display: #07080A;
+  --rk-display-2: #111419;
+  --rk-shadow-1: 0 0 0 1px rgb(255 255 255 / 0.04);
+  --rk-shadow-2: 0 0 0 1px rgb(255 255 255 / 0.05), 0 12px 32px -12px rgb(0 0 0 / 0.6);
+  --rk-shadow-3: 0 0 0 1px rgb(255 255 255 / 0.06), 0 32px 80px -16px rgb(0 0 0 / 0.8);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--rk-bg);
+  --color-surface: var(--rk-surface);
+  --color-sunken: var(--rk-sunken);
+  --color-line: var(--rk-line);
+  --color-line-strong: var(--rk-line-strong);
+  --color-ink: var(--rk-ink);
+  --color-ink-2: var(--rk-ink-2);
+  --color-ink-3: var(--rk-ink-3);
+  --color-lime: var(--rk-lime);
+  --color-lime-ink: var(--rk-lime-ink);
+  --color-lime-soft: var(--rk-lime-soft);
+  --color-amber: var(--rk-amber);
+  --color-amber-ink: var(--rk-amber-ink);
+  --color-amber-soft: var(--rk-amber-soft);
+  --color-red: var(--rk-red);
+  --color-red-ink: var(--rk-red-ink);
+  --color-red-soft: var(--rk-red-soft);
+  --color-display: var(--rk-display);
+  --color-display-2: var(--rk-display-2);
+  --color-display-off: var(--rk-display-off);
+  --color-display-ink: var(--rk-display-ink);
+  --color-display-dim: var(--rk-display-dim);
+  --color-black: #0E1116;
+  --shadow-1: var(--rk-shadow-1);
+  --shadow-2: var(--rk-shadow-2);
+  --shadow-3: var(--rk-shadow-3);
+}
 @theme {
-  /* Superfici */
-  --color-dash: #14181f;        /* sfondo cruscotto */
-  --color-dash-glow: #232b38;   /* centro del gradiente radiale in alto */
-  --color-panel: #1c222c;       /* pannelli e schede */
-  --color-well: #07090c;        /* incassi: rulli del contachilometri, binari delle barre */
-  --color-rule: #262e3a;        /* separatori */
-  --color-edge: #2e3746;        /* bordi dei chip */
-
-  /* Testo */
-  --color-ink: #eef1f6;
-  --color-dim: #8b93a3;         /* testo secondario, contrasto 5,8:1 su dash, 5,2:1 su panel */
-
-  /* Retroilluminazione */
-  --color-amber: #ffb547;       /* accento, "in scadenza", azione principale */
-  --color-amber-ink: #1a1205;   /* testo sopra l'ambra */
-  --color-red: #ff6b5b;         /* "scaduta" */
-  --color-ok: #7fd1a8;          /* conferme, usato poco */
-
-  /* Tipografia */
-  --font-sans: "Saira", system-ui, sans-serif;
-  --font-gauge: "Saira Condensed", "Saira", system-ui, sans-serif;
-
-  /* Forme */
-  --radius-panel: 18px;
-  --radius-pill: 28px;
-  --radius-digit: 3px;
-
-  /* Ombre e bagliori */
-  --shadow-fab: 0 8px 24px rgb(255 181 71 / 0.35);
-  --shadow-well: inset 0 2px 6px rgb(0 0 0 / 0.8);
-  --drop-shadow-glow: 0 0 6px rgb(255 181 71 / 0.6);
-
-  /* Motion */
-  --ease-needle: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --duration-roll: 1400ms;
-  --duration-ui: 180ms;
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  /* movimento: gli stessi valori di src/motion.ts */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-needle: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-instant: 90ms;
+  --duration-fast: 160ms;
+  --duration-base: 240ms;
+  --duration-slow: 420ms;
+  --duration-sweep: 1100ms;
 }

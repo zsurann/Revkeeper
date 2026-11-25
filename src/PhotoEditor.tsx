@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { clampPose, drawRect, MAX_ZOOM, type Pose, type View } from './domain/crop'
-import { ghost, primary } from './ui'
+import { btn } from './ui'
 
 const OUT_W = 1600
 const OUT_H = 900
@@ -92,11 +92,11 @@ export const PhotoEditor = ({ file, onDone, onCancel }: { file: File; onDone: (b
 
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="ed-title"
-      className="fixed inset-0 z-50 grid grid-rows-[auto_1fr_auto] gap-4 bg-[#05070a] px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))]">
+      className="dark fixed inset-0 z-50 grid grid-rows-[auto_1fr_auto] gap-4 bg-[#05070a] text-ink px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))]">
       <header className="flex items-center justify-between gap-3">
-        <button type="button" onClick={onCancel} className={ghost}>Annulla</button>
-        <h2 id="ed-title" className="font-gauge text-lg">Sistema la foto</h2>
-        <button type="button" onClick={confirm} disabled={!img} className={primary}>Conferma</button>
+        <button type="button" onClick={onCancel} className={btn.ghost}>Annulla</button>
+        <h2 id="ed-title" className="t-title m-0 text-[18px]">Sistema la foto</h2>
+        <button type="button" onClick={confirm} disabled={!img} className={`${btn.primary} h-11 px-5`}>Conferma</button>
       </header>
       <div
         ref={stage}
@@ -108,18 +108,18 @@ export const PhotoEditor = ({ file, onDone, onCancel }: { file: File; onDone: (b
         onPointerUp={(e) => pts.current.delete(e.pointerId)}
         onPointerCancel={(e) => pts.current.delete(e.pointerId)}
         onDoubleClick={() => update(() => ({ z: 1, tx: 0, ty: 0 }))}
-        className="relative aspect-[16/9] w-full max-w-xl cursor-grab touch-none self-center justify-self-center overflow-hidden rounded-md outline outline-2 outline-amber active:cursor-grabbing"
+        className="relative aspect-[16/9] w-full max-w-xl cursor-grab touch-none self-center justify-self-center overflow-hidden rounded-md outline outline-2 outline-[#D4FF3A] active:cursor-grabbing"
       >
         <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-50 [&>i]:border-edge [&>i]:border-[0.5px]">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-50 [&>i]:border-white/40 [&>i]:border-[0.5px]">
           {Array.from({ length: 9 }, (_, i) => <i key={i} />)}
         </div>
       </div>
       <footer className="mx-auto grid w-full max-w-xl gap-3">
         <input id="photo-zoom" type="range" min="1" max={MAX_ZOOM} step="0.01" value={pose.z} aria-label="Zoom"
-          onChange={(e) => update((p) => ({ ...p, z: Number(e.target.value) }))} className="w-full accent-amber" />
-        <p className="m-0 text-center text-sm text-dim">Trascina per spostare · pizzica o usa la barra per lo zoom · doppio tocco per ripartire</p>
-        {error && <p role="alert" className="m-0 text-center text-sm text-red">{error}</p>}
+          onChange={(e) => update((p) => ({ ...p, z: Number(e.target.value) }))} className="w-full accent-[#D4FF3A]" />
+        <p className="m-0 text-center text-[13px] text-ink-3">Trascina per spostare · pizzica o usa la barra per lo zoom · doppio tocco per ripartire</p>
+        {error && <p role="alert" className="m-0 text-center text-[14px] text-red-ink">{error}</p>}
       </footer>
     </div>
   )

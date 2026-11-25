@@ -49,7 +49,7 @@ export const GoogleButton = ({ onDone, onBusy }: { onDone: (error?: string) => v
             }
           },
         })
-        g.accounts.id.renderButton(el, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', locale: 'it', width: 280 })
+        g.accounts.id.renderButton(el, { theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline', size: 'large', shape: 'pill', text: 'continue_with', locale: 'it', width: 280 })
       })
       .catch((e: Error) => cb.current.onDone(e.message))
   }, [])

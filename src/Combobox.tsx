@@ -1,4 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { field } from './ui'
 
 export type Option = { label: string; hint?: string; aliases?: string[] }
@@ -12,7 +13,7 @@ const Mark = ({ text, q }: { text: string; q: string }) => {
   return (
     <span>
       {text.slice(0, i)}
-      <mark className="bg-transparent text-amber">{text.slice(i, i + q.length)}</mark>
+      <mark className="bg-transparent font-semibold text-lime-ink">{text.slice(i, i + q.length)}</mark>
       {text.slice(i + q.length)}
     </span>
   )
@@ -92,12 +93,12 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
         }}
         className={`${field} pr-9 disabled:opacity-45`}
       />
-      <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-dim">▾</span>
+      <ChevronDown size={18} aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
       {show && (
         <ul
           id={listId}
           role="listbox"
-          className="absolute inset-x-0 top-[calc(100%+4px)] z-20 m-0 max-h-60 list-none overflow-auto rounded-xl border border-edge bg-[#202733] p-1 shadow-[0_14px_30px_rgb(0_0_0/0.5)]"
+          className="absolute inset-x-0 top-[calc(100%+4px)] z-20 m-0 max-h-60 list-none overflow-auto rounded-md bg-surface p-1 shadow-3 ring-1 ring-line"
         >
           {items.map((o, i) => (
             <li
@@ -110,10 +111,10 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
                 e.preventDefault()
                 pick(o)
               }}
-              className={`flex cursor-pointer justify-between gap-2 rounded-lg p-2.5 ${i === active ? 'bg-[#2b3342]' : ''} ${'free' in o ? 'text-amber' : 'text-ink'}`}
+              className={`flex cursor-pointer justify-between gap-2 rounded-lg p-2.5 ${i === active ? 'bg-sunken' : ''} ${'free' in o ? 'font-semibold text-lime-ink' : 'text-ink'}`}
             >
               {'free' in o ? <span>Usa «{o.label}»</span> : <Mark text={o.label} q={value.trim()} />}
-              {'hint' in o && o.hint && <small className="shrink-0 text-dim">{o.hint}</small>}
+              {'hint' in o && o.hint && <small className="shrink-0 text-ink-3">{o.hint}</small>}
             </li>
           ))}
         </ul>

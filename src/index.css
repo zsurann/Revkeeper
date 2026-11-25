@@ -1,25 +1,52 @@
 @import "tailwindcss";
 @import "../design/tokens.css";
 
-html, body, #root { height: 100%; }
-body {
-  margin: 0;
-  background: radial-gradient(120% 60% at 50% 0%, var(--color-dash-glow) 0%, var(--color-dash) 60%) fixed, var(--color-dash);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  color-scheme: dark;
-  font-variant-numeric: tabular-nums;
+@layer base {
+  html, body, #root { min-height: 100%; }
+  /* Le schermate si sostituiscono: lo scroll anchoring le farebbe partire a metà */
+  html { overflow-anchor: none; }
+  body {
+    margin: 0;
+    background: var(--rk-bg);
+    color: var(--rk-ink);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    transition: background-color var(--duration-base) var(--ease-out);
+  }
+  h1, h2, h3 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+  button, summary, label[for] { cursor: pointer; }
+  button { font: inherit; color: inherit; }
+  input, select, textarea { font: inherit; }
+  :focus-visible { outline: 2px solid var(--rk-ink); outline-offset: 2px; border-radius: 8px; }
+  .dark :focus-visible { outline-color: var(--rk-lime); }
+  summary::-webkit-details-marker { display: none; }
 }
+
+/* Tipografia: una sola famiglia (Archivo, assi wght + wdth) in tre larghezze */
+.t-display { font-variation-settings: "wdth" 112; font-weight: 800; letter-spacing: -0.025em; line-height: 1.02; }
+.t-title   { font-variation-settings: "wdth" 106; font-weight: 700; letter-spacing: -0.015em; }
+.t-num     { font-variation-settings: "wdth" 72;  font-weight: 700; letter-spacing: -0.01em; font-feature-settings: "tnum" 1; }
+.t-label   { font-variation-settings: "wdth" 100; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; font-size: 11px; }
+
+.skeleton { position: relative; overflow: hidden; background: var(--rk-sunken); border-radius: 10px; }
+.skeleton::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  animation: shimmer 1.4s var(--ease-in-out) infinite;
+}
+.dark .skeleton::after { background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent); }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; animation-iteration-count: 1 !important; }
 }
 
-@keyframes arc { from { stroke-dashoffset: var(--arc-from); } }
-/* la lancetta parte da zero, supera il valore di 6° e torna giù */
-@keyframes needle { 0% { transform: rotate(-120deg); } 72% { transform: rotate(calc(var(--needle-to) + 6deg)); } 100% { transform: rotate(var(--needle-to)); } }
-@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
-@keyframes pulse-once { 0%, 100% { box-shadow: var(--shadow-fab), 0 0 0 0 rgb(255 181 71 / 0); } 50% { box-shadow: var(--shadow-fab), 0 0 0 7px rgb(255 181 71 / 0.22); } }
-
+@keyframes shimmer { to { transform: translateX(100%); } }
 /* Installazione e benvenuto */
 @keyframes pop { from { opacity: 0; transform: scale(0.85); } }
 @keyframes draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }

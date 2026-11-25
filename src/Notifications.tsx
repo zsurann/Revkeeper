@@ -1,5 +1,7 @@
+import { Bell, BellOff, ChevronDown, Send } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { ghost, primary, field } from './ui'
+import { toast } from './toast'
+import { btn, card, field } from './ui'
 
 const key = () => Uint8Array.from(atob(import.meta.env.VITE_VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0))
 export const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
@@ -19,6 +21,15 @@ export const enablePush = async (hour: number) => {
   return s
 }
 
+export const HourSelect = ({ id, value, onChange }: { id: string; value: number; onChange: (h: number) => void }) => (
+  <span className="relative block">
+    <select id={id} value={value} onChange={(e) => onChange(Number(e.target.value))} className={`${field} appearance-none pr-10`}>
+      {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{`${String(h).padStart(2, '0')}:00`}</option>)}
+    </select>
+    <ChevronDown size={18} aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
+  </span>
+)
+
 export const Notifications = () => {
   const [sub, setSub] = useState<PushSubscription | null>()
   const [hour, setHour] = useState(9)
@@ -30,15 +41,16 @@ export const Notifications = () => {
 
   if (!pushSupported())
     return (
-      <p className="m-0 text-sm text-dim">
+      <div className={`${card} p-4 text-[14px] text-ink-2`}>
         Questo browser non riceve notifiche. Su iPhone: Condividi → "Aggiungi alla schermata Home", poi apri Revkeeper da lì.
-      </p>
+      </div>
     )
 
   const enable = async () => {
     try {
       setSub(await enablePush(hour))
-      setMsg(`Notifiche attive alle ${hour}:00`)
+      setMsg('')
+      toast(`Promemoria alle ${String(hour).padStart(2, '0')}:00`, { body: 'Ti avvisiamo prima di ogni scadenza' })
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Attivazione non riuscita')
     }
@@ -48,35 +60,38 @@ export const Notifications = () => {
     await post('unsubscribe', { endpoint: sub.endpoint }).catch(() => undefined)
     await sub.unsubscribe()
     setSub(null)
-    setMsg('Notifiche disattivate')
+    toast('Notifiche disattivate', { kind: 'info' })
   }
   const test = async () => {
     try {
       const r = await post('test', {})
-      setMsg(r.sent ? 'Notifica di prova inviata' : 'Nessun dispositivo raggiunto')
+      toast(r.sent ? 'Notifica di prova inviata' : 'Nessun dispositivo raggiunto', { kind: r.sent ? 'success' : 'warn' })
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Invio non riuscito')
     }
   }
 
   return (
-    <section className="grid gap-3 rounded-panel bg-panel p-4">
-      <b className="font-gauge text-lg">Notifiche</b>
-      <p className="m-0 text-sm text-dim">Un avviso al giorno quando una scadenza è a 30 giorni, a 7 giorni o oggi, e se non aggiorni i km da 30 giorni.</p>
-      <label className="grid gap-1 text-sm text-dim">
+    <div className={`${card} grid gap-4 p-4`}>
+      <div className="flex items-start gap-3">
+        <span className={`grid size-11 shrink-0 place-items-center rounded-full ${sub ? 'bg-lime text-black' : 'bg-sunken text-ink-2'}`}>{sub ? <Bell size={20} /> : <BellOff size={20} />}</span>
+        <span className="grid gap-0.5">
+          <b className="text-[15px] font-semibold">{sub ? 'Notifiche attive' : 'Notifiche spente'}</b>
+          <span className="text-[13px] text-ink-3">Un avviso al giorno quando una scadenza è a 30 giorni, a 7 giorni o oggi, e se non aggiorni i km da 30 giorni.</span>
+        </span>
+      </div>
+      <label className="grid gap-1.5 text-[13px] font-medium text-ink-2">
         Ora dell'avviso
-        <select id="notify-hour" value={hour} onChange={(e) => setHour(Number(e.target.value))} className={field}>
-          {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{`${h}:00`}</option>)}
-        </select>
+        <HourSelect id="notify-hour" value={hour} onChange={setHour} />
       </label>
-      <button onClick={() => void enable()} className={primary}>{sub ? 'Aggiorna orario' : 'Attiva notifiche'}</button>
+      <button type="button" onClick={() => void enable()} className={`${btn.primary} w-full`}><Bell size={17} />{sub ? 'Aggiorna orario' : 'Attiva notifiche'}</button>
       {sub && (
-        <div className="flex gap-2">
-          <button onClick={() => void test()} className={ghost}>Invia prova</button>
-          <button onClick={() => void disable()} className={ghost}>Disattiva</button>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => void test()} className={btn.secondary}><Send size={16} />Invia prova</button>
+          <button type="button" onClick={() => void disable()} className={btn.secondary}><BellOff size={16} />Disattiva</button>
         </div>
       )}
-      {msg && <p role="status" className="m-0 text-sm text-dim">{msg}</p>}
-    </section>
+      {msg && <p role="status" className="m-0 text-[14px] font-medium text-red-ink">{msg}</p>}
+    </div>
   )
 }

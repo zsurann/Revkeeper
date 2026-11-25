@@ -6,6 +6,7 @@ import { App } from './App'
 import { browserAllowed, detectPlatform, isInstalled } from './domain/platform'
 import { Install } from './Install'
 import { captureInstallPrompt } from './installPrompt'
+import { THEME_KEY } from './theme'
 
 // Sui telefoni Revkeeper si usa solo installata: nel browser c'è la pagina di installazione. Computer e tablet: sito normale
 const platform = detectPlatform(navigator.userAgent)
@@ -21,8 +22,10 @@ const resetLocalData = () =>
       if (localStorage.getItem('revkeeper.epoch') === EPOCH) return done()
       const req = indexedDB.deleteDatabase('revkeeper')
       req.onsuccess = req.onerror = req.onblocked = () => {
+        const theme = localStorage.getItem(THEME_KEY) // il tema è una preferenza del dispositivo, non un dato: resta
         localStorage.clear()
         localStorage.setItem('revkeeper.epoch', EPOCH)
+        if (theme) localStorage.setItem(THEME_KEY, theme)
         done()
       }
     } catch {
