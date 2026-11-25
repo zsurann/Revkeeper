@@ -39,7 +39,7 @@ export const baseName = (raw: string) => {
 const key = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '')
 const keep = (n: string) => !DENY.test(n) && !/[/,]/.test(n) && n.length > 1
 
-const SOURCE: Record<string, string> = { traficom: 'Traficom (CC BY 4.0)', dgt: 'DGT', astra: 'ASTRA' }
+const SOURCE: Record<string, string> = { traficom: 'Traficom (CC BY 4.0)', dgt: 'DGT', astra: 'Ufficio federale delle strade (USTRA)' }
 
 export const buildCatalog = (
   raw: Raw[],

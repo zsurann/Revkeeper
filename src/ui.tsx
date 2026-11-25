@@ -1,8 +1,9 @@
-import { AnimatePresence, m, useDragControls, useReducedMotion, type HTMLMotionProps } from 'motion/react'
+import { AnimatePresence, animate, m, useMotionValue, useReducedMotion, type HTMLMotionProps } from 'motion/react'
 import { ChevronLeft, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { getAttachment } from './db'
 import type { Id, Status } from './domain/types'
+import { useBackLayer } from './historyLayers'
 import { dur, ease, spring } from './motion'
 
 // Classi dei controlli: un solo posto per forme, colori e stati
@@ -120,15 +121,38 @@ export function Segmented<T extends string>({ value, options, onChange, label, i
   )
 }
 
-// Foglio dal basso (su schermi larghi una finestra al centro): si trascina giù per chiudere, Esc chiude
+// Foglio dal basso (su schermi larghi una finestra al centro): si trascina giù da maniglia, titolo o contenuto (quando è in cima); Esc e Indietro chiudono
+const canDragFromTarget = (target: EventTarget | null, body: HTMLElement | null): boolean => {
+  if (!body || body.scrollTop > 1) return false
+  let el = target as HTMLElement | null
+  while (el && el !== body) {
+    if (el.tagName === 'SELECT' || (el.tagName === 'INPUT' && (el as HTMLInputElement).type === 'range')) return false
+    const style = getComputedStyle(el)
+    if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollTop > 1) return false
+    el = el.parentElement
+  }
+  return true
+}
+
 export const Sheet = ({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) => {
   const reduce = useReducedMotion()
   const panel = useRef<HTMLDivElement>(null)
-  const drag = useDragControls()
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const dragY = useMotionValue(0)
+  const touchActiveRef = useRef(false)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
+  useBackLayer(open, onClose, 'overlay')
+
+  useEffect(() => {
+    if (open) dragY.set(0)
+  }, [open, dragY])
+
   useEffect(() => {
     if (!open) return
     const prev = document.activeElement as HTMLElement | null
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const key = (e: KeyboardEvent) => e.key === 'Escape' && onCloseRef.current()
     addEventListener('keydown', key)
     const t = setTimeout(() => panel.current?.querySelector<HTMLElement>('input,select,textarea,button:not([data-close])')?.focus(), 260)
     document.documentElement.style.overflow = 'hidden'
@@ -138,36 +162,178 @@ export const Sheet = ({ open, onClose, title, children }: { open: boolean; onClo
       document.documentElement.style.overflow = ''
       prev?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
+
+  // Trascinamento sul corpo del foglio via TouchEvent nativo (evita pull-to-refresh e scroll-chaining quando è in cima)
+  useEffect(() => {
+    const body = bodyRef.current
+    if (!open || !body) return
+    let s: { x: number; y: number; originY: number; lastY: number; lastT: number; vy: number; dy: number; dragging: boolean; decided: boolean } | null = null
+    let touchTimer: number | undefined
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (touchTimer) { window.clearTimeout(touchTimer); touchTimer = undefined }
+      touchActiveRef.current = true
+      if (e.touches.length !== 1 || !canDragFromTarget(e.target, body)) { s = null; return }
+      const t = e.touches[0]!
+      s = { x: t.clientX, y: t.clientY, originY: t.clientY, lastY: t.clientY, lastT: performance.now(), vy: 0, dy: 0, dragging: false, decided: false }
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (!s || e.touches.length !== 1) return
+      const t = e.touches[0]!
+      const now = performance.now()
+      if (!s.decided) {
+        const dx = t.clientX - s.x
+        const dy = t.clientY - s.y
+        if (Math.hypot(dx, dy) < 6) return
+        s.decided = true
+        if (dy > 0 && Math.abs(dy) > Math.abs(dx) * 1.1 && canDragFromTarget(e.target, body)) {
+          s.dragging = true
+          s.originY = t.clientY
+          s.lastY = t.clientY
+          s.lastT = now
+        } else {
+          s = null
+          return
+        }
+      }
+      if (!s.dragging) return
+      if (e.cancelable) e.preventDefault()
+      const dy = t.clientY - s.originY
+      const dt = Math.max(1, now - s.lastT)
+      const instantVy = ((t.clientY - s.lastY) / dt) * 1000
+      s.vy = s.vy * 0.5 + instantVy * 0.5
+      s.dy = dy
+      s.lastY = t.clientY
+      s.lastT = now
+      if (!reduce) dragY.set(dy < 0 ? dy * 0.08 : dy)
+    }
+    const onTouchEnd = (e: TouchEvent) => {
+      const cur = s
+      s = null
+      touchTimer = window.setTimeout(() => { touchActiveRef.current = false }, 80)
+      if (!cur?.dragging) return
+      const shouldClose = e.type === 'touchend' && (reduce ? cur.dy > 80 || cur.vy > 600 : cur.dy > 110 || cur.vy > 600)
+      if (shouldClose) {
+        if (reduce) dragY.set(0)
+        onCloseRef.current()
+      } else if (!reduce) {
+        void animate(dragY, 0, spring.sheet)
+      }
+    }
+
+    body.addEventListener('touchstart', onTouchStart, { passive: true })
+    body.addEventListener('touchmove', onTouchMove, { passive: false })
+    body.addEventListener('touchend', onTouchEnd)
+    body.addEventListener('touchcancel', onTouchEnd)
+    return () => {
+      if (touchTimer) window.clearTimeout(touchTimer)
+      touchActiveRef.current = false
+      body.removeEventListener('touchstart', onTouchStart)
+      body.removeEventListener('touchmove', onTouchMove)
+      body.removeEventListener('touchend', onTouchEnd)
+      body.removeEventListener('touchcancel', onTouchEnd)
+    }
+  }, [open, reduce, dragY])
+
+  const startPointerDrag = (startEvent: React.PointerEvent, immediate: boolean) => {
+    if (!immediate && touchActiveRef.current) return
+    if (!startEvent.isPrimary || startEvent.button !== 0) return
+    if (!immediate && !canDragFromTarget(startEvent.target, bodyRef.current)) return
+    let s = {
+      id: startEvent.pointerId,
+      x: startEvent.clientX,
+      y: startEvent.clientY,
+      originY: startEvent.clientY,
+      lastY: startEvent.clientY,
+      lastT: performance.now(),
+      vy: 0,
+      dy: 0,
+      dragging: immediate,
+      decided: immediate,
+    }
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerId !== s.id) return
+      const now = performance.now()
+      if (!s.decided) {
+        const dx = e.clientX - s.x
+        const dy = e.clientY - s.y
+        if (Math.hypot(dx, dy) < 6) return
+        s.decided = true
+        if (dy > 0 && Math.abs(dy) > Math.abs(dx) * 1.1 && canDragFromTarget(e.target, bodyRef.current)) {
+          s.dragging = true
+          s.originY = e.clientY
+          s.lastY = e.clientY
+          s.lastT = now
+        } else {
+          cleanup()
+          return
+        }
+      }
+      if (!s.dragging) return
+      const dy = e.clientY - s.originY
+      const dt = Math.max(1, now - s.lastT)
+      const instantVy = ((e.clientY - s.lastY) / dt) * 1000
+      s.vy = s.vy * 0.5 + instantVy * 0.5
+      s.dy = dy
+      s.lastY = e.clientY
+      s.lastT = now
+      if (!reduce) dragY.set(dy < 0 ? dy * 0.08 : dy)
+    }
+    const onEnd = (e: PointerEvent) => {
+      if (e.pointerId !== s.id) return
+      cleanup()
+      if (!s.dragging) return
+      const shouldClose = e.type === 'pointerup' && (reduce ? s.dy > 80 || s.vy > 600 : s.dy > 110 || s.vy > 600)
+      if (shouldClose) {
+        if (reduce) dragY.set(0)
+        onCloseRef.current()
+      } else if (!reduce) {
+        void animate(dragY, 0, spring.sheet)
+      }
+    }
+    const cleanup = () => {
+      removeEventListener('pointermove', onMove)
+      removeEventListener('pointerup', onEnd)
+      removeEventListener('pointercancel', onEnd)
+    }
+    addEventListener('pointermove', onMove)
+    addEventListener('pointerup', onEnd)
+    addEventListener('pointercancel', onEnd)
+  }
+
   return (
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-40 grid items-end lg:place-items-center" role="dialog" aria-modal="true" aria-label={title}>
           <m.div className="absolute inset-0 bg-[#0E1116]/45 backdrop-blur-[2px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: dur.base }} onClick={onClose} />
           <m.div
-            ref={panel}
-            className="relative mx-auto flex max-h-[92dvh] w-full max-w-[520px] flex-col rounded-t-xl bg-surface shadow-3 lg:rounded-xl"
-            style={{ touchAction: 'pan-y' }}
+            className="relative mx-auto flex w-full max-w-[520px] justify-center"
             initial={reduce ? { opacity: 0 } : { y: '100%' }}
             animate={reduce ? { opacity: 1 } : { y: 0 }}
             exit={reduce ? { opacity: 0 } : { y: '100%', transition: { duration: 0.2, ease: ease.inOut } }}
             transition={spring.sheet}
-            drag={reduce ? false : 'y'}
-            dragListener={false}
-            dragControls={drag}
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0.04, bottom: 0.6 }}
-            onDragEnd={(_, i) => { if (i.offset.y > 110 || i.velocity.y > 600) onClose() }}
           >
-            {/* Maniglia e titolo chiudono trascinando; il corpo del foglio e le liste restano scorrevoli */}
-            <div onPointerDown={(e) => drag.start(e)} className="grid cursor-grab touch-none place-items-center pb-1 pt-2.5 active:cursor-grabbing" aria-hidden="true">
-              <i className="h-1.5 w-10 rounded-full bg-line-strong" />
-            </div>
-            <div className="flex items-center justify-between px-5 pb-2 pt-1">
-              <h2 className="t-title m-0 flex-1 cursor-grab touch-none text-[20px] active:cursor-grabbing" onPointerDown={(e) => drag.start(e)}>{title}</h2>
-              <button type="button" data-close onClick={onClose} className={btn.icon} aria-label="Chiudi"><X size={20} /></button>
-            </div>
-            <div className="overflow-y-auto overscroll-contain px-5 pb-[max(20px,env(safe-area-inset-bottom))]" style={{ touchAction: 'pan-y' }}>{children}</div>
+            <m.div
+              ref={panel}
+              className="flex max-h-[min(92dvh,calc(100dvh-env(safe-area-inset-top)-12px))] w-full flex-col rounded-t-xl bg-surface shadow-3 lg:rounded-xl"
+              style={{ y: reduce ? 0 : dragY }}
+            >
+              {/* Maniglia, titolo e contenuto (quando è in cima) chiudono trascinando verso il basso */}
+              <div onPointerDown={(e) => startPointerDrag(e, true)} className="grid cursor-grab touch-none place-items-center pb-1 pt-2.5 active:cursor-grabbing" aria-hidden="true">
+                <i className="h-1.5 w-10 rounded-full bg-line-strong" />
+              </div>
+              <div className="flex items-center justify-between px-5 pb-2 pt-1">
+                <h2 className="t-title m-0 flex-1 cursor-grab touch-none text-[20px] active:cursor-grabbing" onPointerDown={(e) => startPointerDrag(e, true)}>{title}</h2>
+                <button type="button" data-close onClick={onClose} className={btn.icon} aria-label="Chiudi"><X size={20} /></button>
+              </div>
+              <div
+                ref={bodyRef}
+                onPointerDown={(e) => startPointerDrag(e, false)}
+                className="overflow-y-auto overscroll-contain px-5 pb-[max(20px,env(safe-area-inset-bottom))]"
+                style={{ touchAction: 'pan-y' }}
+              >{children}</div>
+            </m.div>
           </m.div>
         </div>
       )}

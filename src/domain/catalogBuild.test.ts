@@ -44,3 +44,22 @@ it('il catalogo generato è valido: niente marche doppie, anni sensati, la Z650 
   for (const f of readdirSync(DIR)) expect(readFileSync(`${DIR}/${f}`, 'utf8').length).toBeLessThan(150_000)
   expect(new Set(index.brands.map((b) => b.slug)).size).toBe(index.brands.length)
 })
+
+it('cita Ufficio federale delle strade (USTRA) per le specifiche ASTRA', () => {
+  const c = buildCatalog(
+    [],
+    { popular: [], brands: {} },
+    2026,
+    'x',
+    [{ make: 'Kawasaki', model: 'Z650', from: 2017, to: 2026, cc: 649, kw: 50.2, kg: 188, tyreFront: '120/70 ZR17', tyreRear: '160/60 ZR17', sources: ['astra', 'traficom'] }],
+  )
+  const src = c.brands[0]?.models[0]?.specs?.[0]?.source
+  expect(src).toBe('Registri ufficiali: Ufficio federale delle strade (USTRA), Traficom (CC BY 4.0)')
+  for (const f of readdirSync(DIR)) {
+    if (!f.startsWith('b-')) continue
+    const models = JSON.parse(readFileSync(`${DIR}/${f}`, 'utf8')) as { specs?: { source?: string }[] }[]
+    for (const m of models)
+      for (const sp of m.specs ?? [])
+        if (sp.source?.includes('ASTRA')) expect(sp.source).toContain('Ufficio federale delle strade')
+  }
+})

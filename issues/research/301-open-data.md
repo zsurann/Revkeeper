@@ -9,8 +9,7 @@ dove scritto "non verificato". Script di prova e file scaricati nello scratchpad
   svizzere, aggiornato mensilmente, download libero, 12 MB, nessuna chiave). 11 663 omologazioni moto, 603 marche,
   5 465 coppie marca+nome commerciale, dal 1995 al 2026. Ha **tutto tranne il serbatoio**: nome commerciale,
   tipo, data omologazione, cc, kW, peso a vuoto, **misure gomme e cerchi** (es. Z650 2026:
-  `v= 120/70ZR17 … h= 160/60ZR17`). Licenza: open data federale "frei verfügbar", senza un testo di licenza
-  esplicito sul portale (vedi sotto: da confermare con una mail ad ASTRA prima del rilascio).
+  `v= 120/70ZR17 … h= 160/60ZR17`). Licenza: open data federale "frei verfügbar"; riutilizzo nell'app confermato per iscritto dall'Ufficio federale delle strade il 2026-11-23 citando la fonte (`issues/304-richiesta-di-licenza-ad-astra.md`).
 - **Seconda fonte, con la licenza più pulita: Finlandia, Traficom "Ajoneuvojen avoin data", CC BY 4.0.**
   Un CSV con tutti i veicoli in circolazione (251 792 righe di categoria L), con marca, nome commerciale,
   cc, kW, massa a vuoto, data di prima immissione: 771 marche, 12 928 coppie marca+nome. Niente gomme.
@@ -33,7 +32,7 @@ dove scritto "non verificato". Script di prova e file scaricati nello scratchpad
 
 | Fonte | Accesso | Campi utili | Moto coperte | Licenza | Esito |
 |---|---|---|---|---|---|
-| **ASTRA (CH) TAS_Motorrad** | CSV/xlsb, download diretto, mensile; JSON per omologazione | marca, nome commerciale, tipo, variante, data omologazione, cc, kW, giri, coppia, peso a vuoto min/max, massa max, **gomme+cerchi**, dimensioni, v max | 11 663 omologazioni, 603 marche, 1995–2026 (tutto ciò che si vende in CH ≈ mercato UE) | "Open Data, frei verfügbar"; nessun testo di licenza trovato, solo "uso accurato e corretto dei dati" | **provato** |
+| **ASTRA (CH) TAS_Motorrad** | CSV/xlsb, download diretto, mensile; JSON per omologazione | marca, nome commerciale, tipo, variante, data omologazione, cc, kW, giri, coppia, peso a vuoto min/max, massa max, **gomme+cerchi**, dimensioni, v max | 11 663 omologazioni, 603 marche, 1995–2026 (tutto ciò che si vende in CH ≈ mercato UE) | "Open Data, frei verfügbar"; conferma scritta 2026-11-23: uso consentito citando l'Ufficio federale delle strade | **provato** |
 | **Traficom (FI)** | ZIP 206 MB → CSV 956 MB, `;`, latin-1, aggiornamento trimestrale | classe (L1e/L3e…), marca, `kaupallinenNimi`, `mallimerkinta`, cc, kW, massa a vuoto, data prima immissione, n. omologazione | 251 792 veicoli L in circolazione, 771 marche | **CC BY 4.0** | **provato** |
 | **DGT (ES) microdati matriculaciones** | ZIP mensile (~16 MB → 120 MB), larghezza fissa, latin-1, dal 12/2014 | marca, modello (22 car.), cc, kW, tara, massa in ordine di marcia, categoria UE, tipo/variante/versione, n. omologazione | 29 823 moto+ciclomotori nel solo 09/2026; 175 marche | Riuso libero anche commerciale, citando la fonte (aviso legal datos.gob.es) | **provato** |
 | **RDW (NL)** | API Socrata (SoQL), JSON/CSV | merk, handelsbenaming, datum_eerste_toelating, cilinderinhoud, massa_ledig_voertuig/massa_rijklaar, typegoedkeuringsnummer, variant, uitvoering; nettomaximumvermogen nel dataset carburanti | Tutto il parco NL (non contato) | **CC0** | **non provato** (host bloccato qui) |
@@ -174,7 +173,7 @@ le specifiche.
 
 1. **Base: ASTRA TAS_Motorrad** per nome commerciale, anni, cc, kW e **gomme**. È l'unica fonte aperta
    con le gomme, ed è già organizzata per omologazione (una riga per tipo/versione), quindi non serve
-   aggregare milioni di targhe. Prima del rilascio: scrivere ad ASTRA (contatto indicato sulla pagina dati veicoli) per avere per scritto che il riuso in un'app gratuita è permesso, con attribuzione.
+   aggregare milioni di targhe. Conferma scritta ricevuta il 2026-11-23 (`issues/304-richiesta-di-licenza-ad-astra.md`): uso consentito citando l'Ufficio federale delle strade.
 2. **Conferma e massa: Traficom (CC BY 4.0)**, per la massa a vuoto UE (senza conducente), per gli anni di
    circolazione reali e per i modelli che in Svizzera non ci sono. Attribuzione: "Fonte: Traficom, CC BY 4.0".
 3. **Copertura mercato Sud Europa: DGT**, in particolare per gli scooter 125 (Zontes, SYM, Kymco, Voge) e

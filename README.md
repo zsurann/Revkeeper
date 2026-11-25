@@ -63,7 +63,7 @@ Restano tuoi. Non vengono venduti né condivisi, e quelli salvati online restano
 
 ---
 
-<sub>Elenco dei modelli basato su dati pubblici: NHTSA vPIC, Traficom (CC BY 4.0), DGT, ASTRA/USTRA (Ufficio federale delle strade, Svizzera).</sub>
+<sub>Elenco dei modelli basato su dati pubblici: NHTSA vPIC, Traficom (CC BY 4.0), DGT, Ufficio federale delle strade (USTRA/ASTRA, Svizzera).</sub>
 
 ## Per pubblicare gli aggiornamenti
 

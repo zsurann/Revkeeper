@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 import { detectPlatform } from './platform'
+import { supportsEdgeSwipeBack } from '../EdgeSwipeBack'
 
 const UA = {
   safari26: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1',
@@ -26,4 +27,12 @@ it('riconosce telefono, browser e browser interni', () => {
 it('iPad e tablet restano un sito normale', () => {
   expect(detectPlatform(UA.ipad).os).toBe('desktop')
   expect(detectPlatform(UA.tabletAndroid).os).toBe('desktop')
+})
+
+it('edge-swipe attivo solo su iPhone in PWA installata, mai in Safari o Android', () => {
+  expect(supportsEdgeSwipeBack(UA.safari26, true)).toBe(true)
+  expect(supportsEdgeSwipeBack(UA.safari26, false)).toBe(false)
+  expect(supportsEdgeSwipeBack(UA.chromeAndroid, true)).toBe(false)
+  expect(supportsEdgeSwipeBack(UA.chromeAndroid, false)).toBe(false)
+  expect(supportsEdgeSwipeBack(UA.ipad, true)).toBe(false)
 })

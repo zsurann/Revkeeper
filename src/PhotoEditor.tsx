@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { clampPose, drawRect, MAX_ZOOM, type Pose, type View } from './domain/crop'
+import { useBackLayer } from './historyLayers'
 import { btn } from './ui'
 
 const OUT_W = 1600
@@ -13,6 +14,12 @@ export const PhotoEditor = ({ file, onDone, onCancel }: { file: File; onDone: (b
   const [pose, setPose] = useState<Pose>({ z: 1, tx: 0, ty: 0 })
   const [error, setError] = useState('')
   const pts = useRef(new Map<number, { x: number; y: number }>())
+  useBackLayer(true, onCancel, 'overlay')
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCancel()
+    addEventListener('keydown', onKey)
+    return () => removeEventListener('keydown', onKey)
+  }, [onCancel])
 
   useEffect(() => {
     let bmp: ImageBitmap | undefined

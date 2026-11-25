@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { ChevronDown } from 'lucide-react'
+import { useBackLayer } from './historyLayers'
 import { field } from './ui'
 
 export type Option = { label: string; hint?: string; aliases?: string[] }
@@ -54,6 +55,7 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
     onPick?.(o.label)
   }
   const show = open && items.length > 0
+  useBackLayer(show, () => { setOpen(false); input.current?.blur() }, 'overlay')
 
   const cancelClose = () => {
     if (closeTimer.current) window.clearTimeout(closeTimer.current)
@@ -150,7 +152,7 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
           onPointerMove={onListPointerMove}
           onPointerUp={onListPointerUp}
           onPointerCancel={() => { gesture.current = null }}
-          className="absolute inset-x-0 top-[calc(100%+4px)] z-20 m-0 max-h-60 list-none overflow-auto overscroll-contain rounded-md bg-surface p-1 shadow-3 ring-1 ring-line"
+          className="absolute inset-x-0 top-[calc(100%+4px)] z-20 m-0 max-h-60 list-none overflow-auto overscroll-contain touch-pan-y rounded-md bg-surface p-1 shadow-3 ring-1 ring-line"
         >
           {items.map((o, i) => (
             <li
@@ -159,7 +161,7 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
               data-index={i}
               role="option"
               aria-selected={i === active}
-              className={`flex cursor-pointer justify-between gap-2 rounded-lg p-2.5 ${i === active ? 'bg-sunken' : ''} ${'free' in o ? 'font-semibold text-lime-ink' : 'text-ink'}`}
+              className={`flex cursor-pointer select-none justify-between gap-2 rounded-lg p-2.5 ${i === active ? 'bg-sunken' : ''} ${'free' in o ? 'font-semibold text-lime-ink' : 'text-ink'}`}
             >
               {'free' in o ? <span>Usa «{o.label}»</span> : <Mark text={o.label} q={value.trim()} />}
               {'hint' in o && o.hint && <small className="shrink-0 text-ink-3">{o.hint}</small>}

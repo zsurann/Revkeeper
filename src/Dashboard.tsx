@@ -138,7 +138,7 @@ export const Dashboard = ({ next, rows, docs, last, labelOf, km, from, rate, onK
     <div className="lg:col-span-7"><Cluster next={next} km={km} from={from} rate={rate} onKm={onKm} /></div>
     <m.section aria-labelledby="h-docs" className="grid content-start gap-3 lg:col-span-5" variants={list} initial="initial" animate="animate">
       <SectionTitle id="h-docs" action={<button type="button" onClick={() => go('documents')} className={link}>Documenti<ChevronRight size={16} /></button>}>Scadenze</SectionTitle>
-      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 no-scrollbar lg:mx-0 lg:grid lg:overflow-visible lg:px-0">
+      <div className="-mx-4 flex gap-3 overflow-x-auto overscroll-x-contain px-4 pb-1 no-scrollbar lg:mx-0 lg:grid lg:overflow-visible lg:px-0">
         {DOC_KINDS.map((k) => <DocTile key={k} d={docs.find((d) => d.kind === k) ?? { kind: k }} onOpen={() => go('documents')} />)}
       </div>
     </m.section>

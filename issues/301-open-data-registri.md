@@ -15,7 +15,7 @@ Quali registri pubblici europei offrono, gratis e con licenza libera, i dati del
 
 Dettagli, query e bozza di pipeline: [research/301-open-data.md](research/301-open-data.md).
 
-- **Svizzera, ASTRA `TAS_Motorrad.csv`** (gratis, aggiornato ogni mese, 12 MB): 11.663 omologazioni moto, 603 marche, dal 1995 al 2026, con nome commerciale, cilindrata, kW, peso e **misure gomme** (Z650 2026: 649 cc, 50,2 kW, 120/70ZR17 e 160/60ZR17). **Licenza non esplicita**: serve una conferma scritta di ASTRA prima di usarlo. Il peso sembra includere il conducente (263 kg contro i 188 UE sulla Z650).
+- **Svizzera, ASTRA `TAS_Motorrad.csv`** (gratis, aggiornato ogni mese, 12 MB): 11.663 omologazioni moto, 603 marche, dal 1995 al 2026, con nome commerciale, cilindrata, kW, peso e **misure gomme** (Z650 2026: 649 cc, 50,2 kW, 120/70ZR17 e 160/60ZR17). **Licenza / permesso**: uso consentito con attribuzione confermato per iscritto dall'Ufficio federale delle strade il 2026-11-23 (vedi [304](304-richiesta-di-licenza-ad-astra.md)). Il peso sembra includere il conducente (263 kg contro i 188 UE sulla Z650).
 - **Finlandia, Traficom** (CC BY 4.0, licenza più pulita): 251.792 moto, 771 marche, 12.928 coppie marca-modello, con cilindrata, kW, massa a vuoto e anno; niente gomme.
 - **Spagna, microdati DGT** (dal 2014, riuso libero citando la fonte): marca, modello, cilindrata, kW, massa; utile per gli scooter 125 e per gli anni di vendita.
 - **RDW Olanda** (CC0): non provato perché l'host è bloccato da questa sessione.
