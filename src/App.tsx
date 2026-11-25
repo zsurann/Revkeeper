@@ -127,7 +127,9 @@ const Main = () => {
   useEffect(() => void load(), [load])
   useEffect(() => watchSystemTheme(), [])
   // Ogni cambio di schermata riparte dall'alto (es. dopo aver salvato il modulo moto)
-  useEffect(() => scrollTo({ top: 0 }), [view, tab])
+  useEffect(() => {
+    scrollTo({ top: 0 })
+  }, [view, tab])
   useEffect(() => {
     startAutoSync()
     const onSynced = () => void load()
