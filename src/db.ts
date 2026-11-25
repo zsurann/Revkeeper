@@ -2,6 +2,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import { currentKm } from './domain/due'
 import { int } from './domain/num'
 import type { Attachment, Bike, BikeDocument, Id, MaintenanceItem, OdometerReading, Service } from './domain/types'
+import { fullDate } from './format'
 
 type Rec<T> = { key: Id; value: T; indexes: { bikeId: Id } }
 interface RevkeeperDB extends DBSchema {
@@ -62,12 +63,33 @@ export const listByBike = async <S extends ChildStore>(store: S, bikeId: Id): Pr
   alive(await (await db()).getAllFromIndex(store as ChildStore as 'readings', 'bikeId', bikeId)) as Value<S>[]
 
 export class KmDecreasingError extends Error {}
+export class KmBelowServiceError extends Error {}
+
+export const highestService = async (bikeId: Id): Promise<Service | undefined> =>
+  (await listByBike('services', bikeId)).sort((a, b) => b.km - a.km || b.date.localeCompare(a.date))[0]
 
 export const addReading = async (bike: Bike, date: string, km: number) => {
-  if (!Number.isFinite(km) || km < 0) throw new RangeError('Km non validi')
+  if (!Number.isInteger(km) || km < 0) throw new RangeError('Km non validi')
   const now = currentKm(bike, await listByBike('readings', bike.id))
   if (km < now) throw new KmDecreasingError(`I km non possono scendere sotto ${int(now)}`)
   return save('readings', { bikeId: bike.id, date, km })
+}
+
+// Correzione di una lettura sbagliata: rimuove le letture oltre il nuovo valore e ricalcola tutto
+export const correctReading = async (bike: Bike, date: string, km: number) => {
+  if (!Number.isInteger(km) || km < 0) throw new RangeError('Km non validi')
+  const [readings, topService] = await Promise.all([listByBike('readings', bike.id), highestService(bike.id)])
+  if (topService && km < topService.km) {
+    throw new KmBelowServiceError(
+      `I km non possono scendere sotto ${int(topService.km)} km (intervento registrato il ${fullDate(topService.date)}).`,
+    )
+  }
+  const above = readings.filter((r) => r.km > km)
+  for (const r of above) await remove('readings', r.id)
+  if (km < bike.startKm) await save('bikes', { ...bike, startKm: km })
+  const existing = readings.find((r) => r.km === km && r.date === date)
+  const reading = existing ?? (await save('readings', { bikeId: bike.id, date, km }))
+  return { reading, removedCount: above.length, startKmAdjusted: km < bike.startKm }
 }
 
 // Se l'allegato è arrivato dal sync senza file, lo scarica da R2 e lo tiene in cache
@@ -95,4 +117,108 @@ export const findDuplicateBikes = (bikes: Bike[]) => {
   for (const [i, a] of bikes.entries())
     for (const b of bikes.slice(i + 1)) if (key(a) && key(a) === key(b)) return [a, b] as const
   return undefined
+}
+
+export type BikeDeleteSummary = {
+  services: number
+  readings: number
+  items: number
+  documents: number
+  notes: number
+  attachments: number
+}
+
+const bikeAttachmentIds = (bike: Bike | undefined, services: Service[], documents: BikeDocument[]) => {
+  const ids = new Set<Id>()
+  if (bike?.photoId) ids.add(bike.photoId)
+  for (const s of services) for (const id of s.attachmentIds) ids.add(id)
+  for (const d of documents) for (const id of d.attachmentIds) ids.add(id)
+  return ids
+}
+
+const exclusiveAttachments = async (bikeId: Id): Promise<Id[]> => {
+  const d = await db()
+  const [bikes, services, documents] = await Promise.all([
+    alive(await d.getAll('bikes')),
+    alive(await d.getAll('services')),
+    alive(await d.getAll('documents')),
+  ])
+  const targetBike = bikes.find((b) => b.id === bikeId)
+  const target = bikeAttachmentIds(
+    targetBike,
+    services.filter((s) => s.bikeId === bikeId),
+    documents.filter((doc) => doc.bikeId === bikeId),
+  )
+  const usedElsewhere = new Set<Id>()
+  for (const b of bikes) if (b.id !== bikeId && b.photoId) usedElsewhere.add(b.photoId)
+  for (const s of services) if (s.bikeId !== bikeId) for (const id of s.attachmentIds) usedElsewhere.add(id)
+  for (const doc of documents) if (doc.bikeId !== bikeId) for (const id of doc.attachmentIds) usedElsewhere.add(id)
+  return [...target].filter((id) => !usedElsewhere.has(id))
+}
+
+export const bikeDeleteSummary = async (bikeId: Id): Promise<BikeDeleteSummary> => {
+  const [readings, items, services, documents, attachments] = await Promise.all([
+    listByBike('readings', bikeId),
+    listByBike('items', bikeId),
+    listByBike('services', bikeId),
+    listByBike('documents', bikeId),
+    exclusiveAttachments(bikeId),
+  ])
+  const notes = items.filter((i) => i.notes?.trim()).length + services.filter((s) => s.notes?.trim()).length
+  return {
+    services: services.length,
+    readings: readings.length,
+    items: items.length,
+    documents: documents.length,
+    notes,
+    attachments: attachments.length,
+  }
+}
+
+// Cancella una moto e tutti i suoi dati locali (tombstone per sync, blob rimossi per liberare spazio)
+export const removeBikeCascade = async (bikeId: Id): Promise<{ ids: Record<StoreName, Id[]> }> => {
+  const exclusiveAtts = await exclusiveAttachments(bikeId)
+  const d = await db()
+  const now = Date.now()
+  const ids: Record<StoreName, Id[]> = { bikes: [], readings: [], items: [], services: [], documents: [], attachments: [] }
+  const tx = d.transaction(STORES, 'readwrite')
+
+  const bike = await tx.objectStore('bikes').get(bikeId)
+  if (bike && !bike.deletedAt) {
+    await tx.objectStore('bikes').put({ ...bike, deletedAt: now, updatedAt: now, dirty: 1 } as never)
+    ids.bikes.push(bikeId)
+  }
+
+  for (const store of ['readings', 'items', 'services', 'documents'] as const) {
+    const rows = await tx.objectStore(store).index('bikeId').getAll(bikeId)
+    for (const r of rows) {
+      if (r.deletedAt) continue
+      await tx.objectStore(store).put({ ...r, deletedAt: now, updatedAt: now, dirty: 1 } as never)
+      ids[store].push(r.id)
+    }
+  }
+
+  for (const attId of exclusiveAtts) {
+    const att = await tx.objectStore('attachments').get(attId)
+    if (!att || att.deletedAt) continue
+    const { blob: _b, uploaded: _u, ...meta } = att as Attachment & { uploaded?: 1 }
+    await tx.objectStore('attachments').put({ ...meta, size: 0, deletedAt: now, updatedAt: now, dirty: 1 } as never)
+    ids.attachments.push(attId)
+  }
+
+  await tx.done
+
+  if (exclusiveAtts.length && typeof caches !== 'undefined') {
+    const urls = new Set(exclusiveAtts.map((id) => `/api/files/${id}`))
+    await Promise.all(
+      (await caches.keys()).map(async (name) => {
+        const cache = await caches.open(name)
+        const reqs = await cache.keys()
+        await Promise.all(reqs.filter((r) => urls.has(new URL(r.url).pathname)).map((r) => cache.delete(r)))
+      }),
+    ).catch(() => undefined)
+  }
+
+  changed()
+  return { ids }
 }

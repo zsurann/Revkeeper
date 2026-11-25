@@ -1,5 +1,6 @@
 import { expect, it, vi } from 'vitest'
 import { handle, LIMITS, type Env } from './api'
+import { remindersFor, type Rec } from './reminders'
 import type { Jwk } from './google'
 import { FakeD1, FakeR2 } from './testing/cloud'
 import { unzip } from './testing/unzip'
@@ -45,8 +46,8 @@ const bike = (extra: Record<string, unknown> = {}) => ({ id: BIKE, updatedAt: AT
 const session = async () => {
   const { env, d1, files } = cloud()
   const { keys, sign } = await signer()
-  const login = async (email = 'a@b.it') => {
-    const res = await call(env, '/auth/google', { method: 'POST', body: JSON.stringify({ credential: await sign('42', email) }) }, keys)
+  const login = async (email = 'a@b.it', sub = '42') => {
+    const res = await call(env, '/auth/google', { method: 'POST', body: JSON.stringify({ credential: await sign(sub, email) }) }, keys)
     expect(res.status).toBe(200)
     return tokenOf(res)
   }
@@ -259,4 +260,87 @@ it('notifiche di prova: dopo 5 in un’ora risponde 429', async () => {
   const cookie = await login()
   for (let i = 0; i < 5; i++) expect((await call(env, '/push/test', { method: 'POST', cookie, body: '{}' })).status).toBe(200)
   expect((await call(env, '/push/test', { method: 'POST', cookie, body: '{}' })).status).toBe(429)
+})
+
+it('elimina una moto dal server: verifica proprietà, pulisce D1 e R2, aggiorna quota e sync multi-dispositivo', async () => {
+  const { env, d1, files, login } = await session()
+  const ownerCookie = await login('owner@b.it', '42')
+  const otherCookie = await login('other@b.it', '99')
+
+  const BIKE_2 = '11111111-1111-4111-8111-222222222222'
+  const READ_1 = '44444444-4444-4444-8444-111111111111'
+  const ITEM_1 = '55555555-5555-4555-8555-111111111111'
+  const SVC_1 = '77777777-7777-4777-8777-111111111111'
+  const DOC_1 = '88888888-8888-4888-8888-111111111111'
+  const READ_2 = '44444444-4444-4444-8444-222222222222'
+
+  expect((await putFile(env, ownerCookie, FILE, new Uint8Array([1, 2, 3, 4]))).status).toBe(200)
+  expect((await putFile(env, ownerCookie, FILE_B, new Uint8Array([5, 6]))).status).toBe(200)
+
+  expect((await push(env, ownerCookie, [
+    { kind: 'bikes', id: BIKE, updatedAt: AT, data: bike({ photoId: FILE }) },
+    { kind: 'bikes', id: BIKE_2, updatedAt: AT, data: { ...bike({ id: BIKE_2, model: 'MT-07', photoId: FILE_B }) } },
+    { kind: 'readings', id: READ_1, updatedAt: AT, data: { id: READ_1, updatedAt: AT, bikeId: BIKE, date: '2026-11-01', km: 31000 } },
+    { kind: 'readings', id: READ_2, updatedAt: AT, data: { id: READ_2, updatedAt: AT, bikeId: BIKE_2, date: '2026-11-01', km: 5000 } },
+    { kind: 'items', id: ITEM_1, updatedAt: AT, data: { id: ITEM_1, updatedAt: AT, bikeId: BIKE, item: 'engine_oil', label: 'Olio', action: 'replace', km: 10000, months: 12, origin: 'model', notes: '10W-40' } },
+    { kind: 'services', id: SVC_1, updatedAt: AT, data: { id: SVC_1, updatedAt: AT, bikeId: BIKE, date: '2026-06-01', km: 30000, itemIds: [ITEM_1], attachmentIds: [FILE] } },
+    { kind: 'documents', id: DOC_1, updatedAt: AT, data: { id: DOC_1, updatedAt: AT, bikeId: BIKE, kind: 'revisione', dueDate: '2026-11-27', attachmentIds: [] } },
+    { kind: 'attachments', id: FILE, updatedAt: AT, data: { id: FILE, updatedAt: AT, name: 'foto.jpg', type: 'image/jpeg', size: 4 } },
+    { kind: 'attachments', id: FILE_B, updatedAt: AT, data: { id: FILE_B, updatedAt: AT, name: 'altra.jpg', type: 'image/jpeg', size: 2 } },
+  ])).status).toBe(200)
+
+  const beforeRev = d1.prepare('SELECT rev FROM users WHERE id = ?').bind('42').first<{ rev: number }>()!.rev
+
+  // Sicurezza: anonimo (401), id non valido (400), altro utente (404) non toccano nulla
+  expect((await call(env, `/bikes/${BIKE}`, { method: 'DELETE' })).status).toBe(401)
+  expect((await call(env, '/bikes/not-a-uuid', { method: 'DELETE', cookie: ownerCookie })).status).toBe(400)
+  expect((await call(env, `/bikes/${BIKE}`, { method: 'DELETE', cookie: otherCookie })).status).toBe(404)
+  expect(files.objects.has(`42/${FILE}`)).toBe(true)
+
+  // Proprietario elimina BIKE
+  const res = await call(env, `/bikes/${BIKE}`, { method: 'DELETE', cookie: ownerCookie })
+  expect(res.status).toBe(200)
+  expect(await res.json()).toMatchObject({ ok: true, deletedRecords: 6, deletedFiles: 1 })
+
+  // R2 e quota: FILE rimosso, FILE_B della seconda moto intatto
+  expect(files.objects.has(`42/${FILE}`)).toBe(false)
+  expect(files.objects.has(`42/${FILE_B}`)).toBe(true)
+  expect(d1.prepare('SELECT bytes FROM users WHERE id = ?').bind('42').first<{ bytes: number }>()).toEqual({ bytes: 2 })
+  expect(d1.prepare('SELECT count(*) AS n FROM files WHERE user_id = ?').bind('42').first<{ n: number }>()).toEqual({ n: 1 })
+
+  // D1: i record di BIKE sono tombstone senza dati (data IS NULL, deleted = 1), BIKE_2 resta viva
+  const aliveRows = d1.prepare('SELECT kind, id, data FROM records WHERE user_id = ? AND deleted = 0').bind('42').all<{ kind: string; id: string; data: string }>().results
+  expect(aliveRows.map((r) => r.id).sort()).toEqual([BIKE_2, FILE_B, READ_2].sort())
+
+  // Secondo dispositivo riceve i tombstone dal cursore precedente
+  const pulled = await (await call(env, `/sync/pull?since=${beforeRev}`, { cookie: ownerCookie })).json() as {
+    changes: { kind: string; id: string; deleted: boolean; data: unknown }[]
+  }
+  expect(pulled.changes.every((c) => c.deleted && c.data === null)).toBe(true)
+  expect(pulled.changes.map((c) => c.id).sort()).toEqual([BIKE, READ_1, ITEM_1, SVC_1, DOC_1, FILE].sort())
+
+  // I promemoria non includono più la moto eliminata
+  const recs: Rec[] = aliveRows.map((r) => ({ kind: r.kind, data: JSON.parse(r.data) }))
+  expect(remindersFor(recs, '2026-11-20')).toEqual([])
+})
+
+it('il sync accetta correzione km in calo e ricalcola i promemoria', async () => {
+  const { env, d1, login } = await session()
+  const cookie = await login()
+  const READ_WRONG = '44444444-4444-4444-8444-333333333333'
+  const READ_RIGHT = '44444444-4444-4444-8444-444444444444'
+  const ITEM_1 = '55555555-5555-4555-8555-222222222222'
+  await push(env, cookie, [
+    { kind: 'bikes', id: BIKE, updatedAt: AT, data: bike({ startKm: 12000 }) },
+    { kind: 'items', id: ITEM_1, updatedAt: AT, data: { id: ITEM_1, updatedAt: AT, bikeId: BIKE, item: 'engine_oil', label: 'Olio', action: 'replace', km: 10000, months: 12, origin: 'model' } },
+    { kind: 'readings', id: READ_WRONG, updatedAt: AT, data: { id: READ_WRONG, updatedAt: AT, bikeId: BIKE, date: '2026-10-21', km: 16000 } },
+  ])
+  // Correzione: tombstone sulla lettura da 16.000 e nuova lettura a 15.500
+  expect((await push(env, cookie, [
+    { kind: 'readings', id: READ_WRONG, updatedAt: AT + 10, deleted: true, data: null },
+    { kind: 'readings', id: READ_RIGHT, updatedAt: AT + 10, data: { id: READ_RIGHT, updatedAt: AT + 10, bikeId: BIKE, date: '2026-10-21', km: 15500 } },
+  ])).status).toBe(200)
+  const alive = d1.prepare('SELECT kind, data FROM records WHERE user_id = ? AND deleted = 0').bind('42').all<{ kind: string; data: string }>().results
+  const recs: Rec[] = alive.map((r) => ({ kind: r.kind, data: JSON.parse(r.data) }))
+  expect(remindersFor(recs, '2026-11-20')).toEqual(['Kawasaki Z650: aggiorna i km (15.500 km di 30 giorni fa)'])
 })

@@ -121,3 +121,108 @@ test('voce di manutenzione: nota salvata', async ({ page, isMobile }) => {
   await page.getByRole('button', { name: 'Salva', exact: true }).first().click()
   await expect(page.getByText('Filtro HF204')).toBeVisible()
 })
+
+test('correzione km in calo: avviso, conferma, ricalcolo automatico e limite intervento', async ({ page, isMobile }) => {
+  await addBike(page, isMobile)
+  const tapOrClick = async (loc: ReturnType<Page['locator']>) => (isMobile ? loc.tap() : loc.click())
+
+  // Registra un intervento a 15.000 km sulla prima voce di manutenzione
+  await tab(page, 'Interventi')
+  await page.getByRole('button', { name: /Registra/ }).first().click()
+  await page.locator('#svc-km').fill('15000')
+  await page.locator('label:has(input[name=itemIds])').first().click()
+  await page.getByRole('button', { name: 'Salva intervento' }).click()
+  await expect(page.getByRole('heading', { name: 'Intervento registrato', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Chiudi', exact: true }).last().click()
+
+  // Aggiorna i km con un errore di battitura (16.000 invece di 15.500)
+  await tab(page, 'Cruscotto')
+  await tapOrClick(page.getByRole('button', { name: 'Aggiorna km' }).first())
+  await page.locator('#km').fill('16000')
+  await tapOrClick(page.getByRole('button', { name: 'Salva km' }))
+  await expect(page.getByRole('heading', { name: '+1.000 km registrati' })).toBeVisible()
+  await page.getByRole('button', { name: 'Chiudi', exact: true }).last().click()
+
+  // Leggi i km mancanti prima della correzione
+  const dueBefore = await page.getByRole('region', { name: 'Prossima manutenzione' }).textContent()
+
+  // Riapri Aggiorna km: prima prova sotto l'intervento (14.500) -> bloccato
+  await tapOrClick(page.getByRole('button', { name: 'Aggiorna km' }).first())
+  await page.locator('#km').fill('14500')
+  await expect(page.getByText(/I km non possono scendere sotto 15\.000 km/)).toBeVisible()
+  await expect(page.getByRole('button', { name: /Salva km|Correggi lettura/ })).toBeDisabled()
+
+  // Inserisci 15.500: avviso inline + conferma "Correggi lettura"
+  await page.locator('#km').fill('15500')
+  await expect(page.getByText(/Stai abbassando i km da 16\.000 km a 15\.500 km/)).toBeVisible()
+  await expect(page.getByText(/La lettura da 16\.000 km verrà sostituita con 15\.500 km/)).toBeVisible()
+  await tapOrClick(page.getByRole('button', { name: 'Correggi lettura' }))
+  await expect(page.getByRole('heading', { name: 'Lettura corretta' })).toBeVisible()
+  await expect(page.getByText('Le scadenze sono state ricalcolate su 15.500 km.')).toBeVisible()
+  await page.getByRole('button', { name: 'Chiudi', exact: true }).last().click()
+
+  // Verifica ricalcolo sul cruscotto e pulizia della cronologia
+  await expect(page.getByRole('img', { name: '15.500 km' })).toBeVisible()
+  const dueAfter = await page.getByRole('region', { name: 'Prossima manutenzione' }).textContent()
+  expect(dueAfter).not.toBe(dueBefore)
+
+  await tapOrClick(page.getByRole('button', { name: 'Aggiorna km' }).first())
+  await page.getByText('Letture precedenti').click()
+  await expect(page.getByRole('button', { name: /Cancella la lettura di 16\.000/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Cancella la lettura di 15\.500/ })).toBeVisible()
+})
+
+test('garage: elimina moto con doppia conferma, cambio moto attiva e stato vuoto', async ({ page, isMobile }) => {
+  await addBike(page, isMobile)
+  const tapOrClick = async (loc: ReturnType<Page['locator']>) => (isMobile ? loc.tap() : loc.click())
+
+  // Aggiungi un intervento con nota e allegato sulla prima moto
+  await tab(page, 'Interventi')
+  await page.getByRole('button', { name: /Registra/ }).first().click()
+  await page.locator('#svc-km').fill('12500')
+  await page.locator('label:has(input[name=itemIds])').first().click()
+  await page.locator('#svc-notes').fill('Controllo completo')
+  await page.locator('#svc-files').setInputFiles(png)
+  await page.getByRole('button', { name: 'Salva intervento' }).click()
+  await page.getByRole('button', { name: 'Chiudi', exact: true }).last().click()
+
+  // Apri il garage e aggiungi una seconda moto (Yamaha)
+  const openGarage = async () => {
+    if (isMobile) await page.getByRole('button', { name: /apri il garage/ }).tap()
+    else await page.locator('aside nav[aria-label=Sezioni]').getByRole('button', { name: 'Garage' }).click()
+  }
+  await tab(page, 'Cruscotto')
+  await openGarage()
+  await tapOrClick(page.getByRole('button', { name: 'Moto', exact: true }))
+  await fillCombo(page, '#make', 'Yamaha', isMobile)
+  await page.getByRole('option').first().click()
+  await page.locator('#model').click()
+  await page.getByRole('option').first().click()
+  await page.locator('#year').click()
+  await page.getByRole('option').first().click()
+  await page.locator('#startKm').fill('5000')
+  await page.getByRole('button', { name: 'Salva moto' }).click()
+  await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+
+  // Elimina la moto attiva (Yamaha): passa a Honda
+  await openGarage()
+  await expect(page.getByText('2 moto')).toBeVisible()
+  await tapOrClick(page.getByRole('button', { name: /^Elimina Yamaha / }))
+  await expect(page.getByText(/La moto attiva passerà a Honda /)).toBeVisible()
+  await tapOrClick(page.getByRole('button', { name: 'Elimina moto e dati' }))
+  await expect(page.getByText(/Ultima conferma:/)).toBeVisible()
+  await tapOrClick(page.getByRole('button', { name: 'Elimina definitivamente' }))
+  await expect(page.getByText('1 moto')).toBeVisible()
+  await expect(page.getByText('In uso')).toBeVisible()
+
+  // Elimina l'ultima moto (Honda): mostra il riepilogo completo e passa allo stato vuoto
+  await tapOrClick(page.getByRole('button', { name: /^Elimina Honda / }))
+  await expect(page.getByText('1 intervento registrato')).toBeVisible()
+  await expect(page.getByText('1 nota salvata')).toBeVisible()
+  await expect(page.getByText('1 foto o allegato')).toBeVisible()
+  await expect(page.getByText(/il garage resterà vuoto/)).toBeVisible()
+  await tapOrClick(page.getByRole('button', { name: 'Elimina moto e dati' }))
+  await tapOrClick(page.getByRole('button', { name: 'Elimina definitivamente' }))
+  await expect(page.getByRole('heading', { name: 'Nessuna moto nel garage' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Aggiungi moto' })).toBeVisible()
+})

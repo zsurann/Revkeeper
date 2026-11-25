@@ -364,6 +364,109 @@ const deleteAccount = async (env: Env, userId: string) => {
   return json({ ok: true }, 200, { 'set-cookie': setCookie('', 0) })
 }
 
+const chunk = <T>(xs: T[], size: number) => {
+  const out: T[][] = []
+  for (let i = 0; i < xs.length; i += size) out.push(xs.slice(i, i + size))
+  return out
+}
+
+const deleteBike = async (env: Env, userId: string, bikeId: string) => {
+  const bikeRow = await env.DB.prepare("SELECT id, deleted FROM records WHERE user_id = ? AND kind = 'bikes' AND id = ?")
+    .bind(userId, bikeId)
+    .first<{ id: string; deleted: number }>()
+  if (!bikeRow) return fail(404, 'Moto non trovata')
+
+  const { results } = await env.DB.prepare(
+    "SELECT kind, id, data FROM records WHERE user_id = ? AND deleted = 0 AND kind IN ('bikes','readings','items','services','documents','attachments')",
+  )
+    .bind(userId)
+    .all<{ kind: string; id: string; data: string | null }>()
+
+  const byKind = new Map<string, string[]>()
+  const addId = (kind: string, id: string) => {
+    const list = byKind.get(kind) ?? []
+    list.push(id)
+    byKind.set(kind, list)
+  }
+  const bikeAtts = new Set<string>()
+  const otherAtts = new Set<string>()
+  const aliveAtts = new Set<string>()
+
+  const collectAtts = (kind: string, data: Record<string, unknown>, target: Set<string>) => {
+    if (kind === 'bikes' && typeof data.photoId === 'string') target.add(data.photoId)
+    if ((kind === 'services' || kind === 'documents') && Array.isArray(data.attachmentIds)) {
+      for (const id of data.attachmentIds) if (typeof id === 'string') target.add(id)
+    }
+  }
+
+  for (const r of results) {
+    if (r.kind === 'attachments') {
+      aliveAtts.add(r.id)
+      continue
+    }
+    const parsed = parseStored(r.data, `Delete bike, record non leggibile: ${r.kind}/${r.id}`)
+    const data = parsed.ok && parsed.data && typeof parsed.data === 'object' ? (parsed.data as Record<string, unknown>) : undefined
+    if (r.kind === 'bikes') {
+      if (r.id === bikeId) {
+        addId('bikes', r.id)
+        if (data) collectAtts('bikes', data, bikeAtts)
+      } else if (data) {
+        collectAtts('bikes', data, otherAtts)
+      }
+      continue
+    }
+    if (!data) continue
+    if (data.bikeId === bikeId) {
+      addId(r.kind, r.id)
+      collectAtts(r.kind, data, bikeAtts)
+    } else {
+      collectAtts(r.kind, data, otherAtts)
+    }
+  }
+
+  const orphanAtts = [...bikeAtts].filter((id) => !otherAtts.has(id))
+  for (const attId of orphanAtts) if (aliveAtts.has(attId)) addId('attachments', attId)
+
+  const orphanSet = new Set(orphanAtts)
+  const { results: userFiles } = orphanAtts.length
+    ? await env.DB.prepare('SELECT id, size FROM files WHERE user_id = ?').bind(userId).all<{ id: string; size: number }>()
+    : { results: [] as { id: string; size: number }[] }
+  const filesToDelete = userFiles.filter((f) => orphanSet.has(f.id))
+  const freedBytes = filesToDelete.reduce((sum, f) => sum + f.size, 0)
+
+  if (orphanAtts.length) {
+    for (const part of chunk(orphanAtts.map((id) => `${userId}/${id}`), 500)) {
+      await env.FILES.delete(part)
+    }
+  }
+
+  const deletedRecords = [...byKind.values()].reduce((sum, ids) => sum + ids.length, 0)
+  if (deletedRecords === 0 && filesToDelete.length === 0) {
+    return json({ ok: true, deletedRecords: 0, deletedFiles: 0 })
+  }
+
+  const now = Date.now()
+  const stmts: D1PreparedStatement[] = [
+    env.DB.prepare('UPDATE users SET rev = rev + 1, bytes = MAX(0, bytes - ?2) WHERE id = ?1').bind(userId, freedBytes),
+  ]
+  for (const [kind, ids] of byKind) {
+    for (const part of chunk(ids, 50)) {
+      const ph = part.map((_, i) => `?${i + 4}`).join(', ')
+      stmts.push(
+        env.DB.prepare(
+          `UPDATE records SET data = NULL, deleted = 1, updated_at = MAX(updated_at + 1, ?1), device_id = '~', rev = (SELECT rev FROM users WHERE id = ?2) WHERE user_id = ?2 AND kind = ?3 AND id IN (${ph})`,
+        ).bind(now, userId, kind, ...part),
+      )
+    }
+  }
+  for (const part of chunk(filesToDelete.map((f) => f.id), 50)) {
+    const ph = part.map((_, i) => `?${i + 2}`).join(', ')
+    stmts.push(env.DB.prepare(`DELETE FROM files WHERE user_id = ?1 AND id IN (${ph})`).bind(userId, ...part))
+  }
+  await env.DB.batch(stmts)
+  return json({ ok: true, deletedRecords, deletedFiles: filesToDelete.length })
+}
+
 export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>): Promise<Response> => {
   const url = new URL(req.url)
   const path = url.pathname.replace(/^\/api/, '')
@@ -390,6 +493,11 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
     }
     if (req.method === 'GET' && path === '/account/export') return await exportAccount(env, userId)
     if (req.method === 'POST' && path === '/account/delete') return await deleteAccount(env, userId)
+    const bikeId = /^\/bikes\/([^/]+)$/.exec(path)?.[1]
+    if (req.method === 'DELETE' && bikeId) {
+      if (!isId(bikeId)) return fail(400, 'Moto non valida')
+      return await deleteBike(env, userId, bikeId)
+    }
     if (req.method === 'POST' && path === '/sync/push') return await push(req, env, userId)
     if (req.method === 'POST' && path === '/push/subscribe') return await subscribe(req, env, userId)
     if (req.method === 'POST' && path === '/push/unsubscribe') {

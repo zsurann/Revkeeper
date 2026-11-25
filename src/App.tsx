@@ -34,6 +34,9 @@ const readActive = () => {
 const writeActive = (id: Id) => {
   try { localStorage.setItem(ACTIVE, id) } catch { /* preferenza per dispositivo, non critica */ }
 }
+const clearActive = () => {
+  try { localStorage.removeItem(ACTIVE) } catch { /* ignore */ }
+}
 const WELCOMED = 'revkeeper.welcomed'
 const readWelcomed = () => {
   try { return localStorage.getItem(WELCOMED) === '1' } catch { return false }
@@ -202,7 +205,7 @@ const Main = () => {
     })
   }, [])
   const goBack = useCallback(() => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)), [])
-  useBackDepth(bike ? stack.length - 1 : 0, goBack)
+  useBackDepth(bikes?.length || view !== 'home' ? stack.length - 1 : 0, goBack)
 
   const pick = (id: Id) => {
     writeActive(id)
@@ -227,6 +230,22 @@ const Main = () => {
     pick(b.id)
     toast('Moto salvata', { body: `${b.make} ${b.model}` })
   }
+  const deleted = async (id: Id) => {
+    const remaining = await listBikes()
+    if (id === bike?.id) {
+      const nextBike = remaining[0]
+      if (nextBike) {
+        writeActive(nextBike.id)
+        setActiveId(nextBike.id)
+      } else {
+        clearActive()
+        setActiveId(undefined)
+      }
+      setPrevKm(undefined)
+      setDetail(undefined)
+    }
+    await load()
+  }
 
   if (!bikes)
     return <div className="mx-auto max-w-[480px] px-4 pt-[max(76px,env(safe-area-inset-top))]"><DashboardSkeleton /></div>
@@ -242,9 +261,19 @@ const Main = () => {
       />
     )
   const loading = <div className="mx-auto max-w-[480px] px-4 pt-[max(76px,env(safe-area-inset-top))]"><DashboardSkeleton /></div>
+  if (!bike && view === 'garage') return (
+    <EdgeSwipeBack enabled={stack.length > 1 && edgeSwipe} onBack={goBack}>
+      <Garage bikes={[]} kms={kms} activeId={undefined} onPick={pick} onEdit={() => {}} onDeleted={deleted} onAdd={() => openView('new')} onClose={goBack} onAccount={() => openView('account')} />
+    </EdgeSwipeBack>
+  )
+  if (!bike && view === 'account') return (
+    <EdgeSwipeBack enabled={stack.length > 1 && edgeSwipe} onBack={goBack}>
+      <Suspense fallback={loading}><Account onClose={goBack} onAccount={setEmail} /></Suspense>
+    </EdgeSwipeBack>
+  )
   if (!bike || view === 'new') return (
-    <EdgeSwipeBack enabled={Boolean(bike) && stack.length > 1 && edgeSwipe} onBack={goBack}>
-      <Suspense fallback={loading}><BikeForm onDone={saved} onCancel={bike ? goBack : undefined} /></Suspense>
+    <EdgeSwipeBack enabled={stack.length > 1 && edgeSwipe} onBack={goBack}>
+      <Suspense fallback={loading}><BikeForm onDone={saved} onCancel={bike || stack.length > 1 ? goBack : undefined} /></Suspense>
     </EdgeSwipeBack>
   )
   if (view === 'edit') return (
@@ -267,7 +296,7 @@ const Main = () => {
   const content = (() => {
     if (view === 'account') return <Account onClose={goBack} onAccount={setEmail} />
     if (view === 'garage')
-      return <Garage bikes={bikes} kms={kms} activeId={bike.id} onPick={pick} onEdit={(id) => { writeActive(id); setActiveId(id); openView('edit') }} onAdd={() => openView('new')} onClose={goBack} />
+      return <Garage bikes={bikes} kms={kms} activeId={bike.id} onPick={pick} onEdit={(id) => { writeActive(id); setActiveId(id); openView('edit') }} onDeleted={deleted} onAdd={() => openView('new')} onClose={goBack} onAccount={() => openView('account')} />
     if (!detail) return <DashboardSkeleton />
     if (tab === 'maint') return <Maintenance bike={bike} items={detail.items} rows={rows} onChange={() => void loadDetail(bike)} />
     if (tab === 'services') return <Services bike={bike} km={km} items={detail.items} services={detail.services} readings={detail.readings} onChange={refresh} />

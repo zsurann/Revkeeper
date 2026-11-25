@@ -1,4 +1,5 @@
-import { db, getMeta, setMeta, STORES, type StoreName } from './db'
+import { db, getMeta, removeBikeCascade, setMeta, STORES, type StoreName } from './db'
+import type { Id } from './domain/types'
 import { toast } from './toast'
 
 type Change = { kind: StoreName; id: string; data: unknown; updatedAt: number; deleted?: boolean; deviceId?: string }
@@ -172,6 +173,42 @@ export const deleteAccount = async () => {
   if (!res.ok && res.status !== 401) throw new Error(`Eliminazione non riuscita: ${res.status}`)
   await clearPush()
   await clearLocal()
+}
+
+export const deleteBikeEverywhere = async (bikeId: Id): Promise<{ synced: boolean }> => {
+  const removed = await removeBikeCascade(bikeId)
+  const account = await getMeta<string>('account')
+  if (!account || !navigator.onLine) return { synced: false }
+  let res: Response
+  try {
+    res = await fetch(`/api/bikes/${bikeId}`, { method: 'DELETE' })
+  } catch {
+    // Rete assente o instabile: i tombstone locali restano con dirty=1 e partiranno col sync
+    return { synced: false }
+  }
+  if (res.status === 401) {
+    await dropLocalPush().catch(() => undefined)
+    await clearLocal()
+    globalThis.dispatchEvent?.(new Event('revkeeper:loggedout'))
+    throw new LoggedOut()
+  }
+  if (!res.ok && res.status !== 404) {
+    // Anche in caso di errore temporaneo del server, i tombstone locali sono in coda per il sync
+    return { synced: false }
+  }
+  // Il server ha già cancellato la moto e i file su R2: togliamo il flag dirty dai tombstone locali
+  const d = await db()
+  for (const kind of STORES) {
+    const ids = removed.ids[kind]
+    if (!ids.length) continue
+    const tx = d.transaction(kind, 'readwrite')
+    for (const id of ids) {
+      const cur = (await tx.store.get(id)) as Rec | undefined
+      if (cur && cur.deletedAt) await tx.store.put({ ...cur, dirty: undefined } as never)
+    }
+    await tx.done
+  }
+  return { synced: true }
 }
 
 export const downloadAccountExport = async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addMonths, kmPerDay, nextDue, documentStatus } from './due'
+import { addMonths, currentKm, kmPerDay, nextDue, documentStatus } from './due'
 import { DEFAULT_THRESHOLDS as T, type Bike, type MaintenanceItem, type OdometerReading, type Service } from './types'
 
 const bike: Bike = { id: 'b', updatedAt: 0, make: 'Honda', model: 'Africa Twin', year: 2022, startKm: 0, startDate: '2022-03-01' }
@@ -71,5 +71,22 @@ describe('documentStatus', () => {
     expect(documentStatus(doc, '2026-11-20', T)).toBe('warn')
     expect(documentStatus(doc, '2026-12-10', T)).toBe('warn')
     expect(documentStatus(doc, '2026-12-11', T)).toBe('overdue')
+  })
+})
+
+describe('ricalcolo dopo correzione km', () => {
+  it('ignora le letture cancellate e ricalcola scadenza e km/giorno in base all’ultimo intervento', () => {
+    const services = [svc('2026-06-01', 14000)]
+    const wrong = { ...read('2026-11-25', 24100), deletedAt: 1700000000000 }
+    const earlier = read('2026-10-26', 15000)
+    const corrected = read('2026-11-25', 15600)
+    expect(currentKm(bike, [earlier, wrong, corrected])).toBe(15600)
+    // (15600 - 15000) / 30 giorni = 20 km/giorno
+    expect(kmPerDay([earlier, wrong, corrected], '2026-11-25')).toBe(20)
+    // Ultimo intervento a 14.000 km -> prossimo a 24.000 km, mancanti 8.400 km -> stato ok (non scaduta!)
+    const d = nextDue(oil, bike, services, [earlier, wrong, corrected], '2026-11-25', T)
+    expect(d.dueKm).toBe(24000)
+    expect(d.kmLeft).toBe(8400)
+    expect(d.status).toBe('ok')
   })
 })
