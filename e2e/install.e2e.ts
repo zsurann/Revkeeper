@@ -128,6 +128,7 @@ test('Chrome iOS: il primo passo indica Condividi in alto; Safari: in basso', as
     expect(card!.y + card!.height).toBeGreaterThan(vv.top + vv.height * 0.7)
   } else {
     await expect(steps(page).first()).toContainText(/in basso/)
+    if (/Version\/26/.test(ua)) await expect(steps(page)).toContainText(['··· in basso a destra', 'Condividi', 'Visualizza altro', 'Aggiungi alla schermata Home'])
     const card = await guide(page).boundingBox()
     const vv = await visualBox(page)
     expect(card!.y).toBeLessThan(vv.top + vv.height * 0.3)
