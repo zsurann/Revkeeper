@@ -13,9 +13,7 @@ export const initSentry = () => {
     release: import.meta.env.VITE_SENTRY_RELEASE,
     environment: env,
     dataCollection: { userInfo: false, cookies: false, httpHeaders: false, httpBodies: [], urlQueryParams: false },
-    integrations: [Sentry.browserTracingIntegration()],
-    tracesSampleRate: 0.1,
-    tracePropagationTargets: [/^\/api\//], // solo le nostre API, mai Google
+    // Solo errori, niente tracing: pesava sull'avvio (Lighthouse: LCP da 2,2 a 2,8 s) per un'app così piccola
     // Rumore che non dipende dall'app: rete assente, estensioni del browser
     ignoreErrors: ['Failed to fetch', 'NetworkError when attempting to fetch resource.', 'Load failed', /^AbortError/],
     denyUrls: [/^chrome-extension:\/\//, /^moz-extension:\/\//, /^safari-web-extension:\/\//],
