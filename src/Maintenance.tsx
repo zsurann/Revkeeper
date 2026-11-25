@@ -1,20 +1,30 @@
+import { AnimatePresence, motion } from 'motion/react'
+import { BookOpen, ChevronDown, Plus, Trash2, Wrench } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import type { Row } from './Dashboard'
 import { remove, save } from './db'
 import { DATA, findModel, itemsFor } from './domain/intervals'
 import type { Bike, MaintenanceItem } from './domain/types'
-import { Screen, field, ghost, primary } from './ui'
+import { dueRule, dueShort, every } from './format'
+import { itemIcon } from './icons'
+import { list, listItem } from './motion'
+import { toast } from './toast'
+import { Empty, ErrorText, MiniBar, PageHead, StatusPill, btn, card, field } from './ui'
 
 const int = (v: FormDataEntryValue | null) => {
   const s = String(v ?? '').trim()
   if (s === '') return undefined
-  const n = Number(s)
+  const n = Number(s.replace(/\./g, ''))
   if (!Number.isInteger(n) || n <= 0) throw new RangeError('Usa numeri interi maggiori di zero')
   return n
 }
-const ORIGIN = { model: 'dal libretto', preset: 'valore tipico', user: 'tua' } as const
+const ORIGIN = { model: 'Dal libretto', preset: 'Valore tipico', user: 'Personalizzata' } as const
 
-const ItemRow = ({ item, onChange }: { item: MaintenanceItem; onChange: () => void }) => {
+const ItemCard = ({ item, row, onChange }: { item: MaintenanceItem; row?: Row; onChange: () => void }) => {
+  const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
+  const Icon = itemIcon(item.item)
+  const s = row?.status ?? 'ok'
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const f = new FormData(e.currentTarget)
@@ -24,36 +34,65 @@ const ItemRow = ({ item, onChange }: { item: MaintenanceItem; onChange: () => vo
       if (km === undefined && months === undefined) throw new RangeError('Serve almeno km o mesi')
       await save('items', { ...item, km, months, origin: 'user' })
       setError('')
+      setOpen(false)
+      toast('Intervallo aggiornato', { body: item.label })
       onChange()
     } catch (err) {
       setError(err instanceof RangeError ? err.message : 'Salvataggio non riuscito')
     }
   }
   return (
-    <form onSubmit={submit} className="grid gap-2 rounded-panel bg-panel p-3">
-      <div className="flex items-baseline justify-between gap-2">
-        <b className="font-gauge">{item.label}</b>
-        <span className="text-xs text-dim">{ORIGIN[item.origin]}</span>
-      </div>
-      <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-        <label className="grid gap-1 text-xs text-dim">ogni km
-          <input id={`km-${item.id}`} name="km" inputMode="numeric" pattern="[0-9]*" defaultValue={item.km} className={field} />
-        </label>
-        <label className="grid gap-1 text-xs text-dim">ogni mesi
-          <input id={`months-${item.id}`} name="months" inputMode="numeric" pattern="[0-9]*" defaultValue={item.months} className={field} />
-        </label>
-        <button className={ghost}>Salva</button>
-      </div>
-      {error && <p role="alert" className="m-0 text-sm text-red">{error}</p>}
-      <button type="button" onClick={() => void remove('items', item.id).then(onChange)} className="justify-self-start text-xs text-dim underline">
-        Rimuovi voce
+    <motion.li variants={listItem} className={`${card} overflow-hidden`}>
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="grid w-full grid-cols-[40px_1fr_auto] items-center gap-x-3 gap-y-2 p-4 text-left">
+        <span className={`grid size-10 place-items-center rounded-[12px] ${s === 'overdue' ? 'bg-red-soft text-red-ink' : s === 'warn' ? 'bg-amber-soft text-amber-ink' : 'bg-sunken text-ink'}`}><Icon size={19} /></span>
+        <span className="grid min-w-0">
+          <span className="text-[15px] font-semibold leading-snug">{item.label}</span>
+          <span className="text-[13px] text-ink-3">{every(item)} · {ORIGIN[item.origin]}</span>
+        </span>
+        <span className="flex items-center gap-2">
+          {row && s !== 'ok' ? <StatusPill status={s}>{dueShort(row.due)}</StatusPill> : row && <span className="text-[13px] font-semibold text-ink-2">{dueShort(row.due)}</span>}
+          <motion.span animate={{ rotate: open ? 180 : 0 }} className="text-ink-3"><ChevronDown size={18} /></motion.span>
+        </span>
+        {row && <span className="col-start-2 col-end-4"><MiniBar progress={row.due.progress} status={s} /></span>}
       </button>
-    </form>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.form
+            onSubmit={submit}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="grid gap-3 border-t border-line px-4 pb-4 pt-3">
+              {row && <p className="m-0 text-[13px] text-ink-3">Prossima: {dueRule(row.due)}</p>}
+              <div className="grid grid-cols-2 gap-3">
+                <label className="grid gap-1.5 text-[13px] font-medium text-ink-2">Ogni km
+                  <input id={`km-${item.id}`} name="km" inputMode="numeric" pattern="[0-9.]*" defaultValue={item.km} className={field} />
+                </label>
+                <label className="grid gap-1.5 text-[13px] font-medium text-ink-2">Ogni mesi
+                  <input id={`months-${item.id}`} name="months" inputMode="numeric" pattern="[0-9]*" defaultValue={item.months} className={field} />
+                </label>
+              </div>
+              {error && <ErrorText>{error}</ErrorText>}
+              <div className="flex items-center justify-between gap-2">
+                <button type="button" onClick={() => void remove('items', item.id).then(() => { toast('Voce rimossa', { kind: 'info', body: item.label }); onChange() })} className={`${btn.ghost} -ml-2 text-red-ink hover:bg-red-soft`}>
+                  <Trash2 size={16} />Rimuovi
+                </button>
+                <button className={btn.ink}>Salva</button>
+              </div>
+            </div>
+          </motion.form>
+        )}
+      </AnimatePresence>
+    </motion.li>
   )
 }
 
-export const Maintenance = ({ bike, items, onChange, onClose }: { bike: Bike; items: MaintenanceItem[]; onChange: () => void; onClose: () => void }) => {
+export const Maintenance = ({ bike, items, rows, onChange }: { bike: Bike; items: MaintenanceItem[]; rows: Row[]; onChange: () => void }) => {
   const [error, setError] = useState('')
+  const [adding, setAdding] = useState(false)
   const add = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -66,37 +105,57 @@ export const Maintenance = ({ bike, items, onChange, onClose }: { bike: Bike; it
       await save('items', { bikeId: bike.id, item: 'custom', label, action: 'inspect', km, months, origin: 'user' })
       form.reset()
       setError('')
+      setAdding(false)
+      toast('Voce aggiunta', { body: label })
       onChange()
     } catch (err) {
       setError(err instanceof RangeError ? err.message : 'Salvataggio non riuscito')
     }
   }
+  const sorted = [...items].sort((a, b) => rows.findIndex((r) => r.id === a.id) - rows.findIndex((r) => r.id === b.id))
   return (
-    <Screen>
-      <header className="flex items-center justify-between">
-        <h1 className="font-gauge text-2xl">Manutenzioni</h1>
-        <button onClick={onClose} className={ghost}>Chiudi</button>
-      </header>
+    <>
+      <PageHead title="Manutenzione" sub="Ogni voce scade al primo traguardo tra km e mesi." action={!adding && <button type="button" onClick={() => setAdding(true)} className={`${btn.primary} h-11 px-5`}><Plus size={18} strokeWidth={2.6} />Voce</button>} />
       {findModel(DATA, bike.make, bike.model, bike.year) && items.some((i) => i.origin !== 'model') && (
         <button
-          onClick={() => void Promise.all(items.map((i) => remove('items', i.id))).then(() => Promise.all(itemsFor(bike).map((i) => save('items', i)))).then(onChange)}
-          className={primary}
+          type="button"
+          onClick={() => void Promise.all(items.map((i) => remove('items', i.id))).then(() => Promise.all(itemsFor(bike).map((i) => save('items', i)))).then(() => { toast('Intervalli del libretto applicati'); onChange() })}
+          className={`${card} flex items-center gap-3 p-4 text-left`}
         >
-          Usa gli intervalli del libretto {bike.make} {bike.model}
+          <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-lime-soft text-lime-ink"><BookOpen size={19} /></span>
+          <span className="grid"><b className="text-[15px] font-semibold">Usa gli intervalli del libretto</b><span className="text-[13px] text-ink-3">{bike.make} {bike.model} · sostituisce le voci attuali</span></span>
         </button>
       )}
-      <p className="m-0 text-sm text-dim">Ogni voce scade al primo traguardo tra km e mesi. I valori tipici sono indicativi: controlla il libretto della tua moto.</p>
-      <div className="grid gap-3">{items.map((i) => <ItemRow key={i.id} item={i} onChange={onChange} />)}</div>
-      <form onSubmit={add} className="grid gap-2 rounded-panel border border-dashed border-edge p-3">
-        <b className="font-gauge">Nuova voce</b>
-        <input id="new-label" name="label" placeholder="Es. Pastiglie freni anteriori" className={field} />
-        <div className="grid grid-cols-2 gap-2">
-          <input id="new-km" name="km" inputMode="numeric" pattern="[0-9]*" placeholder="ogni km" className={field} />
-          <input id="new-months" name="months" inputMode="numeric" pattern="[0-9]*" placeholder="ogni mesi" className={field} />
-        </div>
-        {error && <p role="alert" className="m-0 text-sm text-red">{error}</p>}
-        <button className={primary}>Aggiungi voce</button>
-      </form>
-    </Screen>
+      <AnimatePresence initial={false}>
+        {adding && (
+          <motion.form onSubmit={add} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className={`${card} grid gap-3 p-4`}>
+            <b className="t-title text-[17px]">Nuova voce</b>
+            <input id="new-label" name="label" placeholder="Es. Pastiglie freni anteriori" className={field} autoFocus />
+            <div className="grid grid-cols-2 gap-3">
+              <input id="new-km" name="km" inputMode="numeric" pattern="[0-9.]*" placeholder="Ogni km" aria-label="Ogni km" className={field} />
+              <input id="new-months" name="months" inputMode="numeric" pattern="[0-9]*" placeholder="Ogni mesi" aria-label="Ogni mesi" className={field} />
+            </div>
+            {error && <ErrorText>{error}</ErrorText>}
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => { setAdding(false); setError('') }} className={btn.ghost}>Annulla</button>
+              <button className={btn.primary}>Aggiungi voce</button>
+            </div>
+          </motion.form>
+        )}
+      </AnimatePresence>
+      {sorted.length === 0 && !adding ? (
+        <Empty
+          icon={<Wrench size={28} />}
+          title="Nessuna voce di manutenzione"
+          text="Aggiungi le voci da tenere d'occhio, come olio o catena: ti avvisiamo prima che scadano."
+          action={<button type="button" onClick={() => setAdding(true)} className={btn.primary}><Plus size={18} strokeWidth={2.6} />Aggiungi voce</button>}
+        />
+      ) : (
+        <motion.ul className="m-0 grid list-none gap-3 p-0" variants={list} initial="initial" animate="animate">
+          {sorted.map((i) => <ItemCard key={i.id} item={i} row={rows.find((r) => r.id === i.id)} onChange={onChange} />)}
+        </motion.ul>
+      )}
+      <p className="m-0 px-1 text-[13px] text-ink-3">I valori tipici sono indicativi: controlla il libretto della tua moto.</p>
+    </>
   )
 }

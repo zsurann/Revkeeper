@@ -1,5 +1,4 @@
 import type { Due } from './domain/due'
-import type { Status } from './domain/types'
 
 // Data di oggi nel fuso del dispositivo, in formato AAAA-MM-GG
 export const today = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
@@ -18,5 +17,17 @@ export const dueRule = (d: Due) => {
   return d.estimatedDate ? `${rule} · stima ${fullDate(d.estimatedDate)}` : rule
 }
 
-export const statusText: Record<Status, string> = { ok: '', warn: 'in scadenza', overdue: 'scaduta' }
-export const statusColor: Record<Status, string> = { ok: 'text-dim', warn: 'text-amber', overdue: 'text-red' }
+
+export const km = (x: number) => `${Math.round(x).toLocaleString('it-IT')} km`
+export const eur = (x?: number) => (x === undefined ? '' : x.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' }))
+export const dayMonth = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', timeZone: 'UTC' })
+
+// "ogni 6.000 km o 12 mesi"
+export const every = (i: { km?: number; months?: number }) => {
+  const parts = [i.km !== undefined && `${n(i.km)} km`, i.months !== undefined && (i.months === 1 ? '1 mese' : `${i.months} mesi`)].filter(Boolean)
+  return parts.length ? `ogni ${parts.join(' o ')}` : ''
+}
+
+// "tra 17 giorni", "oggi", "scaduto da 3 giorni"
+export const daysText = (days: number, masc = true) =>
+  days === 0 ? 'oggi' : days > 0 ? `tra ${days} ${days === 1 ? 'giorno' : 'giorni'}` : `${masc ? 'scaduto' : 'scaduta'} da ${-days} ${days === -1 ? 'giorno' : 'giorni'}`

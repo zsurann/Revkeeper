@@ -1,32 +1,50 @@
-import { useEffect, useState } from 'react'
+import { Cloud, Download, LogOut, Monitor, Moon, RefreshCw, Sun, Trash2, TriangleAlert } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { getMeta } from './db'
 import { GoogleButton } from './GoogleButton'
 import { downloadBlob, localBackup } from './localExport'
 import { Notifications } from './Notifications'
 import { deleteAccount, downloadAccountExport, logout, logoutAll, syncNow, unsynced } from './sync'
-import { Screen, ghost, primary } from './ui'
+import { readTheme, setTheme, type ThemePref } from './theme'
+import { toast } from './toast'
+import { PageHead, Screen, Segmented, Sheet, btn, card } from './ui'
 
 const ago = (ms?: number) => (ms ? new Date(ms).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) : 'mai')
-const danger = 'rounded-pill bg-red px-5 py-3 font-gauge text-dash'
 
-export const Account = ({ onClose }: { onClose: () => void }) => {
+const Section = ({ title, children, id }: { title: string; children: ReactNode; id: string }) => (
+  <section aria-labelledby={id} className="grid gap-3">
+    <h2 id={id} className="t-label m-0 px-1 text-ink-3">{title}</h2>
+    <div className={`${card} grid gap-4 p-4`}>{children}</div>
+  </section>
+)
+
+export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount?: (email?: string) => void }) => {
   const [email, setEmail] = useState<string>()
   const [lastSync, setLastSync] = useState<number>()
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
   const [ask, setAsk] = useState<'out' | 'del'>()
+  const [theme, pickTheme] = useState<ThemePref>(readTheme)
 
   const refresh = async () => {
-    setEmail(await getMeta<string>('account'))
+    const e = await getMeta<string>('account')
+    setEmail(e)
+    onAccount?.(e)
     setLastSync(await getMeta<number>('lastSync'))
   }
-  useEffect(() => void refresh(), [])
+  useEffect(() => void refresh(), []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const changeTheme = (t: ThemePref) => {
+    pickTheme(t)
+    setTheme(t)
+  }
 
   const sync = async () => {
     setBusy(true)
     try {
       await syncNow()
-      setMsg('Sincronizzato')
+      setMsg('')
+      toast('Sincronizzato', { kind: 'success', body: 'Garage aggiornato su tutti i dispositivi' })
     } catch (e) {
       setMsg(e instanceof Error ? `Sync non riuscito: ${e.message}` : 'Sync non riuscito')
     } finally {
@@ -70,7 +88,7 @@ export const Account = ({ onClose }: { onClose: () => void }) => {
     try {
       await syncNow()
       await downloadAccountExport()
-      setMsg('Copia scaricata')
+      toast('Copia scaricata', { body: 'Moto, interventi, documenti e file' })
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Download non riuscito')
     } finally {
@@ -84,7 +102,7 @@ export const Account = ({ onClose }: { onClose: () => void }) => {
     try {
       const data = await localBackup()
       downloadBlob('revkeeper-copia.json', new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
-      setMsg('Copia scaricata')
+      toast('Copia scaricata', { body: 'Il file resta su questo dispositivo' })
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Download non riuscito')
     } finally {
@@ -109,62 +127,87 @@ export const Account = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <Screen>
-      <header className="flex items-center justify-between">
-        <h1 className="font-gauge text-2xl">Account</h1>
-        <button onClick={onClose} className={ghost}>Chiudi</button>
-      </header>
+      <PageHead title="Account" sub="Accesso, promemoria, aspetto e dati." onBack={onClose} />
+
+      <Section title="Aspetto" id="h-look">
+        <Segmented
+          id="theme"
+          label="Tema"
+          value={theme}
+          onChange={changeTheme}
+          options={[
+            { value: 'light', label: 'Chiaro', icon: <Sun size={16} /> },
+            { value: 'dark', label: 'Notte', icon: <Moon size={16} /> },
+            { value: 'system', label: 'Sistema', icon: <Monitor size={16} /> },
+          ]}
+        />
+        <p className="m-0 text-[13px] text-ink-3">Notte scurisce tutta l'app per guidare di sera; Sistema segue il telefono.</p>
+      </Section>
+
       {email ? (
-        <section className="grid gap-3 rounded-panel bg-panel p-4">
-          <p className="m-0">Accesso con <b>{email}</b></p>
-          <p className="m-0 text-sm text-dim">Ultima sincronizzazione: {ago(lastSync)}</p>
-          <button onClick={() => void sync()} disabled={busy} className={primary}>Sincronizza ora</button>
-          <button onClick={() => void exit()} disabled={busy} className={`justify-self-start ${ghost}`}>Esci</button>
-          {ask === 'out' ? (
-            <div className="grid gap-2 rounded-lg border border-edge p-3">
-              <p className="m-0 text-sm">Chiude l'accesso su tutti i telefoni. I dati online restano; su questo vengono tolti. Le notifiche degli altri dispositivi restano finché non le disattivi.</p>
-              <button onClick={() => void exitAll()} disabled={busy} className={danger}>Esci ovunque</button>
-              <button onClick={() => setAsk(undefined)} disabled={busy} className={`justify-self-start ${ghost}`}>Annulla</button>
-            </div>
-          ) : (
-            <button onClick={() => setAsk('out')} disabled={busy} className={`justify-self-start ${ghost}`}>Esci da tutti i dispositivi</button>
-          )}
-          <p className="m-0 text-xs text-dim">Uscendo, i dati restano online ma vengono tolti da questo telefono e le notifiche si spengono.</p>
-        </section>
-      ) : null}
-      {email ? (
-        <Notifications />
+        <Section title="Sincronizzazione" id="h-sync">
+          <div className="flex items-center gap-3">
+            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-lime-soft text-lime-ink"><Cloud size={20} /></span>
+            <span className="grid min-w-0"><b className="truncate text-[15px] font-semibold">{email}</b><span className="text-[13px] text-ink-3">Ultima sincronizzazione: {ago(lastSync)}</span></span>
+          </div>
+          <button type="button" onClick={() => void sync()} disabled={busy} className={`${btn.primary} w-full`}><RefreshCw size={17} className={busy ? 'animate-spin' : ''} />Sincronizza ora</button>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => void exit()} disabled={busy} className={btn.secondary}><LogOut size={16} />Esci</button>
+            <button type="button" onClick={() => setAsk('out')} disabled={busy} className={btn.secondary}>Esci ovunque</button>
+          </div>
+          <p className="m-0 text-[12px] text-ink-3">Uscendo, i dati restano online ma vengono tolti da questo telefono e le notifiche si spengono.</p>
+        </Section>
       ) : (
-        <section className="grid gap-3 rounded-panel bg-panel p-4">
-          <p className="m-0">Accedi per salvare il garage online e usarlo su più telefoni. Senza accesso l'app funziona lo stesso, solo su questo dispositivo.</p>
+        <Section title="Accesso" id="h-login">
+          <p className="m-0 text-[15px]">Accedi per salvare il garage online e usarlo su più telefoni. Senza accesso l'app funziona lo stesso, solo su questo dispositivo.</p>
           <GoogleButton
             onBusy={setBusy}
             onDone={(err) => {
-              setMsg(err ?? 'Dati sincronizzati')
+              if (err) setMsg(err)
+              else toast('Dati sincronizzati', { body: 'Accesso eseguito' })
               void refresh()
             }}
           />
-          <button onClick={() => void copyLocal()} disabled={busy} className={`justify-self-start ${ghost}`}>Scarica una copia</button>
-          <p className="m-0 text-xs text-dim">Senza account i dati stanno solo su questo telefono. La copia è un file che resta qui.</p>
+          <button type="button" onClick={() => void copyLocal()} disabled={busy} className={`${btn.secondary} justify-self-start`}><Download size={16} />Scarica una copia</button>
+          <p className="m-0 text-[12px] text-ink-3">Senza account i dati stanno solo su questo telefono. La copia è un file che resta qui.</p>
+        </Section>
+      )}
+
+      {email && (
+        <section aria-labelledby="h-push" className="grid gap-3">
+          <h2 id="h-push" className="t-label m-0 px-1 text-ink-3">Promemoria</h2>
+          <Notifications />
         </section>
       )}
-      {email ? (
-        <section className="grid gap-3 rounded-panel bg-panel p-4">
-          <b className="font-gauge text-lg">I tuoi dati</b>
-          <p className="m-0 text-sm text-dim">Scarica una copia di moto, interventi, documenti e file salvati online, oppure elimina l'account. L'eliminazione non si può annullare.</p>
-          <button onClick={() => void download()} disabled={busy} className={primary}>Scarica i miei dati</button>
-          {ask === 'del' ? (
-            <div className="grid gap-2 rounded-lg border border-red p-3">
-              <p className="m-0 text-sm">Verranno cancellati l'account, i dati online e i file. Su questo telefono sparisce tutto.</p>
-              <button onClick={() => void wipe()} disabled={busy} className={danger}>Elimina definitivamente</button>
-              <button onClick={() => setAsk(undefined)} disabled={busy} className={`justify-self-start ${ghost}`}>Annulla</button>
-            </div>
-          ) : (
-            <button onClick={() => setAsk('del')} disabled={busy} className={`justify-self-start ${ghost}`}>Elimina account</button>
-          )}
-        </section>
-      ) : null}
-      <p className="m-0 text-xs text-dim">Elenco dei modelli: NHTSA vPIC, Traficom (CC BY 4.0), DGT, ASTRA/USTRA (Ufficio federale delle strade), schede e libretti ufficiali dei costruttori.</p>
-      {msg && <p role="status" className="m-0 text-sm text-dim">{busy ? 'Attendi…' : msg}</p>}
+
+      {email && (
+        <Section title="I tuoi dati" id="h-data">
+          <p className="m-0 text-[14px] text-ink-2">Scarica una copia di moto, interventi, documenti e file salvati online, oppure elimina l'account.</p>
+          <button type="button" onClick={() => void download()} disabled={busy} className={`${btn.secondary} w-full`}><Download size={16} />Scarica i miei dati</button>
+          <button type="button" onClick={() => setAsk('del')} disabled={busy} className={`${btn.ghost} justify-self-start text-red-ink hover:bg-red-soft`}><Trash2 size={16} />Elimina account</button>
+        </Section>
+      )}
+
+      {msg && <p role="status" className="m-0 rounded-md bg-red-soft px-4 py-3 text-[14px] font-medium text-red-ink">{busy ? 'Attendi…' : msg}</p>}
+      <p className="m-0 px-1 text-[12px] text-ink-3">Elenco dei modelli: NHTSA vPIC, Traficom (CC BY 4.0), DGT, ASTRA/USTRA (Ufficio federale delle strade), schede e libretti ufficiali dei costruttori.</p>
+
+      <Sheet open={ask === 'del'} onClose={() => setAsk(undefined)} title="Eliminare l'account?">
+        <div className="grid gap-4 pb-1">
+          <div className="flex gap-3 rounded-md bg-red-soft p-4 text-[14px] text-ink">
+            <TriangleAlert size={20} className="mt-0.5 shrink-0 text-red-ink" />
+            <span>Verranno cancellati l'account, i dati online e i file. Su questo telefono sparisce tutto. Non si può annullare.</span>
+          </div>
+          <button type="button" onClick={() => void wipe()} disabled={busy} className={`${btn.danger} w-full`}><Trash2 size={17} />Elimina definitivamente</button>
+          <button type="button" onClick={() => setAsk(undefined)} disabled={busy} className={`${btn.secondary} w-full`}>Annulla</button>
+        </div>
+      </Sheet>
+      <Sheet open={ask === 'out'} onClose={() => setAsk(undefined)} title="Uscire da tutti i dispositivi?">
+        <div className="grid gap-4 pb-1">
+          <p className="m-0 text-[14px] text-ink-2">Chiude l'accesso su tutti i telefoni. I dati online restano; su questo vengono tolti. Le notifiche degli altri dispositivi restano finché non le disattivi.</p>
+          <button type="button" onClick={() => void exitAll()} disabled={busy} className={`${btn.danger} w-full`}><LogOut size={17} />Esci ovunque</button>
+          <button type="button" onClick={() => setAsk(undefined)} disabled={busy} className={`${btn.secondary} w-full`}>Annulla</button>
+        </div>
+      </Sheet>
     </Screen>
   )
 }

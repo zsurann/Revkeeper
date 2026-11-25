@@ -1,92 +1,64 @@
-# Revkeeper · design system "Strumentazione"
+# Revkeeper · design system "Hi-Vis"
 
-Fonte: variante A del [prototipo](../prototypes/direzione-visiva.html). Token in [tokens.css](tokens.css) (Tailwind v4 `@theme`).
+Token in [tokens.css](tokens.css) (variabili `--rk-*` mappate in Tailwind v4 con `@theme inline`). Il tema scuro sovrascrive gli stessi token sotto la classe `.dark` su `<html>`.
 
 ## Principi
 
-- Il cruscotto della moto: solo tema scuro, con retroilluminazione ambra come unico accento.
-- L'ambra significa "azione o in scadenza", il rosso significa "scaduta". Nessun altro colore porta significato.
-- Un solo momento animato forte (il contachilometri); il resto dell'interfaccia è quieto.
-- Niente riflessi, lucine o texture finte: il bagliore si usa solo su cifre, arco e pulsante principale.
-- Numeri sempre `tabular-nums`. Testi in italiano, sentence case.
+- **Chiaro di default.** Fondo bianco e grigio freddo, inchiostro quasi nero. Il tema scuro ("Notte") si sceglie da Account → Aspetto: Chiaro, Notte o Sistema. Il valore predefinito è Chiaro, non quello del sistema.
+- **Il cruscotto resta nero in entrambi i temi.** Il "vetro" (`display`) ospita il numero grande, la RevBar e il contachilometri, come una strumentazione vera.
+- **Lime ad alta visibilità** per l'azione principale e lo stato "a posto". Ambra vuol dire "in scadenza", rosso "scaduta". Lo stato è sempre anche testuale.
+- Numeri `tabular-nums`. Testi in italiano, sentence case.
+
+## Tema
+
+- Preferenza salvata in `localStorage` con la chiave `revkeeper.theme`: `light`, `dark` o `system`. Valore assente o sconosciuto vale `light`. Non è sincronizzata tra dispositivi.
+- `/theme-init.js` gira nel `<head>` prima del primo paint: aggiunge `.dark`, imposta `color-scheme` e `meta[name=theme-color]`. È un file esterno perché la CSP vieta gli script inline.
+- `src/theme.ts` gestisce i cambi a runtime e, con "Sistema", ascolta `prefers-color-scheme`. "Cancella i dati locali" conserva la scelta.
+- `theme-color`: `#F4F5F7` in chiaro, `#0B0D10` in scuro.
 
 ## Tipografia
 
-| Ruolo | Font | Uso |
-|---|---|---|
-| Cifre e titoli | Saira Condensed 700 | contachilometri, km nelle schede, nome della moto, pulsante principale |
-| Testo | Saira 400/600 | tutto il resto |
+Archivo Variable (asse `wdth`), self-hosted con `@fontsource-variable/archivo` e messo in cache dal service worker.
 
-Scala: 12 · 14 · 16 · 18 · 22 · 28 px. Google Fonts con `display=swap`; li mette in cache il service worker.
+| Classe | Uso |
+|---|---|
+| `.t-display` | titoli di pagina, numero del cruscotto (larghezza espansa, 800) |
+| `.t-title` | titoli di card e fogli |
+| `.t-num` | cifre tabellari (km, euro, date) |
+| `.t-label` | etichette maiuscole spaziate |
 
 ## Contrasto (WCAG AA)
 
-| Coppia | Rapporto |
-|---|---|
-| dim su dash | 5,8:1 |
-| dim su panel | 5,2:1 |
-| amber su dash | 10,1:1 |
-| amber-ink su amber | 10,6:1 |
-| red su panel | 5,7:1 |
+Verificato con axe-core su tutte le schermate, in chiaro e in scuro, a 390×844.
+
+| Coppia | Chiaro | Scuro |
+|---|---|---|
+| ink-3 su surface | 5,8:1 | 6,2:1 |
+| ink-3 su sunken | 5,0:1 | 5,7:1 |
+| lime-ink su surface | 6,7:1 | 15,5:1 |
+| amber-ink su surface | 6,6:1 | 10,5:1 |
+| red-ink su surface | 6,6:1 | 7,1:1 |
+| testo su lime | 16,4:1 | 16,4:1 |
+| display-dim su display | 7,4:1 | 7,9:1 |
+
+Il pulsante distruttivo usa `#B4231A` con testo bianco (6,4:1) in entrambi i temi.
 
 ## Componenti
 
-### Odometer (contachilometri a rulli)
-- 6 rulli `well`, cifre ambra Saira Condensed 26 px con `text-shadow` ambra; sotto c'è l'etichetta "km totali".
-- Props: `value` (km), `from?` (km da cui rullare).
-- Motion: ogni rullo trasla a `translateY(-cifra × altezza)` in `--duration-roll` con `--ease-needle`. Si attiva al primo montaggio (dagli ultimi 120 km) e dopo ogni "Aggiorna km" (dal valore precedente). Stato a riposo: già sul valore finale.
-- Accessibilità: `aria-label="23.418 km"`, rulli `aria-hidden`.
+- **Cruscotto** (`Dashboard.tsx`): prossimo intervento, numero grande lime/ambra/rosso, `RevBar` a 28 segmenti (self-test all'apertura, lampeggia se scaduta), contachilometri a rulli (`Odometer`), pulsante "Aggiorna km".
+- **Sheet** (`ui.tsx`): foglio dal basso a molla, si trascina dalla maniglia, Esc chiude, scroll del body bloccato; centrato su desktop.
+- **Toast** (`toast.tsx`): `toast(titolo, { kind, body })`, massimo 3, in alto, chiusura automatica dopo 3,8 s o con swipe.
+- **Segmented, StatusPill, MiniBar, Empty, Skeleton, PageHead** in `ui.tsx`.
+- **Splash** (`Splash.tsx`): accensione del marchio una volta per sessione; saltata con riduzione del movimento.
 
-### ServiceArc (arco verso il tagliando)
-- Arco SVG di 240°, binario `#2a3240`, riempimento ambra con `drop-shadow` glow. Diventa rosso oltre il 100%.
-- Props: `progress` (0–1+), `label`.
-- Motion: `stroke-dashoffset` in `--duration-roll`, in sincronia con l'Odometer.
+## Motion
 
-### NextServiceCard
-- Pannello `panel`, `radius-panel`. Titolo della voce in Saira Condensed, a destra "tra 582 km" in ambra se in scadenza, rosso se scaduta.
-- ProgressBar sotto (8 px, binario `well`, riempimento con gradiente da ambra a rosso), poi la regola in `dim`: "a 24.000 km o entro dicembre 2026, quello che arriva prima".
+- `motion/react` dentro `MotionConfig reducedMotion="user"`; curve e durate in `src/motion.ts` e nei token `--ease-*`, `--duration-*`.
+- `prefers-reduced-motion: reduce` porta le durate CSS a 0 e disattiva splash, sweep della RevBar e rulli.
 
-### DueList
-- Righe con separatore `rule`: nome a sinistra, scadenza a destra (`dim` se ok, ambra se in scadenza, rosso se scaduta).
-- Lo stato è anche testuale per gli screen reader ("in scadenza", "scaduta").
+## Icona, notifiche e manifest
 
-### PrimaryAction (FAB)
-- "+ Aggiorna km": ambra, testo `amber-ink`, `radius-pill`, `shadow-fab`, in basso a destra con gli inset di safe area.
-- Alla pressione `scale(0.96)` in `--duration-ui`; apre il foglio "Aggiorna km".
-
-### BikeSwitcher
-- Chip in alto a destra ("2 moto"); apre l'elenco del garage.
-
-### Sheet (foglio dal basso)
-- Usato per aggiornare i km, registrare un intervento e aggiungere un documento. Entra dal basso in 240 ms, esce in 180 ms; la chiusura si può interrompere.
-
-## Motion: regole
-
-- Si animano solo `transform`, `opacity` e `stroke-dashoffset`.
-- `prefers-reduced-motion: reduce` porta tutte le durate a 0: i valori finali compaiono subito.
-- CSS per transizioni e fogli. GSAP non serve all'MVP: la regola ponytail vieta dipendenze per poche righe.
-
-## Icona, manifest e splash
-
-- Icona: [icon.svg](icon.svg) (arco ambra, ago rosso, fondo grafite; contenuto nel cerchio sicuro dell'80%, quindi va bene anche come maskable). PNG in [icons/](icons/): 192, 512, apple-touch-icon 180.
-- Manifest (generato da `vite-plugin-pwa` nello scaffold):
-
-```json
-{
-  "name": "Revkeeper",
-  "short_name": "Revkeeper",
-  "lang": "it",
-  "start_url": "/",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#14181f",
-  "theme_color": "#14181f",
-  "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
-}
-```
-
-- Splash: su Android la genera il browser da `background_color` più l'icona; su iOS si usano `apple-touch-icon` e `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`. Niente immagini splash per ogni dispositivo: troppi file per poco guadagno.
+- Icone generate da `scripts/icons.mjs` in `public/icons/`: `icon.svg`, `icon-maskable.svg`, PNG 192/512, `maskable-512.png`, `apple-touch-icon.png`.
+- Badge delle notifiche: `badge.svg` e `badge-96.png` (monocromo bianco), usati da `public/push-sw.js`.
+- Testo delle notifiche invariato (`server/reminders.ts`): titolo = scadenza ("L'assicurazione scade tra 7 giorni"), corpo = nome della moto.
+- Manifest: `background_color` e `theme_color` `#F4F5F7`.
