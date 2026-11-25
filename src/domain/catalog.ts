@@ -25,8 +25,8 @@ export const modelsOf = (make: string) => modelsFor(make).map((m) => ({ label: m
 // Anni dal più recente; senza modello nel catalogo, tutti gli anni dal 1970
 export const yearsOf = (make: string, name: string) => {
   const m = model(make, name)
-  const to = m?.to ?? thisYear()
   const from = m?.from ?? 1970
+  const to = Math.max(m?.to ?? thisYear(), from)
   return Array.from({ length: to - from + 1 }, (_, i) => to - i)
 }
 

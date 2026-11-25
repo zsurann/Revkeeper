@@ -19,7 +19,7 @@ const BRAND_ALIAS: Record<string, string> = {
   BMW: 'BMW', KTM: 'KTM', SYM: 'SYM', SANYANG: 'SYM', CFMOTO: 'CFMoto', 'CF MOTO': 'CFMoto', NIU: 'NIU', SWM: 'SWM', MASH: 'Mash',
   'HARLEY DAVIDSON': 'Harley-Davidson', 'HARLEY-DAVIDSON': 'Harley-Davidson', 'MV AGUSTA': 'MV Agusta', 'MV-AGUSTA': 'MV Agusta',
   'MOTO GUZZI': 'Moto Guzzi', GUZZI: 'Moto Guzzi', 'MOTO MORINI': 'Moto Morini', 'ROYAL ENFIELD': 'Royal Enfield', 'ROYAL-ENFIELD': 'Royal Enfield', 'FANTIC MOTOR': 'Fantic', GASGAS: 'GasGas', 'GAS GAS': 'GasGas',
-  'INDIAN MOTORCYCLE': 'Indian', ZERO: 'Zero Motorcycles', 'ZERO MOTORCYCLES': 'Zero Motorcycles', 'JAWA-CZ': 'Jawa',
+  'INDIAN MOTORCYCLE': 'Indian', ZERO: 'Zero Motorcycles', 'ZERO MOTORCYCLES': 'Zero Motorcycles', 'JAWA-CZ': 'Jawa', 'SKY TEAM': 'Skyteam', 'TM RACING': 'TM', 'TM-RACING': 'TM', 'MOTORHISPANIA/MHMOTORCYCLE': 'Motorhispania',
 }
 const brand = (raw: string) => {
   const up = raw.trim().toUpperCase().replace(/\s+/g, ' ')

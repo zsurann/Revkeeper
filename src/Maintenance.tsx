@@ -119,11 +119,13 @@ export const Maintenance = ({ bike, items, rows, onChange }: { bike: Bike; items
       setError(err instanceof RangeError ? err.message : 'Salvataggio non riuscito')
     }
   }
+  const modelManual = findModel(DATA, bike.make, bike.model, bike.year)
+  const manualSource = modelManual?.source as { title?: string; page?: number; url?: string } | undefined
   const sorted = [...items].sort((a, b) => rows.findIndex((r) => r.id === a.id) - rows.findIndex((r) => r.id === b.id))
   return (
     <>
       <PageHead title="Manutenzione" sub="Ogni voce scade al primo traguardo tra km e mesi." action={!adding && <button type="button" onClick={() => setAdding(true)} className={`${btn.primary} h-11 px-5`}><Plus size={18} strokeWidth={2.6} />Voce</button>} />
-      {findModel(DATA, bike.make, bike.model, bike.year) && items.some((i) => i.origin !== 'model') && (
+      {modelManual && items.some((i) => i.origin !== 'model') && (
         <button
           type="button"
           onClick={() => void Promise.all(items.map((i) => remove('items', i.id))).then(() => Promise.all(itemsFor(bike).map((i) => save('items', i)))).then(() => { toast('Intervalli del libretto applicati'); onChange() })}
@@ -162,7 +164,18 @@ export const Maintenance = ({ bike, items, rows, onChange }: { bike: Bike; items
           {sorted.map((i) => <ItemCard key={i.id} item={i} row={rows.find((r) => r.id === i.id)} onChange={onChange} />)}
         </m.ul>
       )}
-      <p className="m-0 px-1 text-[13px] text-ink-3">I valori tipici sono indicativi: controlla il libretto della tua moto.</p>
+      <div className="grid gap-1 px-1 text-[13px] text-ink-3">
+        {manualSource?.title && items.some((i) => i.origin === 'model') && (
+          <p className="m-0">
+            Fonte intervalli:{' '}
+            {manualSource.url && /^https?:\/\//.test(manualSource.url) ? (
+              <a href={manualSource.url} target="_blank" rel="noopener noreferrer" className="underline decoration-ink-3 underline-offset-2 hover:text-ink">{manualSource.title}</a>
+            ) : manualSource.title}
+            {manualSource.page ? ` (pag. ${manualSource.page})` : ''}.
+          </p>
+        )}
+        <p className="m-0">I valori tipici sono indicativi: controlla il libretto della tua moto.</p>
+      </div>
     </>
   )
 }

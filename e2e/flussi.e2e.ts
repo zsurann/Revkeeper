@@ -5,11 +5,20 @@ const png = { name: 'scontrino.png', mimeType: 'image/png', buffer: Buffer.from(
 
 const tab = (page: Page, name: string) => page.locator('nav[aria-label=Sezioni]:visible').getByRole('button', { name, exact: true }).click()
 
-const addBike = async (page: Page) => {
+const fillCombo = async (page: Page, id: string, text: string, isMobile: boolean) => {
+  const el = page.locator(id)
+  if (isMobile) {
+    await el.tap()
+    await el.tap()
+  }
+  await el.fill(text)
+}
+
+const addBike = async (page: Page, isMobile: boolean) => {
   await page.goto('/?browser=1')
   await page.getByRole('button', { name: 'Più tardi' }).click()
   await page.getByRole('button', { name: 'Aggiungi moto' }).click()
-  await page.locator('#make').fill('Honda')
+  await fillCombo(page, '#make', 'Honda', isMobile)
   await page.getByRole('option').first().click()
   await page.locator('#model').click()
   await page.getByRole('option').first().click()
@@ -28,8 +37,8 @@ test.beforeEach(({ page }) => {
 })
 test.afterEach(({ page }) => expect(errors.get(page)).toEqual([]))
 
-test('ospite: moto, km, cancellazione di una lettura sbagliata', async ({ page }) => {
-  await addBike(page)
+test('ospite: moto, km, cancellazione di una lettura sbagliata', async ({ page, isMobile }) => {
+  await addBike(page, isMobile)
   await page.getByRole('button', { name: 'Aggiorna km' }).first().click()
   await page.locator('#km').fill('120000') // una cifra in più
   await page.getByRole('button', { name: 'Salva km' }).click()
@@ -46,8 +55,8 @@ test('ospite: moto, km, cancellazione di una lettura sbagliata', async ({ page }
   await expect(page.getByRole('heading', { name: '+500 km registrati' })).toBeVisible()
 })
 
-test('interventi: registra, modifica, cerca, spese', async ({ page }) => {
-  await addBike(page)
+test('interventi: registra, modifica, cerca, spese', async ({ page, isMobile }) => {
+  await addBike(page, isMobile)
   await tab(page, 'Interventi')
   await page.getByRole('button', { name: /Registra/ }).first().click()
   await page.locator('#svc-km').fill('12.500')
@@ -83,8 +92,8 @@ test('interventi: registra, modifica, cerca, spese', async ({ page }) => {
   await expect(page.getByText('Officina Bianchi, olio 10W-40')).toBeVisible()
 })
 
-test('documenti: scadenza, allegato tolto, calendario .ics', async ({ page }) => {
-  await addBike(page)
+test('documenti: scadenza, allegato tolto, calendario .ics', async ({ page, isMobile }) => {
+  await addBike(page, isMobile)
   await tab(page, 'Documenti')
   await page.locator('#doc-assicurazione').fill('2027-03-01')
   await page.locator('#doc-files-assicurazione').setInputFiles(png)
@@ -104,8 +113,8 @@ test('documenti: scadenza, allegato tolto, calendario .ics', async ({ page }) =>
   expect(Buffer.concat(ics).toString()).toContain('DTSTART;VALUE=DATE:20270301')
 })
 
-test('voce di manutenzione: nota salvata', async ({ page }) => {
-  await addBike(page)
+test('voce di manutenzione: nota salvata', async ({ page, isMobile }) => {
+  await addBike(page, isMobile)
   await tab(page, 'Manutenzione')
   await page.locator('li button[aria-expanded]').first().click()
   await page.locator('textarea[name=notes]').first().fill('Filtro HF204')
