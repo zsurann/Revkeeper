@@ -21,16 +21,16 @@ Revkeeper ricorda per te quando fare il tagliando, cambiare l'olio, tendere la c
 Aggiungi una o più moto. Scegli marca, modello e anno dagli elenchi (puoi anche scrivere per cercare più in fretta): la scheda si compila da sola con cilindrata, potenza, peso, gomme e olio consigliati. Aggiungi una foto e sistemala con zoom e spostamento prima di salvarla.
 
 ### 🔧 Manutenzioni
-Per ogni voce (olio, filtri, catena, freni, valvole…) vedi quanti chilometri o mesi mancano e una stima della data, calcolata su come usi la moto. Le voci più urgenti stanno in cima.
+Per ogni voce (olio, filtri, catena, freni, valvole…) vedi quanti chilometri o mesi mancano e una stima della data, calcolata su come usi la moto. Le voci più urgenti stanno in cima. A ogni voce puoi aggiungere una nota (tipo d'olio, codice del filtro, coppie di serraggio). Sul cruscotto vedi i km medi al giorno e quando è previsto il prossimo intervento.
 
 ### 📒 Interventi
-Registra cosa hai fatto, a quanti km e quanto hai speso. Allega foto o PDF di fatture e ricevute. Il totale speso è sempre visibile.
+Registra cosa hai fatto, a quanti km e quanto hai speso. Allega foto o PDF di fatture e ricevute. Puoi correggere un intervento salvato, togliere un allegato e cercare nel libretto per parola, anno o voce. Le spese si vedono per anno, per voce e al km. Con **PDF** stampi il libretto o lo salvi come PDF, utile quando vendi la moto.
 
 ### 📄 Documenti
-Inserisci le scadenze di assicurazione, bollo e revisione, con il documento allegato.
+Inserisci le scadenze di assicurazione, bollo e revisione, con il documento allegato. Con **Calendario** scarichi un file da aprire sul telefono: le scadenze finiscono nel tuo calendario con un promemoria 7 giorni prima e la mattina stessa.
 
 ### 🔔 Promemoria
-Attiva le notifiche e scegli a che ora riceverle. Revkeeper ti avvisa 30 giorni, 7 giorni e il giorno stesso di una scadenza, e quando una manutenzione si avvicina ai chilometri previsti.
+Attiva le notifiche e scegli a che ora riceverle. Se sbagli i km, cancella la lettura da **Aggiorna km → Letture precedenti**. Revkeeper ti avvisa 30 giorni, 7 giorni e il giorno stesso di una scadenza, e quando una manutenzione si avvicina ai chilometri previsti.
 
 ## Come iniziare
 
@@ -84,8 +84,25 @@ La chiave privata delle notifiche (`VAPID_PRIVATE_KEY`) è già un secret del Wo
 L'app e il server mandano gli errori a Sentry (organizzazione `grok-bot-w1`, regione UE):
 `revkeeper` per l'app nel browser, `revkeeper-api` per le API e il cron dei promemoria.
 Non partono email, cookie, intestazioni, corpi delle richieste o parametri dell'URL.
-Gli errori dell'app e delle API portano il commit come release, quelli del cron la versione del Worker; il cron ha anche un monitor che avvisa se un giro salta.
+Gli errori dell'app e delle API portano il commit come release, quelli del cron la versione del Worker; il cron ha due monitor (promemoria orari e copia notturna) che avvisano via email se un giro salta o fallisce. Un errore nuovo, o che torna dopo essere stato risolto, arriva per email.
 
 Per avere gli errori dell'app con i nomi veri di file e funzioni serve il token `SENTRY_AUTH_TOKEN`
 tra le variabili di build del progetto Pages su Cloudflare: la build carica le mappe dei sorgenti e
 poi le cancella, quindi non finiscono online. Senza token tutto funziona lo stesso, con stack minificati.
+
+## Copie del database
+
+Ogni notte alle 02:30 UTC il cron salva una copia del database D1 nel bucket R2 `revkeeper-backups` (UE),
+come `d1/revkeeper-AAAA-MM-GG.json.gz`, e cancella quelle più vecchie di 7 giorni. Dentro ci sono utenti, dati
+sincronizzati, elenco dei file e iscrizioni alle notifiche; le sessioni no (al ripristino basta accedere di nuovo).
+I file allegati stanno già su R2 nel bucket `revkeeper-files`.
+
+## Limiti di frequenza
+
+Per evitare abusi: 20 tentativi di accesso ogni 10 minuti per rete, 5 notifiche di prova all'ora e 120 file caricati all'ora per utente.
+Oltre il limite il server risponde 429 con `Retry-After`. Gli indirizzi IP non si salvano: il contatore usa un'impronta (hash).
+
+## Aggiornamenti dell'app
+
+Quando esce una nuova versione l'app mostra **Aggiornamento disponibile**: tocca **Aggiorna** per ricaricarla,
+o continua e la nuova versione parte alla prossima apertura.

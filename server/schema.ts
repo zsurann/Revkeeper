@@ -66,7 +66,7 @@ const bike = (o: Obj) => {
 const byKind: Record<string, (o: Obj) => boolean> = {
   bikes: bike,
   readings: (o) => any(ident(o, 'bikeId', true), day(o, 'date', true), num(o, 'km', 10_000_000, true, true)),
-  items: (o) => any(ident(o, 'bikeId', true), str(o, 'item', 80, true), str(o, 'label', 200, true), oneOf(o, 'action', ACTIONS, true), oneOf(o, 'origin', ORIGINS, true), num(o, 'km', 10_000_000, false, true), num(o, 'months', 1_200, false, true), num(o, 'firstKm', 10_000_000, false, true)),
+  items: (o) => any(ident(o, 'bikeId', true), str(o, 'item', 80, true), str(o, 'label', 200, true), oneOf(o, 'action', ACTIONS, true), oneOf(o, 'origin', ORIGINS, true), num(o, 'km', 10_000_000, false, true), num(o, 'months', 1_200, false, true), num(o, 'firstKm', 10_000_000, false, true), str(o, 'notes', 2_000)),
   services: (o) => any(ident(o, 'bikeId', true), day(o, 'date', true), num(o, 'km', 10_000_000, true, true), idList(o, 'itemIds'), idList(o, 'attachmentIds'), str(o, 'notes', 4_000), num(o, 'costTotal', 1e9), num(o, 'costParts', 1e9), num(o, 'costLabour', 1e9)),
   documents: (o) => any(ident(o, 'bikeId', true), oneOf(o, 'kind', DOCS, true), day(o, 'dueDate', true), idList(o, 'attachmentIds')),
   attachments: (o) => any(str(o, 'name', 300, true), str(o, 'type', 120, true), num(o, 'size', 15 * 1024 * 1024, false, true)),

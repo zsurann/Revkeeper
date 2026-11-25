@@ -1,9 +1,10 @@
-import { motion } from 'motion/react'
-import { Check } from 'lucide-react'
+import { m } from 'motion/react'
+import { CalendarPlus, Check } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { AttachmentLink, AttachmentPicker, usePending } from './Attachments'
+import { AttachmentLink, AttachmentPicker, usePending, withoutAttachment } from './Attachments'
 import { save } from './db'
 import { daysBetween, documentStatus } from './domain/due'
+import { icsFor } from './domain/ics'
 import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type DocKind } from './domain/types'
 import { daysText, fullDate, today } from './format'
 import { DOC, DOC_KINDS } from './icons'
@@ -29,8 +30,13 @@ const DocCard = ({ bike, kind, doc, onChange }: { bike: Bike; kind: DocKind; doc
     toast(`${meta.label} ${kind === 'bollo' ? 'salvato' : 'salvata'}`, { body: `Scadenza ${fullDate(dueDate)}` })
     onChange()
   }
+  const dropFile = async (d: BikeDocument, id: string) => {
+    await save('documents', { ...d, attachmentIds: await withoutAttachment(d.attachmentIds, id) })
+    toast('Allegato tolto', { kind: 'info' })
+    onChange()
+  }
   return (
-    <motion.form variants={listItem} onSubmit={submit} className={`${card} grid gap-4 p-4`}>
+    <m.form variants={listItem} onSubmit={submit} className={`${card} grid gap-4 p-4`}>
       <div className="flex items-center gap-3">
         <span className={`grid size-11 shrink-0 place-items-center rounded-[12px] ${status === 'overdue' ? 'bg-red-soft text-red-ink' : status === 'warn' ? 'bg-amber-soft text-amber-ink' : 'bg-sunken text-ink'}`}><Icon size={20} /></span>
         <span className="grid min-w-0 flex-1">
@@ -43,19 +49,32 @@ const DocCard = ({ bike, kind, doc, onChange }: { bike: Bike; kind: DocKind; doc
         Scadenza
         <input id={`doc-${kind}`} name="dueDate" type="date" defaultValue={doc?.dueDate} className={field} />
       </label>
-      {doc && doc.attachmentIds.length > 0 && <div className="flex flex-wrap gap-2">{doc.attachmentIds.map((id) => <AttachmentLink key={id} id={id} />)}</div>}
+      {doc && doc.attachmentIds.length > 0 && <div className="flex flex-wrap gap-2">{doc.attachmentIds.map((id) => <AttachmentLink key={id} id={id} onRemove={(x) => void dropFile(doc, x)} />)}</div>}
       <AttachmentPicker id={`doc-files-${kind}`} p={files} />
       {error && <ErrorText>{error}</ErrorText>}
       <button className={`${btn.ink} w-full`}><Check size={17} strokeWidth={2.6} />Salva</button>
-    </motion.form>
+    </m.form>
   )
+}
+
+// Scarica un file .ics: il calendario del telefono lo apre e aggiunge le scadenze con i promemoria
+const downloadIcs = (bike: Bike, docs: BikeDocument[]) => {
+  const url = URL.createObjectURL(new Blob([icsFor(bike, docs)], { type: 'text/calendar;charset=utf-8' }))
+  const a = Object.assign(document.createElement('a'), { href: url, download: `scadenze-${`${bike.make}-${bike.model}`.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.ics` })
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  toast('Calendario scaricato', { kind: 'info', body: 'Aprilo per aggiungere le scadenze, con un promemoria 7 giorni prima.' })
 }
 
 export const Documents = ({ bike, documents, onChange }: { bike: Bike; documents: BikeDocument[]; onChange: () => void }) => (
   <>
-    <PageHead title="Documenti" sub={`${bike.make} ${bike.model}${bike.plate ? ` · ${bike.plate}` : ''} · ti avvisiamo 30 giorni, 7 giorni e il giorno stesso.`} />
-    <motion.div className="grid gap-3 lg:grid-cols-3" variants={list} initial="initial" animate="animate">
+    <PageHead
+      title="Documenti"
+      sub={`${bike.make} ${bike.model}${bike.plate ? ` · ${bike.plate}` : ''} · ti avvisiamo 30 giorni, 7 giorni e il giorno stesso.`}
+      action={documents.length > 0 ? <button type="button" onClick={() => downloadIcs(bike, documents)} className={btn.secondary}><CalendarPlus size={17} />Calendario</button> : undefined}
+    />
+    <m.div className="grid gap-3 lg:grid-cols-3" variants={list} initial="initial" animate="animate">
       {DOC_KINDS.map((k) => <DocCard key={k} bike={bike} kind={k} doc={documents.find((d) => d.kind === k)} onChange={onChange} />)}
-    </motion.div>
+    </m.div>
   </>
 )

@@ -235,3 +235,28 @@ it('un tombstone più vecchio non cancella il file di un allegato ancora vivo', 
   expect((await call(env, `/files/${FILE}`, { cookie })).status).toBe(404)
   void files
 })
+
+it('limita i tentativi di accesso per IP e le notifiche di prova per utente', async () => {
+  const { env, keys } = await session()
+  const bad = () => call(env, '/auth/google', { method: 'POST', headers: { 'cf-connecting-ip': '203.0.113.9' }, body: JSON.stringify({ credential: 'a.b.c' }) }, keys)
+  for (let i = 0; i < 20; i++) expect((await bad()).status).toBe(401)
+  const over = await bad()
+  expect(over.status).toBe(429)
+  expect(Number(over.headers.get('retry-after'))).toBeGreaterThan(0)
+  // un altro IP passa
+  expect((await call(env, '/auth/google', { method: 'POST', headers: { 'cf-connecting-ip': '198.51.100.1' }, body: JSON.stringify({ credential: 'a.b.c' }) }, keys)).status).toBe(401)
+})
+
+it("l'IP non si salva in chiaro nei contatori", async () => {
+  const { env, d1, keys } = await session()
+  await call(env, '/auth/google', { method: 'POST', headers: { 'cf-connecting-ip': '203.0.113.9' }, body: JSON.stringify({ credential: 'a.b.c' }) }, keys)
+  const keysSaved = d1.prepare('SELECT key FROM rate_limits').all().results.map((r) => String((r as { key: string }).key))
+  expect(keysSaved.join()).not.toContain('203.0.113.9')
+})
+
+it('notifiche di prova: dopo 5 in un’ora risponde 429', async () => {
+  const { env, login } = await session()
+  const cookie = await login()
+  for (let i = 0; i < 5; i++) expect((await call(env, '/push/test', { method: 'POST', cookie, body: '{}' })).status).toBe(200)
+  expect((await call(env, '/push/test', { method: 'POST', cookie, body: '{}' })).status).toBe(429)
+})

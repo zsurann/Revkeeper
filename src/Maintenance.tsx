@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
 import { BookOpen, ChevronDown, Plus, Trash2, Wrench } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import type { Row } from './Dashboard'
@@ -9,7 +9,7 @@ import { dueRule, dueShort, every } from './format'
 import { itemIcon } from './icons'
 import { list, listItem } from './motion'
 import { toast } from './toast'
-import { Empty, ErrorText, MiniBar, PageHead, StatusPill, btn, card, field } from './ui'
+import { Empty, ErrorText, MiniBar, PageHead, StatusPill, area, btn, card, field } from './ui'
 
 const int = (v: FormDataEntryValue | null) => {
   const s = String(v ?? '').trim()
@@ -32,32 +32,36 @@ const ItemCard = ({ item, row, onChange }: { item: MaintenanceItem; row?: Row; o
       const km = int(f.get('km'))
       const months = int(f.get('months'))
       if (km === undefined && months === undefined) throw new RangeError('Serve almeno km o mesi')
-      await save('items', { ...item, km, months, origin: 'user' })
+      const notes = String(f.get('notes') ?? '').trim() || undefined
+      // Cambiare solo la nota non rende "personalizzato" un intervallo preso dal libretto
+      const origin = km === item.km && months === item.months ? item.origin : 'user'
+      await save('items', { ...item, km, months, notes, origin })
       setError('')
       setOpen(false)
-      toast('Intervallo aggiornato', { body: item.label })
+      toast('Voce aggiornata', { body: item.label })
       onChange()
     } catch (err) {
       setError(err instanceof RangeError ? err.message : 'Salvataggio non riuscito')
     }
   }
   return (
-    <motion.li variants={listItem} className={`${card} overflow-hidden`}>
+    <m.li variants={listItem} className={`${card} overflow-hidden`}>
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="grid w-full grid-cols-[40px_1fr_auto] items-center gap-x-3 gap-y-2 p-4 text-left">
         <span className={`grid size-10 place-items-center rounded-[12px] ${s === 'overdue' ? 'bg-red-soft text-red-ink' : s === 'warn' ? 'bg-amber-soft text-amber-ink' : 'bg-sunken text-ink'}`}><Icon size={19} /></span>
         <span className="grid min-w-0">
           <span className="text-[15px] font-semibold leading-snug">{item.label}</span>
           <span className="text-[13px] text-ink-3">{every(item)} · {ORIGIN[item.origin]}</span>
+          {item.notes && <span className="truncate text-[13px] italic text-ink-2">{item.notes}</span>}
         </span>
         <span className="flex items-center gap-2">
           {row && s !== 'ok' ? <StatusPill status={s}>{dueShort(row.due)}</StatusPill> : row && <span className="text-[13px] font-semibold text-ink-2">{dueShort(row.due)}</span>}
-          <motion.span animate={{ rotate: open ? 180 : 0 }} className="text-ink-3"><ChevronDown size={18} /></motion.span>
+          <m.span animate={{ rotate: open ? 180 : 0 }} className="text-ink-3"><ChevronDown size={18} /></m.span>
         </span>
         {row && <span className="col-start-2 col-end-4"><MiniBar progress={row.due.progress} status={s} /></span>}
       </button>
       <AnimatePresence initial={false}>
         {open && (
-          <motion.form
+          <m.form
             onSubmit={submit}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -75,6 +79,9 @@ const ItemCard = ({ item, row, onChange }: { item: MaintenanceItem; row?: Row; o
                   <input id={`months-${item.id}`} name="months" inputMode="numeric" pattern="[0-9]*" defaultValue={item.months} className={field} />
                 </label>
               </div>
+              <label className="grid gap-1.5 text-[13px] font-medium text-ink-2">Note
+                <textarea id={`notes-${item.id}`} name="notes" rows={2} maxLength={2000} defaultValue={item.notes} placeholder="Es. olio 10W-40, filtro HF204, coppia 25 Nm" className={area} />
+              </label>
               {error && <ErrorText>{error}</ErrorText>}
               <div className="flex items-center justify-between gap-2">
                 <button type="button" onClick={() => void remove('items', item.id).then(() => { toast('Voce rimossa', { kind: 'info', body: item.label }); onChange() })} className={`${btn.ghost} -ml-2 text-red-ink hover:bg-red-soft`}>
@@ -83,10 +90,10 @@ const ItemCard = ({ item, row, onChange }: { item: MaintenanceItem; row?: Row; o
                 <button className={btn.ink}>Salva</button>
               </div>
             </div>
-          </motion.form>
+          </m.form>
         )}
       </AnimatePresence>
-    </motion.li>
+    </m.li>
   )
 }
 
@@ -128,7 +135,7 @@ export const Maintenance = ({ bike, items, rows, onChange }: { bike: Bike; items
       )}
       <AnimatePresence initial={false}>
         {adding && (
-          <motion.form onSubmit={add} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className={`${card} grid gap-3 p-4`}>
+          <m.form onSubmit={add} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className={`${card} grid gap-3 p-4`}>
             <b className="t-title text-[17px]">Nuova voce</b>
             <input id="new-label" name="label" placeholder="Es. Pastiglie freni anteriori" className={field} autoFocus />
             <div className="grid grid-cols-2 gap-3">
@@ -140,7 +147,7 @@ export const Maintenance = ({ bike, items, rows, onChange }: { bike: Bike; items
               <button type="button" onClick={() => { setAdding(false); setError('') }} className={btn.ghost}>Annulla</button>
               <button className={btn.primary}>Aggiungi voce</button>
             </div>
-          </motion.form>
+          </m.form>
         )}
       </AnimatePresence>
       {sorted.length === 0 && !adding ? (
@@ -151,9 +158,9 @@ export const Maintenance = ({ bike, items, rows, onChange }: { bike: Bike; items
           action={<button type="button" onClick={() => setAdding(true)} className={btn.primary}><Plus size={18} strokeWidth={2.6} />Aggiungi voce</button>}
         />
       ) : (
-        <motion.ul className="m-0 grid list-none gap-3 p-0" variants={list} initial="initial" animate="animate">
+        <m.ul className="m-0 grid list-none gap-3 p-0" variants={list} initial="initial" animate="animate">
           {sorted.map((i) => <ItemCard key={i.id} item={i} row={rows.find((r) => r.id === i.id)} onChange={onChange} />)}
-        </motion.ul>
+        </m.ul>
       )}
       <p className="m-0 px-1 text-[13px] text-ink-3">I valori tipici sono indicativi: controlla il libretto della tua moto.</p>
     </>

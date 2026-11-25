@@ -1,4 +1,4 @@
-import { animate, motion, useReducedMotion } from 'motion/react'
+import { animate, m, useReducedMotion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import type { Status } from './domain/types'
 import { int } from './domain/num'
@@ -26,7 +26,7 @@ export const RevBar = ({ progress, status, sweep = true }: { progress: number; s
         const on = i < lit
         const bg = on ? (red || status === 'overdue' ? '#FF4D2E' : status === 'warn' && i >= target - 3 ? '#FFB020' : '#D4FF3A') : red ? '#3A1C1A' : '#262C35'
         return (
-          <motion.i
+          <m.i
             key={i}
             className="block rounded-[3px]"
             style={{ background: bg, boxShadow: on ? `0 0 12px -2px ${bg}` : 'none' }}
@@ -53,14 +53,14 @@ export const Odometer = ({ value, from, className = '' }: { value: number; from?
         const to = d >= p ? d : d + 10
         return (
           <span key={i} aria-hidden="true" className="relative inline-block h-[1em] w-[0.6em] overflow-hidden">
-            <motion.span
+            <m.span
               className="absolute inset-x-0 top-0 grid text-center"
               initial={reduce ? false : { y: `-${p}em` }}
               animate={{ y: `-${reduce ? d : to}em` }}
               transition={{ duration: 1.1, delay: 0.25 + (text.length - i) * 0.05, ease: ease.out }}
             >
               {[...'01234567890123456789'].map((n, k) => <span key={k} className="h-[1em]">{n}</span>)}
-            </motion.span>
+            </m.span>
           </span>
         )
       })}

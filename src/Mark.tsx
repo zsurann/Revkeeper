@@ -1,4 +1,4 @@
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
+import { animate, m, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
 import { useEffect } from 'react'
 import { ease } from './motion'
 
@@ -48,9 +48,9 @@ export const IgnitionMark = ({ size = 160, onDone }: { size?: number; onDone?: (
   }, [reduce]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <svg width={size} height={size} viewBox="0 0 512 512" role="img" aria-label="Revkeeper">
-      <motion.rect width="512" height="512" rx="116" fill="#0E1116" initial={reduce ? false : { scale: 0.86, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, ease: ease.out }} style={{ transformOrigin: '256px 256px' }} />
+      <m.rect width="512" height="512" rx="116" fill="#0E1116" initial={reduce ? false : { scale: 0.86, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, ease: ease.out }} style={{ transformOrigin: '256px 256px' }} />
       {Array.from({ length: N }, (_, i) => (
-        <motion.path
+        <m.path
           key={i}
           d={seg(i)}
           strokeWidth={34}
@@ -60,12 +60,12 @@ export const IgnitionMark = ({ size = 160, onDone }: { size?: number; onDone?: (
           transition={{ duration: 1.25, times: [0, 0.35, 1], delay: 0.25 + i * step, ease: 'linear' }}
         />
       ))}
-      <motion.g transform={transform}
+      <m.g transform={transform}
       >
         <path d={needlePath()} fill="#D4FF3A" stroke="#D4FF3A" strokeWidth={6} strokeLinejoin="round" />
         <circle cx={cx} cy={cy} r={26} fill="#D4FF3A" />
         <circle cx={cx} cy={cy} r={10} fill="#0E1116" />
-      </motion.g>
+      </m.g>
     </svg>
   )
 }
