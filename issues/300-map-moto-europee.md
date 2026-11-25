@@ -18,7 +18,7 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 
 ## Decisions so far
 
-- [Aggiungere ASTRA al catalogo](309-aggiungere-astra-al-catalogo.md): omologazioni svizzere importate per gomme, cc, kW e anni (non il peso, che include il conducente); 6.187 modelli, 3.175 con le gomme; licenza scritta ancora da confermare.
+- [Aggiungere ASTRA al catalogo](309-aggiungere-astra-al-catalogo.md): omologazioni svizzere importate per gomme, cc, kW e anni (non il peso, che include il conducente); 6.187 modelli, 3.175 con le gomme; conferma scritta USTRA ricevuta il 2026-11-23 (304).
 
 - [Pipeline dei libretti, prima tornata](307-pipeline-dei-libretti-prima-tornata.md): script di download ed estrazione; 7 modelli Honda/Yamaha aggiunti dai libretti; Yamaha limitata dall'assenza di un indice dei libretti.
 
@@ -30,7 +30,7 @@ Un metodo scelto, costruito e pubblicato che porta nel catalogo di Revkeeper i m
 
 - [Scelta delle fonti e della pipeline](303-scelta-pipeline.md): Traficom + DGT subito, ASTRA dopo la conferma della licenza; un file per marca nell'app; libretti semi-automatici a tornate; aggiornamento ogni 3 mesi con PR.
 
-- [Open data dei registri veicoli europei per le moto](301-open-data-registri.md): ASTRA Svizzera (con gomme, licenza da confermare), Traficom Finlandia (CC BY 4.0) e DGT Spagna coprono migliaia di modelli con cc, kW e massa; RDW da provare; serbatoio solo manuale.
+- [Open data dei registri veicoli europei per le moto](301-open-data-registri.md): ASTRA/USTRA Svizzera (con gomme, permesso scritto con attribuzione), Traficom Finlandia (CC BY 4.0) e DGT Spagna coprono migliaia di modelli con cc, kW e massa; RDW da provare; serbatoio solo manuale.
 
 - [Portali ufficiali dei libretti per marca](302-portali-libretti.md): libretti scaricabili da script per 11 marche (API per KTM/Husqvarna/GasGas e MV Agusta); Ducati e Gruppo Piaggio bloccati, Kawasaki/H-D/Benelli/SYM senza accesso libero; estrazione semi-automatica con verifica.
 

@@ -2,7 +2,7 @@
 id: 304
 title: "Richiesta di licenza ad ASTRA"
 labels: [wayfinder:task]
-status: open
+status: closed
 assignee: claude
 blocked_by: []
 ---
@@ -39,4 +39,10 @@ Destinatario: il contatto indicato nella pagina dei dati veicoli di ASTRA (https
 >
 > Vielen Dank und freundliche Grüsse
 
-Stato: in attesa che l'utente invii l'email e riporti la risposta. Nel frattempo ASTRA è stato integrato su richiesta dell'utente (vedi [Aggiungere ASTRA al catalogo](309-aggiungere-astra-al-catalogo.md)): la panoramica ufficiale ASTRA classifica i dati di omologazione come open data gratuito, ma manca un testo di licenza. Se ASTRA rispondesse di no, basta togliere il blocco ASTRA da `scripts/import-eu.ts` e rigenerare.
+## Risposta (2026-11-23)
+
+L'Ufficio federale delle strade (ASTRA/USTRA, indirizzo `fahrzeugd...@...`) ha risposto il 2026-11-23 confermando per iscritto che il riutilizzo è consentito citando l'Ufficio federale delle strade come fonte (risposta elaborata con DeepL):
+
+> Questo utilizzo dei dati è consentito. Come fonte può citare l'Ufficio federale delle strade.
+
+**Esito:** uso consentito con attribuzione. Nell'app la fonte viene mostrata come `Ufficio federale delle strade (USTRA)` nelle schede compilate da `BikeForm.tsx` e come `Ufficio federale delle strade (USTRA/ASTRA)` in `Account.tsx` e `README.md`.

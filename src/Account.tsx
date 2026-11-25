@@ -189,7 +189,7 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
       )}
 
       {msg && !busy && <p role="alert" className="m-0 rounded-md bg-red-soft px-4 py-3 text-[14px] font-medium text-red-ink">{msg}</p>}
-      <p className="m-0 px-1 text-[12px] text-ink-3">Elenco dei modelli: NHTSA vPIC, Traficom (CC BY 4.0), DGT, ASTRA/USTRA (Ufficio federale delle strade), schede e libretti ufficiali dei costruttori.</p>
+      <p className="m-0 px-1 text-[12px] text-ink-3">Elenco dei modelli: NHTSA vPIC, Traficom (CC BY 4.0), DGT, Ufficio federale delle strade (USTRA/ASTRA), schede e libretti ufficiali dei costruttori.</p>
 
       <Sheet open={ask === 'del'} onClose={() => setAsk(undefined)} title="Eliminare l'account?">
         <div className="grid gap-4 pb-1">

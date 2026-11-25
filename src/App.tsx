@@ -14,6 +14,8 @@ import { Welcome } from './Welcome'
 import { eur, today } from './format'
 import { watchSystemTheme } from './theme'
 import { toast, Toaster } from './toast'
+import { EdgeSwipeBack, supportsEdgeSwipeBack } from './EdgeSwipeBack'
+import { useBackDepth } from './historyLayers'
 import { UpdatePrompt } from './UpdatePrompt'
 import { btn, usePhoto } from './ui'
 
@@ -43,6 +45,8 @@ const RANK: Record<Status, number> = { overdue: 0, warn: 1, ok: 2 }
 
 type View = 'home' | 'garage' | 'new' | 'edit' | 'account'
 type Tab = 'dash' | 'maint' | 'services' | 'documents'
+type Nav = { view: View; tab: Tab }
+const ROOT: Nav = { view: 'home', tab: 'dash' }
 const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: 'dash', label: 'Cruscotto', icon: Gauge },
   { id: 'maint', label: 'Manutenzione', icon: Wrench },
@@ -118,8 +122,8 @@ const Main = () => {
   const [bikes, setBikes] = useState<Bike[]>()
   const [kms, setKms] = useState<Record<Id, number>>({})
   const [activeId, setActiveId] = useState(readActive)
-  const [view, setView] = useState<View>('home')
-  const [tab, setTab] = useState<Tab>('dash')
+  const [stack, setStack] = useState<Nav[]>([ROOT])
+  const { view, tab } = stack[stack.length - 1]!
   const [prevKm, setPrevKm] = useState<number>()
   const [detail, setDetail] = useState<Detail>()
   const [welcomed, setWelcomed] = useState(readWelcomed)
@@ -128,6 +132,7 @@ const Main = () => {
   const online = useOnline()
 
   const bike = bikes?.find((b) => b.id === activeId) ?? bikes?.[0]
+  const edgeSwipe = supportsEdgeSwipeBack()
   const km = bike ? (kms[bike.id] ?? bike.startKm) : 0
 
   const load = useCallback(async () => {
@@ -149,8 +154,7 @@ const Main = () => {
       setActiveId(undefined)
       setDetail(undefined)
       setEmail(undefined)
-      setView('home')
-      setTab('dash')
+      setStack([ROOT])
       void load()
     }
     addEventListener('revkeeper:synced', onSynced)
@@ -189,16 +193,29 @@ const Main = () => {
     return (detail?.documents ?? []).map((doc) => ({ kind: doc.kind, doc, status: documentStatus(doc, d, DEFAULT_THRESHOLDS), days: daysBetween(d, doc.dueDate) }))
   }, [detail])
 
+  const openView = useCallback((v: Exclude<View, 'home'>) => {
+    setStack((s) => {
+      const cur = s[s.length - 1]!
+      if (v === 'new' || v === 'edit') return [...s, { view: v, tab: cur.tab }]
+      const base = s.filter((e) => e.view === 'home')
+      return [...(base.length ? base : [ROOT]), { view: v, tab: cur.tab }]
+    })
+  }, [])
+  const goBack = useCallback(() => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)), [])
+  useBackDepth(bike ? stack.length - 1 : 0, goBack)
+
   const pick = (id: Id) => {
     writeActive(id)
     setActiveId(id)
     setPrevKm(undefined)
-    setView('home')
+    setStack((s) => {
+      const base = s.filter((e) => e.view === 'home')
+      return base.length ? base : [ROOT]
+    })
   }
-  const go = (t: Tab) => {
-    setTab(t)
-    setView('home')
-  }
+  const go = useCallback((t: Tab) => {
+    setStack(t === 'dash' ? [ROOT] : [ROOT, { view: 'home', tab: t }])
+  }, [])
 
   // Una moto senza voci riceve quelle del modello verificato o del preset della sua categoria
   const saved = async (b: Bike) => {
@@ -225,8 +242,16 @@ const Main = () => {
       />
     )
   const loading = <div className="mx-auto max-w-[480px] px-4 pt-[max(76px,env(safe-area-inset-top))]"><DashboardSkeleton /></div>
-  if (!bike || view === 'new') return <Suspense fallback={loading}><BikeForm onDone={saved} onCancel={bike ? () => setView('garage') : undefined} /></Suspense>
-  if (view === 'edit') return <Suspense fallback={loading}><BikeForm bike={bike} onDone={saved} onCancel={() => setView('garage')} /></Suspense>
+  if (!bike || view === 'new') return (
+    <EdgeSwipeBack enabled={Boolean(bike) && stack.length > 1 && edgeSwipe} onBack={goBack}>
+      <Suspense fallback={loading}><BikeForm onDone={saved} onCancel={bike ? goBack : undefined} /></Suspense>
+    </EdgeSwipeBack>
+  )
+  if (view === 'edit') return (
+    <EdgeSwipeBack enabled={stack.length > 1 && edgeSwipe} onBack={goBack}>
+      <Suspense fallback={loading}><BikeForm bike={bike} onDone={saved} onCancel={goBack} /></Suspense>
+    </EdgeSwipeBack>
+  )
 
   const next = rows[0]
   const rest = rows.slice(1, 6)
@@ -240,9 +265,9 @@ const Main = () => {
   const inTabs = view === 'home'
 
   const content = (() => {
-    if (view === 'account') return <Account onClose={() => setView('home')} onAccount={setEmail} />
+    if (view === 'account') return <Account onClose={goBack} onAccount={setEmail} />
     if (view === 'garage')
-      return <Garage bikes={bikes} kms={kms} activeId={bike.id} onPick={pick} onEdit={(id) => { writeActive(id); setActiveId(id); setView('edit') }} onAdd={() => setView('new')} onClose={() => setView('home')} />
+      return <Garage bikes={bikes} kms={kms} activeId={bike.id} onPick={pick} onEdit={(id) => { writeActive(id); setActiveId(id); openView('edit') }} onAdd={() => openView('new')} onClose={goBack} />
     if (!detail) return <DashboardSkeleton />
     if (tab === 'maint') return <Maintenance bike={bike} items={detail.items} rows={rows} onChange={() => void loadDetail(bike)} />
     if (tab === 'services') return <Services bike={bike} km={km} items={detail.items} services={detail.services} readings={detail.readings} onChange={refresh} />
@@ -257,7 +282,7 @@ const Main = () => {
         {/* Barra laterale sui computer */}
         <aside className="sticky top-0 hidden h-dvh flex-col gap-6 border-r border-line bg-surface px-4 py-6 lg:flex">
           <div className="flex items-center gap-2.5 px-2"><Mark size={34} /><span className="t-display text-[20px]">revkeeper</span></div>
-          <button type="button" onClick={() => setView('garage')} className="flex items-center gap-3 rounded-lg bg-sunken p-2 text-left ring-1 ring-line hover:ring-line-strong">
+          <button type="button" onClick={() => openView('garage')} className="flex items-center gap-3 rounded-lg bg-sunken p-2 text-left ring-1 ring-line hover:ring-line-strong">
             <BikeThumb bike={bike} className="size-11 shrink-0 rounded-[10px]" />
             <span className="grid min-w-0 flex-1"><b className="truncate text-[14px] font-semibold">{bike.make} {bike.model}</b><span className="truncate text-[12px] text-ink-3">{[bike.plate, bike.year].filter(Boolean).join(' · ')}</span></span>
             <ChevronDown size={16} className="text-ink-3" />
@@ -266,7 +291,7 @@ const Main = () => {
             {[...TABS, { id: 'garage' as const, label: 'Garage', icon: Warehouse }, { id: 'account' as const, label: 'Account', icon: Settings2 }].map((t) => {
               const on = t.id === 'garage' || t.id === 'account' ? view === t.id : inTabs && tab === t.id
               return (
-                <button key={t.id} type="button" onClick={() => (t.id === 'garage' || t.id === 'account' ? setView(t.id) : go(t.id))} aria-current={on ? 'page' : undefined}
+                <button key={t.id} type="button" onClick={() => (t.id === 'garage' || t.id === 'account' ? openView(t.id) : go(t.id))} aria-current={on ? 'page' : undefined}
                   className={`relative flex h-11 items-center gap-3 rounded-full px-4 text-[14px] font-semibold transition-colors ${on ? 'text-black' : 'text-ink-2 hover:bg-sunken'}`}>
                   {on && <m.span layoutId="side-pill" className="absolute inset-0 rounded-full bg-lime" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
                   <t.icon size={19} className="relative" /><span className="relative">{t.label}</span>
@@ -289,13 +314,13 @@ const Main = () => {
             </div>
           )}
           {inTabs && (
-            <header className={`sticky z-20 mx-auto flex max-w-[480px] items-center justify-between gap-3 bg-bg/85 px-4 pb-3 backdrop-blur-md lg:hidden ${online ? 'top-0 pt-[max(14px,env(safe-area-inset-top))]' : 'top-8 pt-3'}`}>
-              <button type="button" onClick={() => setView('garage')} className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-3 hover:bg-sunken" aria-label={`${bike.make} ${bike.model}, apri il garage`}>
+            <header className={`sticky z-20 mx-auto flex max-w-[480px] items-center justify-between gap-3 bg-bg/85 px-4 pb-3 backdrop-blur-md lg:hidden ${online ? 'top-0 pt-[max(14px,env(safe-area-inset-top))]' : 'top-[calc(32px+env(safe-area-inset-top))] pt-3'}`}>
+              <button type="button" onClick={() => openView('garage')} className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-3 hover:bg-sunken" aria-label={`${bike.make} ${bike.model}, apri il garage`}>
                 <BikeThumb bike={bike} className="size-9 shrink-0 rounded-full ring-2 ring-surface" />
                 <span className="grid min-w-0 text-left leading-tight"><b className="t-title truncate text-[16px]">{bike.make} {bike.model}</b><span className="text-[12px] text-ink-3">{garageLabel}</span></span>
                 <ChevronDown size={16} className="shrink-0 text-ink-3" />
               </button>
-              <button type="button" onClick={() => setView('account')} aria-label="Account e impostazioni"><Avatar email={email} /></button>
+              <button type="button" onClick={() => openView('account')} aria-label="Account e impostazioni"><Avatar email={email} /></button>
             </header>
           )}
           {dup && inTabs && (
@@ -306,6 +331,7 @@ const Main = () => {
               </div>
             </div>
           )}
+          <EdgeSwipeBack enabled={!inTabs && stack.length > 1 && edgeSwipe} onBack={goBack}>
           <AnimatePresence mode="wait" initial={false} onExitComplete={toTop}>
             <m.div key={pageKey} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
               <Suspense fallback={<div className="mx-auto max-w-[480px] px-4 pt-2"><DashboardSkeleton /></div>}>
@@ -315,6 +341,7 @@ const Main = () => {
               </Suspense>
             </m.div>
           </AnimatePresence>
+          </EdgeSwipeBack>
         </div>
       </div>
 

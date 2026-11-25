@@ -3,6 +3,7 @@
 
 @layer base {
   html, body, #root { min-height: 100%; }
+  html, body { overscroll-behavior-y: contain; }
   /* Le schermate si sostituiscono: lo scroll anchoring le farebbe partire a metà */
   html { overflow-anchor: none; }
   body {
@@ -19,6 +20,8 @@
   h1, h2, h3 { text-wrap: balance; }
   p { text-wrap: pretty; }
   button, summary, label[for] { cursor: pointer; }
+  button, summary, label[for], a, [role="button"], [role="radio"], [role="option"] { touch-action: manipulation; }
+  button, summary, [role="button"], [role="radio"], [role="option"] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   button { font: inherit; color: inherit; }
   input, select, textarea { font: inherit; }
   :focus-visible { outline: 2px solid var(--rk-ink); outline-offset: 2px; border-radius: 8px; }

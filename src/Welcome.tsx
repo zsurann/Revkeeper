@@ -1,11 +1,13 @@
 import { AnimatePresence, m } from 'motion/react'
 import { Bell, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { getMeta, listBikes } from './db'
 import { GoogleButton } from './GoogleButton'
 import { IgnitionMark, Mark } from './Mark'
 import { HourSelect, enablePush, pushSupported } from './Notifications'
 import { ease } from './motion'
+import { EdgeSwipeBack, supportsEdgeSwipeBack } from './EdgeSwipeBack'
+import { useBackDepth } from './historyLayers'
 import { btn } from './ui'
 
 // Benvenuto al primo avvio: accesso con Google (o più tardi), promemoria, prima moto.
@@ -40,7 +42,11 @@ const BikeDrawing = () => (
 )
 
 export const Welcome = ({ onDone }: { onDone: () => void }) => {
-  const [step, setStep] = useState<Step>('login')
+  const [stepStack, setStepStack] = useState<Step[]>(['login'])
+  const step = stepStack[stepStack.length - 1]!
+  const goStep = (s: Step) => setStepStack((st) => [...st, s])
+  const goBackStep = useCallback(() => setStepStack((st) => (st.length > 1 ? st.slice(0, -1) : st)), [])
+  useBackDepth(stepStack.length - 1, goBackStep)
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
   const [hour, setHour] = useState(9)
@@ -50,9 +56,9 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
   const after = async (from: Step) => {
     setMsg('')
     const signed = !!(await getMeta<string>('account'))
-    if (from === 'login' && signed && pushSupported()) return setStep('push')
+    if (from === 'login' && signed && pushSupported()) return goStep('push')
     if ((await listBikes()).length > 0) return onDone()
-    setStep('bike')
+    goStep('bike')
   }
   const enable = async () => {
     setBusy(true)
@@ -69,6 +75,7 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
   const steps: Step[] = ['login', 'push', 'bike']
   const at = steps.indexOf(step)
   return (
+    <EdgeSwipeBack enabled={stepStack.length > 1 && supportsEdgeSwipeBack()} onBack={goBackStep}>
     <main className="mx-auto flex min-h-dvh max-w-[440px] flex-col px-6 pb-[max(28px,env(safe-area-inset-bottom))] pt-[max(24px,env(safe-area-inset-top))]">
       <div role="progressbar" aria-label="Benvenuto" aria-valuemin={1} aria-valuemax={3} aria-valuenow={at + 1} className="grid grid-cols-3 gap-1.5">
         {steps.map((s, i) => (
@@ -127,5 +134,6 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
 
       {msg && <p role="status" className="m-0 mt-3 text-center text-[14px] font-medium text-red-ink">{busy ? 'Attendi…' : msg}</p>}
     </main>
+    </EdgeSwipeBack>
   )
 }
