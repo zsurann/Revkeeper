@@ -1,6 +1,7 @@
 import { animate, motion, useReducedMotion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import type { Status } from './domain/types'
+import { int } from './domain/num'
 import { ease } from './motion'
 
 const N = 28
@@ -41,8 +42,8 @@ export const RevBar = ({ progress, status, sweep = true }: { progress: number; s
 // Contachilometri a rulli: ogni cifra rulla in avanti dal valore precedente, da destra verso sinistra
 export const Odometer = ({ value, from, className = '' }: { value: number; from?: number; className?: string }) => {
   const reduce = useReducedMotion()
-  const text = Math.max(0, Math.round(value)).toLocaleString('it-IT')
-  const prev = Math.max(0, Math.round(from ?? value)).toLocaleString('it-IT').padStart(text.length, '0')
+  const text = int(Math.max(0, value))
+  const prev = int(Math.max(0, from ?? value)).padStart(text.length, '0')
   return (
     <span className={`inline-flex overflow-hidden leading-none ${className}`} aria-label={`${text} km`} role="img">
       {[...text].map((ch, i) => {

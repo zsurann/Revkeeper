@@ -69,7 +69,8 @@ it('login, sessione e intestazioni di sicurezza', async () => {
   expect(anon.headers.get('content-security-policy')).toContain("frame-ancestors 'none'")
   expect(anon.headers.get('strict-transport-security')).toContain('max-age=31536000')
   expect(anon.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin')
-  expect(anon.headers.get('permissions-policy')).toContain('notifications=(self)')
+  expect(anon.headers.get('permissions-policy')).toContain('camera=(self)')
+  expect(anon.headers.get('permissions-policy')).not.toContain('notifications') // voce inesistente: Chrome la segnala a ogni pagina
   expect(anon.headers.get('x-content-type-options')).toBe('nosniff')
 
   const cookie = await login()
@@ -162,6 +163,9 @@ it('iscrive e disiscrive un dispositivo', async () => {
   expect((await call(env, '/push/subscribe', { method: 'POST', cookie, body: JSON.stringify({ ...body, hour: 25 }) })).status).toBe(400)
   expect((await call(env, '/push/subscribe', { method: 'POST', cookie, body: JSON.stringify(body) })).status).toBe(200)
   expect(d1.prepare('SELECT notify_hour AS h, tz FROM users WHERE id = ?').bind('42').first()).toMatchObject({ h: 9, tz: 'Europe/Rome' })
+  // l'ora scelta torna all'app, così il menu mostra quella salvata e non sempre le 09:00
+  await call(env, '/push/subscribe', { method: 'POST', cookie, body: JSON.stringify({ ...body, hour: 20 }) })
+  expect(await (await call(env, '/me', { cookie })).json()).toMatchObject({ email: 'a@b.it', notifyHour: 20 })
   expect((await call(env, '/push/unsubscribe', { method: 'POST', cookie, body: JSON.stringify({ endpoint: body.subscription.endpoint }) })).status).toBe(200)
   expect(d1.prepare('SELECT count(*) AS n FROM push_subs').first<{ n: number }>()?.n).toBe(0)
 })
@@ -204,4 +208,30 @@ it('esci da tutti i dispositivi revoca ogni sessione', async () => {
   expect((await call(env, '/auth/logout-all', { method: 'POST', cookie: a })).status).toBe(200)
   expect((await call(env, '/me', { cookie: a })).status).toBe(401)
   expect((await call(env, '/me', { cookie: b })).status).toBe(401)
+})
+
+it('esci ovunque spegne anche le notifiche di tutti i telefoni', async () => {
+  const { env, d1, login } = await session()
+  const a = await login()
+  const sub = (endpoint: string) => ({ subscription: { endpoint, keys: { p256dh: 'k', auth: 'a' } }, hour: 9, tz: 'Europe/Rome' })
+  await call(env, '/push/subscribe', { method: 'POST', cookie: a, body: JSON.stringify(sub('https://push.example/a')) })
+  await call(env, '/push/subscribe', { method: 'POST', cookie: a, body: JSON.stringify(sub('https://push.example/perso')) })
+  expect((await call(env, '/auth/logout-all', { method: 'POST', cookie: a })).status).toBe(200)
+  expect(d1.prepare('SELECT count(*) AS n FROM push_subs').first<{ n: number }>()?.n).toBe(0)
+})
+
+it('un tombstone più vecchio non cancella il file di un allegato ancora vivo', async () => {
+  const { env, files, login } = await session()
+  const cookie = await login()
+  const att = (extra: Record<string, unknown>) => ({ kind: 'attachments', id: FILE, ...extra })
+  expect((await putFile(env, cookie, FILE, new Uint8Array([1, 2, 3]))).status).toBe(200)
+  const data = { id: FILE, updatedAt: AT + 10, name: 'libretto.pdf', type: 'application/pdf', size: 3 }
+  expect((await push(env, cookie, [att({ data, updatedAt: AT + 10 })])).status).toBe(200)
+  // un altro telefono aveva cancellato l'allegato prima della modifica più recente: perde, il file resta
+  expect((await push(env, cookie, [att({ data: null, updatedAt: AT, deleted: true })])).status).toBe(200)
+  expect((await call(env, `/files/${FILE}`, { cookie })).status).toBe(200)
+  // una cancellazione più recente vince e libera il file
+  expect((await push(env, cookie, [att({ data: null, updatedAt: AT + 20, deleted: true })])).status).toBe(200)
+  expect((await call(env, `/files/${FILE}`, { cookie })).status).toBe(404)
+  void files
 })

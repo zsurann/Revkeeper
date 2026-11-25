@@ -78,3 +78,14 @@ npx wrangler d1 migrations apply revkeeper --remote
 ```
 
 La chiave privata delle notifiche (`VAPID_PRIVATE_KEY`) è già un secret del Worker: la pubblicazione non la cancella.
+
+## Errori su Sentry
+
+L'app e il server mandano gli errori a Sentry (organizzazione `grok-bot-w1`, regione UE):
+`revkeeper` per l'app nel browser, `revkeeper-api` per le API e il cron dei promemoria.
+Non partono email, cookie, intestazioni, corpi delle richieste o parametri dell'URL.
+Gli errori dell'app e delle API portano il commit come release, quelli del cron la versione del Worker; il cron ha anche un monitor che avvisa se un giro salta.
+
+Per avere gli errori dell'app con i nomi veri di file e funzioni serve il token `SENTRY_AUTH_TOKEN`
+tra le variabili di build del progetto Pages su Cloudflare: la build carica le mappe dei sorgenti e
+poi le cancella, quindi non finiscono online. Senza token tutto funziona lo stesso, con stack minificati.

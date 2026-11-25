@@ -25,7 +25,7 @@ export const SECURITY = {
   'x-frame-options': 'DENY',
   'referrer-policy': 'strict-origin-when-cross-origin',
   'strict-transport-security': 'max-age=31536000; includeSubDomains',
-  'permissions-policy': 'camera=(self), microphone=(), geolocation=(), payment=(), usb=(), notifications=(self)',
+  'permissions-policy': 'camera=(self), microphone=(), geolocation=(), payment=(), usb=()',
   'content-security-policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
 } as const
 
@@ -97,8 +97,12 @@ const push = async (req: Request, env: Env, userId: string) => {
       ).bind(userId, c.kind, c.id, c.deleted ? null : JSON.stringify(c.data), c.updatedAt, deviceId, c.deleted ? 1 : 0),
     ),
   ])
-  // Allegato cancellato: libera subito lo spazio su R2 e nella quota
-  for (const c of changes.filter((c) => c.kind === 'attachments' && c.deleted)) await dropFile(env, userId, c.id)
+  // Allegato cancellato: libera subito lo spazio su R2 e nella quota. Solo se la cancellazione ha vinto:
+  // un tombstone più vecchio della copia sul server (altro telefono, modifica più recente) non tocca il file.
+  for (const c of changes.filter((c) => c.kind === 'attachments' && c.deleted)) {
+    const row = await env.DB.prepare("SELECT deleted FROM records WHERE user_id = ? AND kind = 'attachments' AND id = ?").bind(userId, c.id).first<{ deleted: number }>()
+    if (row?.deleted) await dropFile(env, userId, c.id)
+  }
   return json({ ok: true })
 }
 
@@ -359,7 +363,7 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
 
     const userId = await userOf(req, env)
     if (path === '/me' && req.method === 'GET')
-      return userId ? json(await env.DB.prepare('SELECT email, bytes FROM users WHERE id = ?').bind(userId).first()) : fail(401, 'Non autenticato')
+      return userId ? json(await env.DB.prepare('SELECT email, bytes, notify_hour AS notifyHour FROM users WHERE id = ?').bind(userId).first()) : fail(401, 'Non autenticato')
     if (!userId) return fail(401, 'Non autenticato')
 
     if (req.method === 'POST' && path === '/auth/logout') {
@@ -367,7 +371,11 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
       return json({ ok: true }, 200, { 'set-cookie': setCookie('', 0) })
     }
     if (req.method === 'POST' && path === '/auth/logout-all') {
-      await env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(userId).run()
+      // Anche le notifiche: un telefono perso non deve continuare a ricevere moto e scadenze
+      await env.DB.batch([
+        env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(userId),
+        env.DB.prepare('DELETE FROM push_subs WHERE user_id = ?').bind(userId),
+      ])
       return json({ ok: true }, 200, { 'set-cookie': setCookie('', 0) })
     }
     if (req.method === 'GET' && path === '/account/export') return await exportAccount(env, userId)

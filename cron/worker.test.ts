@@ -4,7 +4,7 @@ vi.mock('../server/push', () => ({ sendPush: vi.fn(async () => 201) }))
 
 import { sendPush, type PushEnv } from '../server/push'
 import { FakeD1 } from '../server/testing/cloud'
-import { MAX_SENDS, runReminders } from './worker'
+import { CATCH_UP_HOURS, MAX_SENDS, runReminders } from './worker'
 
 const bike = JSON.stringify({ id: 'b', updatedAt: 0, make: 'Kawasaki', model: 'Z650', year: 2017, startKm: 30000, startDate: '2026-01-01' })
 const doc = (due: string) => JSON.stringify({ id: 'd', updatedAt: 0, bikeId: 'b', kind: 'revisione', dueDate: due, attachmentIds: [] })
@@ -69,4 +69,27 @@ it("avvisa solo chi ha quell'ora nel proprio fuso", async () => {
   expect(sent().sort()).toEqual(['https://push.example/ny', 'https://push.example/roma'])
   const skipped = DB.prepare('SELECT last_reminded_at AS t FROM users WHERE id = ?').bind('roma-dopo').first<{ t: number | null }>()
   expect(skipped?.t).toBeNull()
+})
+
+it("chi resta fuori per il tetto viene avvisato all'ora dopo, gli altri non due volte", async () => {
+  const { DB, env } = setup()
+  const n = MAX_SENDS + 5
+  for (let i = 0; i < n; i++) addUser(DB, `u${String(i).padStart(2, '0')}`, 'Europe/Rome', 0)
+  await runReminders(env, NOW)
+  vi.mocked(sendPush).mockClear()
+  await runReminders(env, new Date(NOW.getTime() + 3600_000)) // 01:00 a Roma
+  expect(sent()).toEqual(['https://push.example/u40', 'https://push.example/u41', 'https://push.example/u42', 'https://push.example/u43', 'https://push.example/u44'])
+  vi.mocked(sendPush).mockClear()
+  await runReminders(env, new Date(NOW.getTime() + 2 * 3600_000))
+  expect(sent()).toEqual([])
+})
+
+it('un giro del cron saltato non fa perdere il promemoria del giorno', async () => {
+  const { DB, env } = setup()
+  addUser(DB, 'roma', 'Europe/Rome', 0)
+  await runReminders(env, new Date(NOW.getTime() + 2 * 3600_000)) // il giro delle 00:00 non è partito
+  expect(sent()).toEqual(['https://push.example/roma'])
+  vi.mocked(sendPush).mockClear()
+  await runReminders(env, new Date(NOW.getTime() + CATCH_UP_HOURS * 3600_000 + 3600_000))
+  expect(sent()).toEqual([])
 })

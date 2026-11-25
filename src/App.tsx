@@ -1,19 +1,13 @@
 import { AnimatePresence, LayoutGroup, motion, MotionConfig } from 'motion/react'
 import { ChevronDown, FileText, Gauge, NotebookPen, Settings2, UserRound, Warehouse, WifiOff, Wrench, type LucideIcon } from 'lucide-react'
-import { Component, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Account } from './Account'
-import { BikeForm } from './BikeForm'
+import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Dashboard, DashboardSkeleton, type DocRow, type Row } from './Dashboard'
-import { Documents } from './Documents'
-import { Services } from './Services'
 import { startAutoSync } from './sync'
 import { findDuplicateBikes, getMeta, listBikes, listByBike, mergeBikes, save } from './db'
 import { currentKm, daysBetween, documentStatus, nextDue } from './domain/due'
-import { itemsFor } from './domain/intervals'
 import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type Id, type MaintenanceItem, type OdometerReading, type Service, type Status } from './domain/types'
 import { Garage } from './Garage'
 import { KmSheet } from './KmSheet'
-import { Maintenance } from './Maintenance'
 import { Mark } from './Mark'
 import { Splash } from './Splash'
 import { Welcome } from './Welcome'
@@ -21,6 +15,14 @@ import { eur, today } from './format'
 import { watchSystemTheme } from './theme'
 import { toast, Toaster } from './toast'
 import { btn, usePhoto } from './ui'
+
+// Schermate che non servono all'avvio: si scaricano a parte (restano nel precache, quindi vanno anche offline).
+// Il cruscotto e il benvenuto restano nel pacchetto principale.
+const Account = lazy(() => import('./Account').then((m) => ({ default: m.Account })))
+const BikeForm = lazy(() => import('./BikeForm').then((m) => ({ default: m.BikeForm })))
+const Documents = lazy(() => import('./Documents').then((m) => ({ default: m.Documents })))
+const Maintenance = lazy(() => import('./Maintenance').then((m) => ({ default: m.Maintenance })))
+const Services = lazy(() => import('./Services').then((m) => ({ default: m.Services })))
 
 const ACTIVE = 'revkeeper.activeBike'
 const readActive = () => {
@@ -193,7 +195,10 @@ const Main = () => {
 
   // Una moto senza voci riceve quelle del modello verificato o del preset della sua categoria
   const saved = async (b: Bike) => {
-    if ((await listByBike('items', b.id)).length === 0) await Promise.all(itemsFor(b).map((i) => save('items', i)))
+    if ((await listByBike('items', b.id)).length === 0) {
+      const { itemsFor } = await import('./domain/intervals')
+      await Promise.all(itemsFor(b).map((i) => save('items', i)))
+    }
     await load()
     pick(b.id)
     toast('Moto salvata', { body: `${b.make} ${b.model}` })
@@ -212,8 +217,9 @@ const Main = () => {
         }}
       />
     )
-  if (!bike || view === 'new') return <BikeForm onDone={saved} onCancel={bike ? () => setView('garage') : undefined} />
-  if (view === 'edit') return <BikeForm bike={bike} onDone={saved} onCancel={() => setView('garage')} />
+  const loading = <div className="mx-auto max-w-[480px] px-4 pt-[max(76px,env(safe-area-inset-top))]"><DashboardSkeleton /></div>
+  if (!bike || view === 'new') return <Suspense fallback={loading}><BikeForm onDone={saved} onCancel={bike ? () => setView('garage') : undefined} /></Suspense>
+  if (view === 'edit') return <Suspense fallback={loading}><BikeForm bike={bike} onDone={saved} onCancel={() => setView('garage')} /></Suspense>
 
   const next = rows[0]
   const rest = rows.slice(1, 6)
@@ -295,9 +301,11 @@ const Main = () => {
           )}
           <AnimatePresence mode="wait" initial={false} onExitComplete={toTop}>
             <motion.div key={pageKey} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
-              {inTabs ? (
-                <main className="mx-auto grid max-w-[480px] content-start gap-6 px-4 pb-32 pt-2 lg:max-w-[1100px] lg:px-10 lg:pb-16 lg:pt-8">{content}</main>
-              ) : content}
+              <Suspense fallback={<div className="mx-auto max-w-[480px] px-4 pt-2"><DashboardSkeleton /></div>}>
+                {inTabs ? (
+                  <main className="mx-auto grid max-w-[480px] content-start gap-6 px-4 pb-32 pt-2 lg:max-w-[1100px] lg:px-10 lg:pb-16 lg:pt-8">{content}</main>
+                ) : content}
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </div>

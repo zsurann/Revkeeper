@@ -3,7 +3,7 @@ import { ChevronRight, FileText, Plus, Wrench } from 'lucide-react'
 import { DisplayChip, Odometer, RevBar } from './Cluster'
 import { daysBetween, type Due } from './domain/due'
 import type { BikeDocument, DocKind, MaintenanceItem, Service, Status } from './domain/types'
-import { dayMonth, daysText, dueRule, dueShort, eur, every, fullDate, km as fmtKm, monthYear, today } from './format'
+import { dayMonth, daysText, dueRule, dueShort, eur, every, fullDate, int, km as fmtKm, monthYear, today } from './format'
 import { DOC, DOC_KINDS, itemIcon } from './icons'
 import { list, listItem } from './motion'
 import { MiniBar, SectionTitle, Skeleton, StatusPill, btn, card, link } from './ui'
@@ -18,7 +18,7 @@ export const Cluster = ({ next, km, from, onKm }: { next?: Row; km: number; from
   const due = next?.due
   const days = due?.dueDate ? daysBetween(today(), due.dueDate) : undefined
   const over = due?.status === 'overdue'
-  const big = due ? (due.kmLeft !== undefined ? Math.abs(due.kmLeft).toLocaleString('it-IT') : days !== undefined ? String(Math.abs(days)) : '') : ''
+  const big = due ? (due.kmLeft !== undefined ? int(Math.abs(due.kmLeft)) : days !== undefined ? String(Math.abs(days)) : '') : ''
   const unit = due?.kmLeft !== undefined ? (over ? 'km oltre' : 'km mancanti') : days === 1 || days === -1 ? (over ? 'giorno di ritardo' : 'giorno') : over ? 'giorni di ritardo' : 'giorni'
   const when = over ? undefined : due?.estimatedDate ? { k: 'stima', v: dayMonth(due.estimatedDate) } : due?.kmLeft !== undefined && due.dueDate ? { k: 'entro', v: monthYear(due.dueDate) } : undefined
   return (

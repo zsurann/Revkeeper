@@ -125,10 +125,14 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
               onPick={(v) => applySpecs(make, model, v)} />
           </Field>
           <Num name="startKm" label={bike ? 'Km iniziali' : 'Km attuali'} value={bike?.startKm} />
-          <Field label="Tipo di moto">
-            <select id="category" name="category" defaultValue={bike?.category ?? 'naked'} className={field}>
-              {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-            </select>
+          {/* Riga intera e freccia disegnata: in mezza riga "Stradale / naked" veniva tagliato dalla freccia del sistema */}
+          <Field label="Tipo di moto" className="col-span-2">
+            <span className="relative block">
+              <select id="category" name="category" defaultValue={bike?.category ?? 'naked'} className={`${field} appearance-none truncate pr-10`}>
+                {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+              <ChevronDown size={18} aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
+            </span>
           </Field>
           <Txt name="plate" label="Targa" value={bike?.plate} />
           <Txt name="vin" label="Telaio" value={bike?.vin} />

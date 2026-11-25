@@ -36,7 +36,13 @@ export const Notifications = () => {
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
-    if (pushSupported()) void navigator.serviceWorker.ready.then((r) => r.pushManager.getSubscription()).then(setSub)
+    if (!pushSupported()) return
+    void navigator.serviceWorker.ready.then((r) => r.pushManager.getSubscription()).then(setSub)
+    // L'ora scelta sta sul server: il menu parte da quella, non sempre dalle 09:00
+    void fetch('/api/me')
+      .then((r) => (r.ok ? (r.json() as Promise<{ notifyHour?: number | null }>) : undefined))
+      .then((me) => { if (typeof me?.notifyHour === 'number') setHour(me.notifyHour) })
+      .catch(() => undefined)
   }, [])
 
   if (!pushSupported())
