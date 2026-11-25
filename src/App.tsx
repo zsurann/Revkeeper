@@ -101,6 +101,10 @@ export const App = () => (
   </MotionConfig>
 )
 
+const toTop = () => {
+  scrollTo({ top: 0, behavior: 'instant' })
+}
+
 const Main = () => {
   const [bikes, setBikes] = useState<Bike[]>()
   const [kms, setKms] = useState<Record<Id, number>>({})
@@ -127,9 +131,7 @@ const Main = () => {
   useEffect(() => void load(), [load])
   useEffect(() => watchSystemTheme(), [])
   // Ogni cambio di schermata riparte dall'alto (es. dopo aver salvato il modulo moto)
-  useEffect(() => {
-    scrollTo({ top: 0 })
-  }, [view, tab])
+  useEffect(toTop, [view, tab, bike?.id])
   useEffect(() => {
     startAutoSync()
     const onSynced = () => void load()
@@ -278,7 +280,7 @@ const Main = () => {
               </div>
             </div>
           )}
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence mode="wait" initial={false} onExitComplete={toTop}>
             <motion.div key={pageKey} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
               {inTabs ? (
                 <main className="mx-auto grid max-w-[480px] content-start gap-6 px-4 pb-32 pt-2 lg:max-w-[1100px] lg:px-10 lg:pb-16 lg:pt-8">{content}</main>

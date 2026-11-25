@@ -3,6 +3,8 @@
 
 @layer base {
   html, body, #root { min-height: 100%; }
+  /* Le schermate si sostituiscono: lo scroll anchoring le farebbe partire a metà */
+  html { overflow-anchor: none; }
   body {
     margin: 0;
     background: var(--rk-bg);
