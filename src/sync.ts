@@ -31,6 +31,7 @@ const pushAll = async (device: string) => {
     if (kind === 'attachments')
       for (const a of dirty.filter((a) => a.blob && !a.uploaded && !a.deletedAt)) {
         const res = await fetch(`/api/files/${a.id}`, { method: 'PUT', body: a.blob, headers: { 'content-type': a.type ?? 'application/octet-stream' } })
+        if (res.status === 401) throw new LoggedOut()
         if (!res.ok) throw new Error(`Upload ${a.id}: ${res.status} ${(await res.json().catch(() => ({}))).error ?? ''}`)
         a.uploaded = 1
         await d.put('attachments', a as never)
@@ -83,7 +84,11 @@ export const syncNow = () =>
       if (applied) dispatchEvent(new Event('revkeeper:synced'))
       return applied
     } catch (e) {
-      if (e instanceof LoggedOut) await setMeta('account', undefined)
+      if (e instanceof LoggedOut) {
+        await dropLocalPush().catch(() => undefined)
+        await clearLocal()
+        globalThis.dispatchEvent?.(new Event('revkeeper:loggedout'))
+      }
       throw e
     } finally {
       running = undefined
@@ -114,9 +119,19 @@ const clearPush = async () => {
   await fetch('/api/push/unsubscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) })
   await sub.unsubscribe()
 }
+const dropLocalPush = async () => {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+  const reg = await navigator.serviceWorker.getRegistration()
+  const sub = await reg?.pushManager.getSubscription()
+  await sub?.unsubscribe().catch(() => undefined)
+}
 const clearLocal = async () => {
   const d = await db()
   for (const s of [...STORES, 'meta'] as const) await d.clear(s)
+  try {
+    localStorage.removeItem('revkeeper.welcomed')
+    localStorage.removeItem('revkeeper.activeBike')
+  } catch { /* ignore */ }
 }
 const endSession = async (path: string) => {
   await clearPush()

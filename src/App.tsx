@@ -135,8 +135,21 @@ const Main = () => {
   useEffect(() => {
     startAutoSync()
     const onSynced = () => void load()
+    const onLoggedOut = () => {
+      setWelcomed(false)
+      setActiveId(undefined)
+      setDetail(undefined)
+      setEmail(undefined)
+      setView('home')
+      setTab('dash')
+      void load()
+    }
     addEventListener('revkeeper:synced', onSynced)
-    return () => removeEventListener('revkeeper:synced', onSynced)
+    addEventListener('revkeeper:loggedout', onLoggedOut)
+    return () => {
+      removeEventListener('revkeeper:synced', onSynced)
+      removeEventListener('revkeeper:loggedout', onLoggedOut)
+    }
   }, [load])
 
   const loadDetail = useCallback(async (b: Bike) => {

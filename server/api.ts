@@ -42,7 +42,7 @@ const setCookie = (value: string, maxAge: number) => `${COOKIE}=${value}; Path=/
 const userOf = async (req: Request, env: Env) => {
   const token = cookie(req)
   if (!token) return undefined
-  const row = await env.DB.prepare('SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at > ?')
+  const row = await env.DB.prepare('SELECT s.user_id FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ?')
     .bind(await sha256(token), Date.now())
     .first<{ user_id: string }>()
   return row?.user_id
