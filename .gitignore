@@ -4,3 +4,6 @@ dist
 .cache
 .playwright-mcp/
 *.tsbuildinfo
+.env
+.env.local
+.env.*.local

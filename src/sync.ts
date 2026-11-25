@@ -107,19 +107,51 @@ export const unsynced = async () => {
   return n
 }
 
-// Uscita: notifiche disattivate, sessione chiusa, poi il telefono torna vuoto (può essere condiviso).
-// Senza rete si ferma prima di cancellare, così non resta un telefono vuoto con la sessione ancora aperta.
-export const logout = async () => {
+const clearPush = async () => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined
   const sub = await reg?.pushManager.getSubscription()
-  if (sub) {
-    await fetch('/api/push/unsubscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) })
-    await sub.unsubscribe()
-  }
-  const res = await fetch('/api/auth/logout', { method: 'POST' })
-  if (!res.ok && res.status !== 401) throw new Error(`Uscita non riuscita: ${res.status}`)
+  if (!sub) return
+  await fetch('/api/push/unsubscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) })
+  await sub.unsubscribe()
+}
+const clearLocal = async () => {
   const d = await db()
   for (const s of [...STORES, 'meta'] as const) await d.clear(s)
+}
+const endSession = async (path: string) => {
+  await clearPush()
+  // Senza rete si ferma prima di cancellare, così non resta un telefono vuoto con la sessione ancora aperta.
+  const res = await fetch(path, { method: 'POST' })
+  if (!res.ok && res.status !== 401) throw new Error(`Uscita non riuscita: ${res.status}`)
+  await clearLocal()
+}
+
+// Uscita: notifiche di questo telefono disattivate, sessione chiusa, poi il telefono torna vuoto.
+export const logout = () => endSession('/api/auth/logout')
+
+// Chiude l'accesso su tutti i telefoni. Le notifiche degli altri dispositivi restano finché non le disattivano.
+export const logoutAll = () => endSession('/api/auth/logout-all')
+
+export const deleteAccount = async () => {
+  const res = await fetch('/api/account/delete', { method: 'POST' })
+  if (!res.ok && res.status !== 401) throw new Error(`Eliminazione non riuscita: ${res.status}`)
+  await clearPush()
+  await clearLocal()
+}
+
+export const downloadAccountExport = async () => {
+  const res = await fetch('/api/account/export')
+  if (res.status === 401) throw new LoggedOut()
+  if (!res.ok) throw new Error(`Export non riuscito: ${res.status}`)
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'revkeeper-dati.zip'
+  document.body.append(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1500)
 }
 
 let timer: ReturnType<typeof setTimeout> | undefined
