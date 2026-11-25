@@ -41,6 +41,7 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
   const listRef = useRef<HTMLUListElement>(null)
   const closeTimer = useRef<number>(undefined)
   const gesture = useRef<{ x: number; y: number; moved: boolean } | null>(null)
+  const inputGesture = useRef<{ x: number; y: number; moved: boolean } | null>(null)
   const wasOpenOnDown = useRef(false)
   const lastTouchInRoot = useRef(0)
   const coarse = coarsePointer()
@@ -182,6 +183,7 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
         onPointerDown={(e) => {
           cancelClose()
           wasOpenOnDown.current = open
+          inputGesture.current = { x: e.clientX, y: e.clientY, moved: false }
           if (e.pointerType === 'touch' || e.pointerType === 'pen') {
             lastTouchInRoot.current = Date.now()
             if (!open) {
@@ -195,6 +197,26 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
             e.currentTarget.removeAttribute('inputmode')
           }
         }}
+        onPointerMove={(e) => {
+          const g = inputGesture.current
+          if (g && Math.hypot(e.clientX - g.x, e.clientY - g.y) > TAP) g.moved = true
+        }}
+        onPointerUp={(e) => {
+          const g = inputGesture.current
+          inputGesture.current = null
+          if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return
+          lastTouchInRoot.current = Date.now()
+          if (!g || g.moved || !wasOpenOnDown.current || typing) return
+          setTyping(true)
+          const el = e.currentTarget
+          el.readOnly = false
+          el.removeAttribute('inputmode')
+          el.focus()
+          const len = el.value.length
+          try { el.setSelectionRange(len, len) } catch { /* input non selezionabile */ }
+          requestAnimationFrame(() => el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }))
+        }}
+        onPointerCancel={() => { inputGesture.current = null }}
         onFocus={() => {
           cancelClose()
           setActive(-1)
