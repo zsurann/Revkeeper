@@ -96,7 +96,7 @@ let running: Promise<number> | undefined
 export const syncNow = () =>
   (running ??= (async () => {
     try {
-      if (!navigator.onLine || !(await getMeta<string>('account'))) return 0
+      if (!navigator.onLine || !((await getMeta<string>('account')) || (await getMeta<boolean>('guest')))) return 0
       const device = await deviceId()
       const rejected = await pushAll(device)
       const applied = await pullAll(device)
@@ -105,6 +105,12 @@ export const syncNow = () =>
       if (rejected.length) throw new FilesRejected(`Allegati non caricati: ${[...new Set(rejected)].join('; ')}`)
       return applied
     } catch (e) {
+      if (e instanceof LoggedOut && (await getMeta<boolean>('guest'))) {
+        // Ospite scaduto: i dati restano sul telefono, le notifiche ripartono con un nuovo ospite
+        await setMeta('guest', false)
+        globalThis.dispatchEvent?.(new Event('revkeeper:guestexpired'))
+        return 0
+      }
       if (e instanceof LoggedOut) {
         await dropLocalPush().catch(() => undefined)
         await clearLocal()
@@ -117,12 +123,26 @@ export const syncNow = () =>
   })())
 
 // Primo accesso: tutto il locale va inviato, poi si scarica tutto dal server
-export const startAccount = async (email: string) => {
+const markAllDirty = async () => {
   const d = await db()
   for (const kind of STORES) for (const r of (await d.getAll(kind)) as Rec[]) await d.put(kind, { ...r, dirty: 1 } as never)
   await setMeta('cursor', 0)
+}
+export const startAccount = async (email: string) => {
+  await markAllDirty()
+  await setMeta('guest', false)
   await setMeta('account', email)
   return syncNow()
+}
+
+// Notifiche senza Google: un account anonimo sul server, che riceve i dati per calcolare i promemoria
+export const ensureSession = async () => {
+  if ((await getMeta<string>('account')) || (await getMeta<boolean>('guest'))) return
+  const res = await fetch('/api/auth/guest', { method: 'POST' })
+  if (!res.ok) throw new Error(res.status === 429 ? 'Troppi tentativi: riprova tra qualche minuto' : 'Server non raggiungibile: riprova')
+  await markAllDirty()
+  await setMeta('guest', true)
+  await syncNow()
 }
 
 // Modifiche locali non ancora arrivate al server: uscendo andrebbero perse

@@ -169,16 +169,14 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
             }}
           />
           <button type="button" onClick={() => void copyLocal()} disabled={busy} className={`${btn.secondary} justify-self-start`}><Download size={16} />Scarica una copia</button>
-          <p className="m-0 text-[12px] text-ink-3">Senza account i dati stanno solo su questo telefono. La copia è un file che resta qui.</p>
+          <p className="m-0 text-[12px] text-ink-3">Senza account i dati stanno su questo telefono (con le notifiche attive, una copia anonima serve al server per i promemoria). La copia è un file che resta qui.</p>
         </Section>
       )}
 
-      {email && (
-        <section aria-labelledby="h-push" className="grid gap-3">
-          <h2 id="h-push" className="t-label m-0 px-1 text-ink-3">Promemoria</h2>
-          <Notifications />
-        </section>
-      )}
+      <section aria-labelledby="h-push" className="grid gap-3">
+        <h2 id="h-push" className="t-label m-0 px-1 text-ink-3">Promemoria</h2>
+        <Notifications />
+      </section>
 
       {email && (
         <Section title="I tuoi dati" id="h-data">

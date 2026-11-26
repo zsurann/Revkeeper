@@ -51,7 +51,7 @@ const session = async () => {
     expect(res.status).toBe(200)
     return tokenOf(res)
   }
-  return { env, d1, files, keys, login }
+  return { env, d1, files, keys, login, sign }
 }
 
 const push = (env: Env, cookie: string, changes: unknown[]) =>
@@ -343,4 +343,24 @@ it('il sync accetta correzione km in calo e ricalcola i promemoria', async () =>
   const alive = d1.prepare('SELECT kind, data FROM records WHERE user_id = ? AND deleted = 0').bind('42').all<{ kind: string; data: string }>().results
   const recs: Rec[] = alive.map((r) => ({ kind: r.kind, data: JSON.parse(r.data) }))
   expect(remindersFor(recs, '2026-11-20')).toEqual(['Kawasaki Z650: aggiorna i km (15.500 km di 30 giorni fa)'])
+})
+
+it('ospite: notifiche senza Google, poi al login passano all\'account e l\'ospite sparisce', async () => {
+  const { env, d1, keys, sign } = await session()
+  const g = await call(env, '/auth/guest', { method: 'POST' })
+  expect(g.status).toBe(200)
+  const guest = tokenOf(g)
+  expect((await push(env, guest, [{ kind: 'bikes', id: BIKE, updatedAt: AT, data: bike() }])).status).toBe(200)
+  const sub = { endpoint: 'https://push.example/1', keys: { p256dh: 'p', auth: 'a' } }
+  expect((await call(env, '/push/subscribe', { method: 'POST', cookie: guest, body: JSON.stringify({ subscription: sub, hour: 8, tz: 'Europe/Rome' }) })).status).toBe(200)
+
+  const res = await call(env, '/auth/google', { method: 'POST', cookie: guest, body: JSON.stringify({ credential: await sign('77', 'c@d.it') }) }, keys)
+  expect(res.status).toBe(200)
+  const subs = d1.prepare('SELECT user_id FROM push_subs').all<{ user_id: string }>()
+  expect((await subs).results).toEqual([{ user_id: '77' }])
+  const u = await d1.prepare("SELECT notify_hour FROM users WHERE id = '77'").first<{ notify_hour: number }>()
+  expect(u?.notify_hour).toBe(8)
+  expect((await d1.prepare("SELECT count(*) n FROM users WHERE id LIKE 'guest-%'").first<{ n: number }>())?.n).toBe(0)
+  expect((await d1.prepare("SELECT count(*) n FROM records WHERE user_id LIKE 'guest-%'").first<{ n: number }>())?.n).toBe(0)
+  expect((await call(env, '/me', { cookie: guest })).status).toBe(401)
 })

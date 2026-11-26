@@ -91,13 +91,8 @@ export const MiniBar = ({ progress, status, segments = 24 }: { progress: number;
   return (
     <span className="grid h-1.5 w-full gap-[2px]" style={{ gridTemplateColumns: `repeat(${segments},1fr)` }} aria-hidden="true">
       {Array.from({ length: segments }, (_, i) => (
-        <m.i
-          key={i}
-          className={`block rounded-[1px] ${i < lit ? on : 'bg-line'}`}
-          initial={{ scaleY: 0.2, opacity: 0 }}
-          animate={{ scaleY: 1, opacity: 1 }}
-          transition={{ delay: 0.15 + i * 0.02, duration: dur.base, ease: ease.out }}
-        />
+        // CSS puro: 24 segmenti per riga × 10 righe come componenti animati in JS bloccavano il cambio scheda
+        <i key={i} className={`block rounded-[1px] animate-[seg_var(--duration-base)_var(--ease-out)_both] ${i < lit ? on : 'bg-line'}`} style={{ animationDelay: `${150 + i * 20}ms` }} />
       ))}
     </span>
   )
@@ -306,7 +301,7 @@ export const Sheet = ({ open, onClose, title, children }: { open: boolean; onClo
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-40 grid items-end lg:place-items-center" role="dialog" aria-modal="true" aria-label={title}>
-          <m.div className="absolute inset-0 bg-[#0E1116]/45 backdrop-blur-[2px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: dur.base }} onClick={onClose} />
+          <m.div className="absolute inset-0 bg-[#0E1116]/50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: dur.base }} onClick={onClose} />
           <m.div
             className="relative mx-auto flex w-full max-w-[520px] justify-center"
             initial={reduce ? { opacity: 0 } : { y: '100%' }}

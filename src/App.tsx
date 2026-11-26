@@ -160,11 +160,14 @@ const Main = () => {
       setStack([ROOT])
       void load()
     }
+    const onGuestExpired = () => void import('./Notifications').then((n) => n.renewGuestPush()).catch(() => undefined)
     addEventListener('revkeeper:synced', onSynced)
     addEventListener('revkeeper:loggedout', onLoggedOut)
+    addEventListener('revkeeper:guestexpired', onGuestExpired)
     return () => {
       removeEventListener('revkeeper:synced', onSynced)
       removeEventListener('revkeeper:loggedout', onLoggedOut)
+      removeEventListener('revkeeper:guestexpired', onGuestExpired)
     }
   }, [load])
 
@@ -301,7 +304,7 @@ const Main = () => {
     if (tab === 'maint') return <Maintenance bike={bike} items={detail.items} rows={rows} onChange={() => void loadDetail(bike)} />
     if (tab === 'services') return <Services bike={bike} km={km} items={detail.items} services={detail.services} readings={detail.readings} onChange={refresh} />
     if (tab === 'documents') return <Documents bike={bike} documents={detail.documents} onChange={refresh} />
-    return <Dashboard next={next} rows={rest} docs={docs} last={last} labelOf={labelOf} km={km} from={prevKm ?? Math.max(0, km - 120)} rate={detail ? kmPerDay(detail.readings, today()) : undefined} onKm={() => setKmOpen(true)} go={go} />
+    return <Dashboard next={next} rows={rest} docs={docs} last={last} labelOf={labelOf} km={km} from={prevKm} rate={detail ? kmPerDay(detail.readings, today()) : undefined} onKm={() => setKmOpen(true)} go={go} />
   })()
   const pageKey = inTabs ? tab : view
 
@@ -343,7 +346,7 @@ const Main = () => {
             </div>
           )}
           {inTabs && (
-            <header className={`sticky z-20 mx-auto flex max-w-[480px] items-center justify-between gap-3 bg-bg/85 px-4 pb-3 backdrop-blur-md lg:hidden ${online ? 'top-0 pt-[max(14px,env(safe-area-inset-top))]' : 'top-[calc(32px+env(safe-area-inset-top))] pt-3'}`}>
+            <header className={`sticky z-20 mx-auto flex max-w-[480px] items-center justify-between gap-3 bg-bg/95 px-4 pb-3 lg:hidden ${online ? 'top-0 pt-[max(14px,env(safe-area-inset-top))]' : 'top-[calc(32px+env(safe-area-inset-top))] pt-3'}`}>
               <button type="button" onClick={() => openView('garage')} className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-3 hover:bg-sunken" aria-label={`${bike.make} ${bike.model}, apri il garage`}>
                 <BikeThumb bike={bike} className="size-9 shrink-0 rounded-full ring-2 ring-surface" />
                 <span className="grid min-w-0 text-left leading-tight"><b className="t-title truncate text-[16px]">{bike.make} {bike.model}</b><span className="text-[12px] text-ink-3">{garageLabel}</span></span>
@@ -362,7 +365,8 @@ const Main = () => {
           )}
           <EdgeSwipeBack enabled={!inTabs && stack.length > 1 && edgeSwipe} onBack={goBack}>
           <AnimatePresence mode="wait" initial={false} onExitComplete={toTop}>
-            <m.div key={pageKey} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
+            {/* Uscita quasi istantanea: con mode="wait" ogni millisecondo d'uscita ritarda la schermata nuova, come un'app nativa il tocco risponde subito */}
+            <m.div key={pageKey} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.06 } }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}>
               <Suspense fallback={<div className="mx-auto max-w-[480px] px-4 pt-2"><DashboardSkeleton /></div>}>
                 {inTabs ? (
                   <main className="mx-auto grid max-w-[480px] content-start gap-6 px-4 pb-32 pt-2 lg:max-w-[1100px] lg:px-10 lg:pb-16 lg:pt-8">{content}</main>
@@ -375,7 +379,7 @@ const Main = () => {
       </div>
 
       {inTabs && (
-        <nav aria-label="Sezioni" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/90 pb-[max(10px,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl lg:hidden">
+        <nav aria-label="Sezioni" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[max(10px,env(safe-area-inset-bottom))] pt-1.5 lg:hidden">
           <div className="mx-auto grid max-w-[480px] grid-cols-4">
             {TABS.map((t) => {
               const on = tab === t.id
