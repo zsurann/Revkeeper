@@ -1,12 +1,21 @@
 @import "tailwindcss";
 @import "../design/tokens.css";
 
+/* Area di tocco di almeno 44×44 senza cambiare l'aspetto (Apple/WCAG) */
+@utility hitbox {
+  position: relative;
+  &::before { content: ""; position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 100%; height: 100%; min-width: 44px; min-height: 44px; }
+}
+
 @layer base {
   html, body, #root { min-height: 100%; }
   /* clip, non hidden: niente pagina che scivola di lato e lo sticky continua a funzionare */
   html, body { overscroll-behavior-y: contain; overflow-x: clip; }
   /* Le schermate si sostituiscono: lo scroll anchoring le farebbe partire a metà */
   html { overflow-anchor: none; }
+  /* Titoli senza parola orfana, paragrafi senza vedove */
+  h1, h2, h3 { text-wrap: balance; }
+  p { text-wrap: pretty; }
   body {
     margin: 0;
     background: var(--rk-bg);

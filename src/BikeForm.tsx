@@ -13,7 +13,7 @@ import { ErrorText, Field, PageHead, Screen, btn, card, field, usePhoto } from '
 
 const Group = ({ title, children, open }: { title: string; children: ReactNode; open?: boolean }) => (
   <details open={open} className={`${card} group p-4`}>
-    <summary className="flex list-none items-center justify-between gap-3">
+    <summary className="-my-[9px] flex min-h-11 list-none items-center justify-between gap-3">
       <span className="t-title text-[17px]">{title}</span>
       <ChevronDown size={18} className="text-ink-3 transition-transform duration-[var(--duration-base)] group-open:rotate-180" />
     </summary>
