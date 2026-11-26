@@ -70,16 +70,46 @@ const login = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>) => {
   const { credential } = (await req.json()) as { credential?: string }
   if (!credential) return fail(400, 'Credenziale mancante')
   const user = await verifyIdToken(credential, env.GOOGLE_CLIENT_ID, keys)
+  const guest = await userOf(req, env)
+  const { token, maxAge } = await newSession(env, user.sub, [
+    env.DB.prepare('INSERT INTO users(id, email, created_at) VALUES (?1, ?2, ?3) ON CONFLICT(id) DO UPDATE SET email = ?2')
+      .bind(user.sub, user.email, Date.now()),
+  ])
+  // Dall'ospite all'account Google: le notifiche passano all'account (con l'ora scelta), il resto lo reinvia il telefono
+  if (guest?.startsWith(GUEST)) {
+    await env.DB.batch([
+      env.DB.prepare('UPDATE push_subs SET user_id = ?1 WHERE user_id = ?2').bind(user.sub, guest),
+      env.DB.prepare('UPDATE users SET notify_hour = (SELECT notify_hour FROM users WHERE id = ?2), tz = (SELECT tz FROM users WHERE id = ?2) WHERE id = ?1 AND notify_hour IS NULL')
+        .bind(user.sub, guest),
+    ])
+    await deleteAccount(env, guest)
+  }
+  return json({ email: user.email }, 200, { 'set-cookie': setCookie(token, maxAge) })
+}
+
+const newSession = async (env: Env, userId: string, before: D1PreparedStatement[]) => {
   const token = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, '0')).join('')
   const maxAge = LIMITS.sessionDays * 86400
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO users(id, email, created_at) VALUES (?1, ?2, ?3) ON CONFLICT(id) DO UPDATE SET email = ?2')
-      .bind(user.sub, user.email, Date.now()),
+    ...before,
     env.DB.prepare('INSERT INTO sessions(token_hash, user_id, expires_at) VALUES (?, ?, ?)')
-      .bind(await sha256(token), user.sub, Date.now() + maxAge * 1000),
+      .bind(await sha256(token), userId, Date.now() + maxAge * 1000),
     env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(Date.now()),
   ])
-  return json({ email: user.email }, 200, { 'set-cookie': setCookie(token, maxAge) })
+  return { token, maxAge }
+}
+
+// Ospite: account anonimo legato al telefono, serve solo perché il server possa calcolare e inviare i promemoria
+const GUEST = 'guest-'
+const guestLogin = async (req: Request, env: Env) => {
+  const ip = req.headers.get('cf-connecting-ip') ?? 'sconosciuto'
+  const stop = await limited(env, 'login', await sha256(`ip:${ipKey(ip)}`))
+  if (stop) return stop
+  const id = GUEST + crypto.randomUUID()
+  const { token, maxAge } = await newSession(env, id, [
+    env.DB.prepare("INSERT INTO users(id, email, created_at) VALUES (?, '', ?)").bind(id, Date.now()),
+  ])
+  return json({ guest: true }, 200, { 'set-cookie': setCookie(token, maxAge) })
 }
 
 const push = async (req: Request, env: Env, userId: string) => {
@@ -473,6 +503,7 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
   try {
     if (req.method !== 'GET' && !sameOrigin(req)) return fail(403, 'Origine non ammessa')
     if (req.method === 'POST' && path === '/auth/google') return await login(req, env, keys)
+    if (req.method === 'POST' && path === '/auth/guest') return await guestLogin(req, env)
 
     const userId = await userOf(req, env)
     if (path === '/me' && req.method === 'GET')

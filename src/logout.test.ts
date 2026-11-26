@@ -70,3 +70,20 @@ it('un allegato rifiutato dal server non blocca il resto della sincronizzazione'
   expect(await getMeta('cursor')).toBe(7)
   expect(await unsynced()).toBe(1) // resta da inviare solo l'allegato rifiutato
 })
+
+it('ospite scaduto (401): i dati restano sul telefono e l\'app rinnova le notifiche', async () => {
+  vi.stubGlobal('navigator', { onLine: true })
+  const events: string[] = []
+  vi.stubGlobal('dispatchEvent', (e: Event) => events.push(e.type) > 0)
+  await setMeta('account', undefined)
+  await setMeta('guest', true)
+  await save('bikes', { make: 'Ducati', model: 'Monster', year: 2022, startKm: 10, startDate: '2022-05-01' })
+  const before = (await listBikes()).length
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"error":"Non autenticato"}', { status: 401 })))
+
+  expect(await syncNow()).toBe(0)
+  expect(await listBikes()).toHaveLength(before)
+  expect(await getMeta('guest')).toBe(false)
+  expect(events).toContain('revkeeper:guestexpired')
+  expect(events).not.toContain('revkeeper:loggedout')
+})

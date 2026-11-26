@@ -24,7 +24,7 @@ export const Cluster = ({ next, km, from, rate, onKm, unverified = false }: { ne
   const when = over ? undefined : due?.estimatedDate ? { k: 'previsto il', v: dayMonth(due.estimatedDate) } : due?.kmLeft !== undefined && due.dueDate ? { k: 'entro', v: monthYear(due.dueDate) } : undefined
   return (
     <section aria-label="Prossima manutenzione" className="relative overflow-hidden rounded-xl bg-display p-5 text-display-ink shadow-3 dark:ring-1 dark:ring-white/8 lg:p-7">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full bg-[#D4FF3A]/[0.07] blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full bg-[radial-gradient(closest-side,rgb(212_255_58/0.09),transparent)]" />
       {due && next ? (
         <>
           <div className="relative flex items-center justify-between gap-3">

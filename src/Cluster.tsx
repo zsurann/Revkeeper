@@ -9,8 +9,14 @@ const REDLINE = 0.86 // ultimi segmenti: zona rossa, come le luci di cambiata
 
 // Barra a segmenti (shift-light): quanta parte dell'intervallo è già consumata.
 // All'apertura fa il "self-test" dell'accensione: si accende tutta e ricade sul valore. Scaduta: lampeggia.
-export const RevBar = ({ progress, status, sweep = true }: { progress: number; status: Status; sweep?: boolean }) => {
+// Come su un'app nativa, l'accensione si vede una volta per sessione: tornando sul cruscotto la barra è già lì
+let ignited = false
+let rolled = false
+
+export const RevBar = ({ progress, status, sweep: wantSweep = true }: { progress: number; status: Status; sweep?: boolean }) => {
   const reduce = useReducedMotion()
+  const [sweep] = useState(() => wantSweep && !ignited)
+  useEffect(() => { ignited = true }, [])
   const target = Math.min(N, Math.max(progress > 0 ? 1 : 0, Math.round(Math.min(1, progress) * N)))
   const [lit, setLit] = useState(sweep && !reduce ? 0 : target)
   useEffect(() => {
@@ -26,12 +32,10 @@ export const RevBar = ({ progress, status, sweep = true }: { progress: number; s
         const on = i < lit
         const bg = on ? (red || status === 'overdue' ? '#FF4D2E' : status === 'warn' && i >= target - 3 ? '#FFB020' : '#D4FF3A') : red ? '#3A1C1A' : '#262C35'
         return (
-          <m.i
+          <i
             key={i}
-            className="block rounded-[3px]"
+            className={`block rounded-[3px] ${blink && on ? 'animate-[blink_1.1s_ease-in-out_1.6s_infinite]' : ''}`}
             style={{ background: bg, boxShadow: on ? `0 0 12px -2px ${bg}` : 'none' }}
-            animate={blink && on ? { opacity: [1, 0.35, 1] } : { opacity: 1 }}
-            transition={blink ? { duration: 1.1, repeat: Infinity, ease: 'easeInOut', delay: 1.6 } : undefined}
           />
         )
       })}
@@ -40,10 +44,13 @@ export const RevBar = ({ progress, status, sweep = true }: { progress: number; s
 }
 
 // Contachilometri a rulli: ogni cifra rulla in avanti dal valore precedente, da destra verso sinistra
+// from: km precedenti (dopo un aggiornamento). Senza, rulla solo alla prima apertura dell'app.
 export const Odometer = ({ value, from, className = '' }: { value: number; from?: number; className?: string }) => {
-  const reduce = useReducedMotion()
+  const [start] = useState(() => from ?? (rolled ? value : Math.max(0, value - 120)))
+  useEffect(() => { rolled = true }, [])
+  const reduce = useReducedMotion() || start === value
   const text = int(Math.max(0, value))
-  const prev = int(Math.max(0, from ?? value)).padStart(text.length, '0')
+  const prev = int(Math.max(0, start)).padStart(text.length, '0')
   return (
     <span className={`inline-flex overflow-hidden leading-none ${className}`} aria-label={`${text} km`} role="img">
       {[...text].map((ch, i) => {

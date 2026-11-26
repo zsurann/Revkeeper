@@ -1,5 +1,7 @@
 import { Bell, BellOff, ChevronDown, Send } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { getMeta, setMeta } from './db'
+import { ensureSession } from './sync'
 import { toast } from './toast'
 import { btn, card, field } from './ui'
 
@@ -15,10 +17,19 @@ const post = async (path: string, body: unknown) => {
 // Chiede il permesso (dentro il tocco dell'utente: obbligatorio su iOS), iscrive il dispositivo e salva l'ora sul server
 export const enablePush = async (hour: number) => {
   if ((await Notification.requestPermission()) !== 'granted') throw new Error('Permesso negato: riattivalo dalle impostazioni del telefono')
+  await ensureSession()
+  await setMeta('notifyHour', hour)
   const reg = await navigator.serviceWorker.ready
   const s = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key() }))
   await post('subscribe', { subscription: s.toJSON(), hour, tz: Intl.DateTimeFormat().resolvedOptions().timeZone })
   return s
+}
+
+// Ospite scaduto (sessione lunga 180 giorni): si rifà l'iscrizione da solo, con l'ora già scelta
+export const renewGuestPush = async () => {
+  if (!pushSupported() || Notification.permission !== 'granted') return
+  const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription()
+  if (sub) await enablePush((await getMeta<number>('notifyHour')) ?? 9)
 }
 
 export const HourSelect = ({ id, value, onChange }: { id: string; value: number; onChange: (h: number) => void }) => (

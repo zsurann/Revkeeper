@@ -1,7 +1,7 @@
 import { AnimatePresence, m } from 'motion/react'
 import { Bell, Plus } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { getMeta, listBikes } from './db'
+import { listBikes } from './db'
 import { GoogleButton } from './GoogleButton'
 import { IgnitionMark, Mark } from './Mark'
 import { HourSelect, enablePush, pushSupported } from './Notifications'
@@ -51,12 +51,10 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
   const [busy, setBusy] = useState(false)
   const [hour, setHour] = useState(9)
 
-  // I promemoria li calcola il server sui dati sincronizzati: senza accesso il passo si salta.
-  // Se dopo l'accesso arrivano moto già salvate, la scheda della prima moto non serve.
+  // Le notifiche si offrono anche senza Google (account ospite). Se dopo l'accesso arrivano moto già salvate, la scheda della prima moto non serve.
   const after = async (from: Step) => {
     setMsg('')
-    const signed = !!(await getMeta<string>('account'))
-    if (from === 'login' && signed && pushSupported()) return goStep('push')
+    if (from === 'login' && pushSupported()) return goStep('push')
     if ((await listBikes()).length > 0) return onDone()
     goStep('bike')
   }
@@ -113,6 +111,7 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
               Ora dei promemoria
               <HourSelect id="welcome-hour" value={hour} onChange={setHour} />
             </label>
+            <p className="m-0 mt-3 text-[12px] text-ink-3">Funzionano anche senza account Google: il server riceve solo i dati della moto, in forma anonima.</p>
             <div className="mt-auto grid gap-2.5 pt-8">
               <button type="button" onClick={() => void enable()} disabled={busy} className={big}><Bell size={19} />Attiva notifiche</button>
               <button type="button" onClick={() => void after('push')} className={later}>Non ora</button>
