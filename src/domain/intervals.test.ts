@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { DATA, itemsFor, type Dataset } from './intervals'
+import { DATA, itemsFor, type Dataset, type ItemDraft } from './intervals'
+import type { MaintenanceItem } from './types'
 
 const bike = { id: 'b', make: 'Moto', model: 'Senza libretto', year: 2022, category: 'custom' }
 
@@ -67,4 +68,24 @@ it('libretti terza tornata: Honda Forza 350 2025 e Yamaha MT-09 2021–2023 dal 
   expect(itemsFor({ id: 'b', make: 'Honda', model: 'Forza 350', year: 2025 }).every((i) => i.origin === 'model')).toBe(true)
   expect(itemsFor({ id: 'b', make: 'Yamaha', model: 'MT-09', year: 2022 })[0]?.origin).toBe('model')
   expect(itemsFor({ id: 'b', make: 'Yamaha', model: 'MT-09', year: 2024, category: 'naked' })[0]?.origin).toBe('preset')
+})
+
+it('applicare il libretto non cancella le voci personalizzate e tiene gli id (storico collegato)', async () => {
+  const { applyManual } = await import('./intervals')
+  const base = { bikeId: 'b', updatedAt: 0 }
+  const items = [
+    { ...base, id: 'oil', item: 'oil', label: 'Olio motore', action: 'replace', km: 10000, origin: 'preset', notes: '10W-40' },
+    { ...base, id: 'chain', item: 'chain', label: 'Catena', action: 'lube', km: 500, origin: 'user' },
+    { ...base, id: 'pads', item: 'custom', label: 'Pastiglie', action: 'inspect', km: 15000, origin: 'user' },
+  ] as MaintenanceItem[]
+  const drafts = [
+    { bikeId: 'b', item: 'oil', label: 'Olio motore', action: 'replace', km: 12000, months: 12, origin: 'model' },
+    { bikeId: 'b', item: 'chain', label: 'Catena', action: 'lube', km: 600, origin: 'model' },
+    { bikeId: 'b', item: 'valves', label: 'Gioco valvole', action: 'inspect', km: 24000, origin: 'model' },
+  ] as ItemDraft[]
+  const out = applyManual(items, drafts)
+  expect(out).toHaveLength(2)
+  expect(out[0]).toMatchObject({ id: 'oil', km: 12000, months: 12, origin: 'model', notes: '10W-40' })
+  expect(out[1]).toMatchObject({ item: 'valves' })
+  expect(out[1]).not.toHaveProperty('id')
 })

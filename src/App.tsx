@@ -3,7 +3,7 @@ import { ChevronDown, FileText, Gauge, NotebookPen, Settings2, UserRound, Wareho
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Dashboard, DashboardSkeleton, type DocRow, type Row } from './Dashboard'
 import { startAutoSync } from './sync'
-import { findDuplicateBikes, getMeta, listBikes, listByBike, mergeBikes, save } from './db'
+import { findDuplicateBikes, getMeta, itemLabels, listBikes, listByBike, mergeBikes, save } from './db'
 import { currentKm, daysBetween, documentStatus, kmPerDay, nextDue } from './domain/due'
 import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type Id, type MaintenanceItem, type OdometerReading, type Service, type Status } from './domain/types'
 import { Account } from './Account'
@@ -58,7 +58,7 @@ const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: 'services', label: 'Interventi', icon: NotebookPen },
   { id: 'documents', label: 'Documenti', icon: FileText },
 ]
-type Detail = { items: MaintenanceItem[]; services: Service[]; readings: OdometerReading[]; documents: BikeDocument[] }
+type Detail = { items: MaintenanceItem[]; services: Service[]; readings: OdometerReading[]; documents: BikeDocument[]; labels: Record<Id, string> }
 
 const useOnline = () => {
   const [online, setOnline] = useState(() => navigator.onLine)
@@ -189,13 +189,14 @@ const Main = () => {
   }, [load])
 
   const loadDetail = useCallback(async (b: Bike) => {
-    const [items, services, readings, documents] = await Promise.all([
+    const [items, services, readings, documents, labels] = await Promise.all([
       listByBike('items', b.id),
       listByBike('services', b.id),
       listByBike('readings', b.id),
       listByBike('documents', b.id),
+      itemLabels(b.id),
     ])
-    setDetail({ items, services, readings, documents })
+    setDetail({ items, services, readings, documents, labels })
   }, [])
   useEffect(() => {
     if (bike) void loadDetail(bike)
@@ -306,7 +307,7 @@ const Main = () => {
   const rest = rows.slice(1, 6)
   const refresh = () => void load().then(() => loadDetail(bike))
   const dup = findDuplicateBikes(bikes)
-  const labelOf = (id: string) => detail?.items.find((i) => i.id === id)?.label ?? 'Voce rimossa'
+  const labelOf = (id: string) => detail?.labels[id] ?? 'Voce rimossa'
   const year = today().slice(0, 4)
   const spentYear = (detail?.services ?? []).filter((s) => s.date.startsWith(year)).reduce((a, s) => a + (s.costTotal ?? 0), 0)
   const last = [...(detail?.services ?? [])].sort((a, b) => b.date.localeCompare(a.date) || b.km - a.km)[0]
@@ -319,7 +320,7 @@ const Main = () => {
       return <Garage bikes={bikes} kms={kms} activeId={bike.id} onPick={pick} onEdit={(id) => { writeActive(id); setActiveId(id); openView('edit') }} onDeleted={deleted} onAdd={() => openView('new')} onClose={goBack} onAccount={() => openView('account')} />
     if (!detail) return <DashboardSkeleton />
     if (tab === 'maint') return <Maintenance bike={bike} items={detail.items} rows={rows} onChange={() => void loadDetail(bike)} />
-    if (tab === 'services') return <Services bike={bike} km={km} items={detail.items} services={detail.services} readings={detail.readings} onChange={refresh} />
+    if (tab === 'services') return <Services bike={bike} km={km} items={detail.items} labels={detail.labels} services={detail.services} readings={detail.readings} onChange={refresh} />
     if (tab === 'documents') return <Documents bike={bike} documents={detail.documents} onChange={refresh} />
     return <Dashboard next={next} rows={rest} docs={docs} last={last} labelOf={labelOf} km={km} from={prevKm} rate={detail ? kmPerDay(detail.readings, today()) : undefined} onKm={() => setKmOpen(true)} go={go} />
   })()

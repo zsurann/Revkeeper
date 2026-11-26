@@ -62,6 +62,10 @@ export const listByBike = async <S extends ChildStore>(store: S, bikeId: Id): Pr
   // shortcut: idb non restringe il tipo dell'indice su uno store generico
   alive(await (await db()).getAllFromIndex(store as ChildStore as 'readings', 'bikeId', bikeId)) as Value<S>[]
 
+// Nomi delle voci, anche di quelle eliminate: lo storico degli interventi continua a mostrarle per nome
+export const itemLabels = async (bikeId: Id): Promise<Record<Id, string>> =>
+  Object.fromEntries((await (await db()).getAllFromIndex('items', 'bikeId', bikeId)).filter((i) => i.label).map((i) => [i.id, i.label]))
+
 export class KmDecreasingError extends Error {}
 export class KmBelowServiceError extends Error {}
 

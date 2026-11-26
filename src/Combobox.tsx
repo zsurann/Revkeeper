@@ -6,6 +6,12 @@ import { field } from './ui'
 export type Option = { label: string; hint?: string; aliases?: string[] }
 
 const norm = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, '')
+
+// Per pertinenza: uguale, poi "inizia con", poi "contiene" (scrivendo "sh125" viene SH125 prima di FSH125); a parità resta l'ordine del catalogo
+export const rankOptions = <T extends { label: string; aliases?: string[] }>(options: T[], q: string) => {
+  const rank = (o: T) => Math.min(...[o.label, ...(o.aliases ?? [])].map((n) => { const x = norm(n); return x === q ? 0 : x.startsWith(q) ? 1 : x.includes(q) ? 2 : 3 }))
+  return options.map((o, i) => ({ o, i, r: rank(o) })).filter((x) => x.r < 3).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.o)
+}
 const TAP = 8 // oltre 8 px è uno scorrimento, non una scelta
 const coarsePointer = () => typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches
 
@@ -56,9 +62,7 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
 
   const items = useMemo(() => {
     const q = edited ? norm(value) : ''
-    const hits = q
-      ? options.filter((o) => norm(o.label).includes(q) || o.aliases?.some((a) => norm(a).includes(q))).slice(0, 120)
-      : options
+    const hits = q ? rankOptions(options, q).slice(0, 120) : options
     return hits.length || !edited || !value.trim() ? hits : [{ label: value.trim(), free: true as const }]
   }, [value, options, edited])
 
