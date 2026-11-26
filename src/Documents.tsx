@@ -3,7 +3,7 @@ import { CalendarPlus, Check } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { AttachmentLink, AttachmentPicker, usePending, withoutAttachment } from './Attachments'
 import { save } from './db'
-import { daysBetween, documentStatus } from './domain/due'
+import { daysBetween, documentStatus, nextRevisionYear } from './domain/due'
 import { icsFor } from './domain/ics'
 import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type DocKind } from './domain/types'
 import { daysText, fullDate, today } from './format'
@@ -15,6 +15,7 @@ import { ErrorText, PageHead, StatusPill, btn, card, field } from './ui'
 const DocCard = ({ bike, kind, doc, onChange }: { bike: Bike; kind: DocKind; doc?: BikeDocument; onChange: () => void }) => {
   const files = usePending()
   const [error, setError] = useState('')
+  const [dirty, setDirty] = useState(false)
   const meta = DOC[kind]
   const Icon = meta.icon
   const status = doc ? documentStatus(doc, today(), DEFAULT_THRESHOLDS) : undefined
@@ -27,6 +28,7 @@ const DocCard = ({ bike, kind, doc, onChange }: { bike: Bike; kind: DocKind; doc
     await save('documents', { ...doc, bikeId: bike.id, kind, dueDate, attachmentIds: [...(doc?.attachmentIds ?? []), ...ids] })
     files.clear()
     setError('')
+    setDirty(false)
     toast(`${meta.label} ${kind === 'bollo' ? 'salvato' : 'salvata'}`, { body: `Scadenza ${fullDate(dueDate)}` })
     onChange()
   }
@@ -47,12 +49,14 @@ const DocCard = ({ bike, kind, doc, onChange }: { bike: Bike; kind: DocKind; doc
       </div>
       <label className="grid gap-1.5 text-[13px] font-medium text-ink-2">
         Scadenza
-        <input id={`doc-${kind}`} name="dueDate" type="date" defaultValue={doc?.dueDate} className={field} />
+        <input id={`doc-${kind}`} name="dueDate" type="date" defaultValue={doc?.dueDate} onChange={(e) => setDirty(e.target.value !== (doc?.dueDate ?? ''))} className={field} />
       </label>
+      {kind === 'revisione' && !doc && <p className="-mt-2 m-0 text-[12px] text-ink-3">Prima a 4 anni dall'immatricolazione, poi ogni 2: per la tua probabilmente nel {nextRevisionYear(bike.year, Number(today().slice(0, 4)))}, nel mese di immatricolazione.</p>}
       {doc && doc.attachmentIds.length > 0 && <div className="flex flex-wrap gap-2">{doc.attachmentIds.map((id) => <AttachmentLink key={id} id={id} onRemove={(x) => void dropFile(doc, x)} />)}</div>}
       <AttachmentPicker id={`doc-files-${kind}`} p={files} />
       {error && <ErrorText>{error}</ErrorText>}
-      <button className={`${btn.ink} w-full`}><Check size={17} strokeWidth={2.6} />Salva</button>
+      {dirty && <p role="status" className="m-0 text-[13px] font-medium text-amber-ink">Data non ancora salvata</p>}
+      <button className={`${dirty || files.pending.length ? btn.primary : btn.ink} w-full`}><Check size={17} strokeWidth={2.6} />Salva</button>
     </m.form>
   )
 }

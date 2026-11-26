@@ -19,6 +19,7 @@ import { Celebrate, Empty, ErrorText, Field, PageHead, Sheet, area, btn, card, f
 const ServiceForm = ({ bike, km, items, service, onSaved }: { bike: Bike; km: number; items: MaintenanceItem[]; service?: Service; onSaved: (labels: string[], km: number) => void }) => {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [sum, setSum] = useState((service?.costParts ?? 0) + (service?.costLabour ?? 0))
   const [kept, setKept] = useState(service?.attachmentIds ?? [])
   const files = usePending()
   const submit = async (e: FormEvent<HTMLFormElement>) => {
@@ -49,7 +50,7 @@ const ServiceForm = ({ bike, km, items, service, onSaved }: { bike: Bike; km: nu
       <fieldset className="m-0 grid gap-2 border-0 p-0">
         <legend className="mb-2 text-[13px] font-medium text-ink-2">Cosa hai fatto</legend>
         <div className="flex flex-wrap gap-2">
-          {items.map((i) => {
+          {[...items].sort((a, b) => a.label.localeCompare(b.label, 'it')).map((i) => {
             const Icon = itemIcon(i.item)
             return (
               <label key={i.id} className="group relative inline-flex h-10 items-center gap-2 rounded-full bg-surface px-3.5 text-[14px] font-medium text-ink ring-1 ring-line-strong transition-colors has-checked:bg-ink has-checked:text-bg has-checked:ring-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink">
@@ -62,10 +63,14 @@ const ServiceForm = ({ bike, km, items, service, onSaved }: { bike: Bike; km: nu
           })}
         </div>
       </fieldset>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2" onInput={(e) => {
+        const f = e.currentTarget.querySelectorAll('input')
+        const n = (i: number) => Number(f[i]!.value.replace(',', '.')) || 0
+        setSum(n(0) + n(1))
+      }}>
         <Field label="Ricambi €"><input id="svc-parts" name="costParts" inputMode="decimal" defaultValue={money(service?.costParts)} className={field} /></Field>
         <Field label="Manodopera €"><input id="svc-labour" name="costLabour" inputMode="decimal" defaultValue={money(service?.costLabour)} className={field} /></Field>
-        <Field label="Totale €"><input id="svc-total" name="costTotal" inputMode="decimal" defaultValue={money(service?.costTotal)} placeholder="somma" className={field} /></Field>
+        <Field label="Totale €"><input id="svc-total" name="costTotal" inputMode="decimal" defaultValue={money(service?.costTotal)} placeholder={sum > 0 ? eur(sum) : 'somma'} className={field} /></Field>
       </div>
       <Field label="Note"><textarea id="svc-notes" name="notes" rows={2} placeholder="Officina, ricambi usati…" defaultValue={service?.notes} className={area} /></Field>
       {kept.length > 0 && <div className="flex flex-wrap gap-2">{kept.map((id) => <AttachmentLink key={id} id={id} onRemove={(x) => setKept((k) => k.filter((y) => y !== x))} />)}</div>}
@@ -225,7 +230,7 @@ export const Services = ({ bike, km, items, services, readings, onChange }: {
             km={km}
             items={items}
             service={editing}
-            onSaved={(labels, k) => { setDone({ labels, km: k, edit: !!editing }); toast(editing ? 'Intervento aggiornato' : 'Intervento salvato', { body: labels.filter(Boolean).join(', ') }); onChange() }}
+            onSaved={(labels, k) => { setDone({ labels, km: k, edit: !!editing }); onChange() }}
           />
         )}
       </Sheet>

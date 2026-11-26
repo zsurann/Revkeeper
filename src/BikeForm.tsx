@@ -67,12 +67,18 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const form = new FormData(e.currentTarget)
     try {
-      const draft = bikeFromForm(new FormData(e.currentTarget), bike)
+      const draft = bikeFromForm(form, bike)
       const photoId = photo ? (await save('attachments', { name: 'moto.jpg', type: 'image/jpeg', blob: photo })).id : bike?.photoId
       onDone(await save('bikes', { ...draft, id: bike?.id, photoId }))
     } catch (err) {
       setError(err instanceof RangeError ? err.message : 'Salvataggio non riuscito')
+      // Porta al primo campo obbligatorio vuoto: l'errore è in fondo, il campo spesso è in cima
+      const empty = ['make', 'model', 'year', 'startKm'].find((k) => !String(form.get(k) ?? '').trim())
+      const el = empty ? document.getElementById(empty) : null
+      el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      el?.focus({ preventScroll: true })
     }
   }
 
@@ -134,13 +140,13 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
           </Field>
           <Field label="Modello">
             <Combobox key={`model-${make}`} id="model" name="model" required options={modelsOf(make)} defaultValue={model}
-              disabled={!make} placeholder={make ? 'Modello' : 'Scegli prima la marca'}
+              disabled={!make} placeholder={make ? 'Modello' : 'Prima la marca'}
               onPick={(v) => { setModel(v); applySpecs(make, v) }} />
           </Field>
           <Field label="Anno">
             <Combobox key={`year-${make}-${model}`} id="year" name="year" required options={opts(yearsOf(make, model))}
               defaultValue={bike && bike.make === make && bike.model === model ? String(bike.year) : ''}
-              disabled={!model} placeholder={model ? 'Anno' : 'Scegli prima il modello'}
+              disabled={!model} placeholder={model ? 'Anno' : 'Prima il modello'}
               onPick={(v) => applySpecs(make, model, v)} />
           </Field>
           <Num name="startKm" label={bike ? 'Km iniziali' : 'Km attuali'} value={bike?.startKm} />
@@ -158,10 +164,10 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
         </Group>
         <Group key={`tyres-${rev}`} title="Gomme e pressioni" open={!!(t || p?.tyreFront)}>
           <Field label="Misura ant.">
-            <Combobox id="tyreFront" name="tyreFront" options={opts(TYRES)} defaultValue={p?.tyreFront ?? t?.front} placeholder="120/70 ZR17" />
+            <Combobox id="tyreFront" name="tyreFront" options={opts(TYRES)} defaultValue={p?.tyreFront ?? t?.front} placeholder="es. 120/70 ZR17" />
           </Field>
           <Field label="Misura post.">
-            <Combobox id="tyreRear" name="tyreRear" options={opts(TYRES)} defaultValue={p?.tyreRear ?? t?.rear} placeholder="160/60 ZR17" />
+            <Combobox id="tyreRear" name="tyreRear" options={opts(TYRES)} defaultValue={p?.tyreRear ?? t?.rear} placeholder="es. 160/60 ZR17" />
           </Field>
           <Num name="psFront" label="Bar ant. da solo" value={t?.pressureSolo?.front} decimal />
           <Num name="psRear" label="Bar post. da solo" value={t?.pressureSolo?.rear} decimal />
@@ -170,14 +176,14 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
         </Group>
         <Group key={`fluids-${rev}`} title="Liquidi" open={!!(fl || p?.oilGrade)}>
           <Field label="Olio">
-            <Combobox id="oilType" name="oilType" options={opts(OIL_TYPES)} defaultValue={fl?.oilType} placeholder="Sintetico" />
+            <Combobox id="oilType" name="oilType" options={opts(OIL_TYPES)} defaultValue={fl?.oilType} placeholder="es. Sintetico" />
           </Field>
           <Field label="Gradazione">
-            <Combobox id="oilGrade" name="oilGrade" options={opts(OIL_GRADES)} defaultValue={p?.oilGrade ?? fl?.oilGrade} placeholder="10W-40" />
+            <Combobox id="oilGrade" name="oilGrade" options={opts(OIL_GRADES)} defaultValue={p?.oilGrade ?? fl?.oilGrade} placeholder="es. 10W-40" />
           </Field>
           <Num name="oilLitres" label="Litri olio" value={p?.oilLitres ?? fl?.oilLitres} decimal />
           <Field label="Liquido freni">
-            <Combobox id="brakeFluid" name="brakeFluid" options={opts(BRAKE_FLUIDS)} defaultValue={p?.brakeFluid ?? fl?.brakeFluid} placeholder="DOT 4" />
+            <Combobox id="brakeFluid" name="brakeFluid" options={opts(BRAKE_FLUIDS)} defaultValue={p?.brakeFluid ?? fl?.brakeFluid} placeholder="es. DOT 4" />
           </Field>
           <Txt name="sparkPlug" label="Candele" value={fl?.sparkPlug} />
         </Group>
