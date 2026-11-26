@@ -341,7 +341,7 @@ const Main = () => {
               return (
                 <button key={t.id} type="button" onClick={() => (t.id === 'garage' || t.id === 'account' ? openView(t.id) : go(t.id))} aria-current={on ? 'page' : undefined}
                   className={`relative flex h-11 items-center gap-3 rounded-full px-4 text-[14px] font-semibold transition-colors ${on ? 'text-black' : 'text-ink-2 hover:bg-sunken'}`}>
-                  {on && <m.span layoutId="side-pill" className="absolute inset-0 rounded-full bg-lime" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
+                  {on && <m.span layoutId="side-pill" className="absolute inset-0 rounded-full bg-lime" transition={{ type: 'spring', stiffness: 500, damping: 45 }} />}
                   <t.icon size={19} className="relative" /><span className="relative">{t.label}</span>
                 </button>
               )
@@ -368,7 +368,7 @@ const Main = () => {
                 <span className="grid min-w-0 text-left leading-tight"><b className="t-title truncate text-[16px]">{bike.make} {bike.model}</b><span className="text-[12px] text-ink-3">{garageLabel}</span></span>
                 <ChevronDown size={16} className="shrink-0 text-ink-3" />
               </button>
-              <button type="button" onClick={() => openView('account')} aria-label="Account e impostazioni"><Avatar email={email} /></button>
+              <button type="button" onClick={() => openView('account')} aria-label="Account e impostazioni" className="hitbox rounded-full"><Avatar email={email} /></button>
             </header>
           )}
           {dup && inTabs && (
@@ -402,7 +402,7 @@ const Main = () => {
               return (
                 <button key={t.id} type="button" onClick={() => go(t.id)} aria-current={on ? 'page' : undefined} className={`grid min-h-12 justify-items-center gap-1 py-1 text-[11px] font-semibold transition-colors ${on ? 'text-ink' : 'text-ink-3'}`}>
                   <span className="relative grid h-8 w-14 place-items-center">
-                    {on && <m.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-lime" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+                    {on && <m.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-lime" transition={{ type: 'spring', stiffness: 500, damping: 45 }} />}
                     <t.icon size={20} strokeWidth={on ? 2.3 : 1.9} className={`relative ${on ? 'text-black' : ''}`} />
                   </span>
                   {t.label}

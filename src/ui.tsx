@@ -7,7 +7,7 @@ import { useBackLayer } from './historyLayers'
 import { dur, ease, spring } from './motion'
 
 // Classi dei controlli: un solo posto per forme, colori e stati
-const base = 'inline-flex items-center justify-center gap-2 font-semibold select-none disabled:opacity-40 disabled:pointer-events-none transition-[background-color,box-shadow,color,transform] duration-[var(--duration-fast)] active:scale-[0.97]'
+const base = 'inline-flex items-center justify-center gap-2 font-semibold select-none disabled:opacity-40 disabled:pointer-events-none transition-[background-color,box-shadow,color,transform] duration-[var(--duration-fast)] active:scale-[0.97] hitbox'
 export const btn = {
   primary: `${base} h-12 rounded-full bg-lime px-6 text-[15px] text-black shadow-[inset_0_-2px_0_rgb(0_0_0/0.12),0_6px_20px_-6px_rgb(170_210_0/0.7)] hover:bg-[#C8F52A]`,
   ink: `${base} h-12 rounded-full bg-ink px-6 text-[15px] text-bg hover:opacity-90`,
@@ -22,7 +22,7 @@ export const ghost = btn.ghost
 export const field = 'w-full min-w-0 h-12 rounded-md bg-sunken px-3.5 text-[16px] text-ink placeholder:text-ink-3 ring-1 ring-transparent transition-shadow duration-[var(--duration-fast)] focus:outline-none focus:ring-2 focus:ring-ink focus:bg-surface dark:focus:ring-lime disabled:opacity-50'
 export const area = field.replace('h-12', 'min-h-24 py-3')
 export const card = 'rounded-lg bg-surface shadow-1 ring-1 ring-line'
-export const link = 'inline-flex items-center gap-1 text-[13px] font-semibold text-ink-2 hover:text-ink'
+export const link = 'hitbox inline-flex items-center gap-1 text-[13px] font-semibold text-ink-2 hover:text-ink'
 
 export const Card = ({ className = '', children, ...p }: { className?: string; children: ReactNode } & HTMLMotionProps<'div'>) => (
   <m.div className={`${card} ${className}`} {...p}>{children}</m.div>
@@ -40,7 +40,7 @@ export const Screen = ({ children, className = '' }: { children: ReactNode; clas
 export const PageHead = ({ title, sub, onBack, action }: { title: string; sub?: ReactNode; onBack?: () => void; action?: ReactNode }) => (
   <header className="grid gap-1">
     {onBack && (
-      <button type="button" onClick={onBack} className="-ml-2 mb-1 inline-flex h-10 items-center gap-1 justify-self-start rounded-full pl-1 pr-3 text-[14px] font-semibold text-ink-2 hover:bg-sunken">
+      <button type="button" onClick={onBack} className="hitbox -ml-2 mb-1 inline-flex h-10 items-center gap-1 justify-self-start rounded-full pl-1 pr-3 text-[14px] font-semibold text-ink-2 hover:bg-sunken">
         <ChevronLeft size={20} />Indietro
       </button>
     )}
@@ -107,7 +107,7 @@ export function Segmented<T extends string>({ value, options, onChange, label, i
         const on = o.value === value
         return (
           <button key={o.value} type="button" role="radio" aria-checked={on} onClick={() => onChange(o.value)}
-            className={`relative flex h-10 items-center justify-center gap-1.5 rounded-full text-[14px] font-semibold transition-colors ${on ? 'text-black' : 'text-ink-2 hover:text-ink'}`}>
+            className={`hitbox flex h-10 items-center justify-center gap-1.5 rounded-full text-[14px] font-semibold transition-colors ${on ? 'text-black' : 'text-ink-2 hover:text-ink'}`}>
             {on && <m.span layoutId={`seg-${id}`} className="absolute inset-0 rounded-full bg-lime shadow-[0_2px_8px_-2px_rgb(120_150_0/0.5)]" transition={spring.snappy} />}
             <span className="relative flex items-center gap-1.5">{o.icon}{o.label}</span>
           </button>
@@ -302,7 +302,7 @@ export const Sheet = ({ open, onClose, title, children }: { open: boolean; onClo
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-40 grid items-end lg:place-items-center" role="dialog" aria-modal="true" aria-label={title}>
-          <m.div className="absolute inset-0 bg-[#0E1116]/50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: dur.base }} onClick={onClose} />
+          <m.div className="absolute inset-0 bg-[#0E1116]/50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.2, ease: ease.inOut } }} transition={{ duration: dur.base }} onClick={onClose} />
           <m.div
             className="relative mx-auto flex w-full max-w-[520px] justify-center"
             initial={reduce ? { opacity: 0 } : { y: '100%' }}

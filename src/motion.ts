@@ -10,7 +10,7 @@ export const dur = { instant: 0.09, fast: 0.16, base: 0.24, slow: 0.42, sweep: 1
 
 // Molle: "snappy" per pulsanti e interruttori, "sheet" per i fogli, "soft" per gli elementi grandi
 export const spring = {
-  snappy: { type: 'spring', stiffness: 520, damping: 32, mass: 0.8 } satisfies Transition,
+  snappy: { type: 'spring', stiffness: 520, damping: 40, mass: 0.8 } satisfies Transition,
   sheet: { type: 'spring', stiffness: 420, damping: 40, mass: 1 } satisfies Transition,
   soft: { type: 'spring', stiffness: 220, damping: 28 } satisfies Transition,
 }
@@ -22,8 +22,9 @@ export const page = {
   exit: { opacity: 0, y: -6, transition: { duration: dur.fast, ease: ease.inOut } },
 }
 export const list = { animate: { transition: { staggerChildren: 0.045, delayChildren: 0.08 } } }
+// Sotto i 300 ms come vuole l'interfaccia di prodotto; molle a smorzamento critico (niente rimbalzi)
 export const listItem = {
   initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: dur.slow, ease: ease.out } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: ease.out } },
 }
 export const press = { whileTap: { scale: 0.97 }, transition: spring.snappy }
