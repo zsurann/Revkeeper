@@ -3,7 +3,8 @@
 
 @layer base {
   html, body, #root { min-height: 100%; }
-  html, body { overscroll-behavior-y: contain; }
+  /* clip, non hidden: niente pagina che scivola di lato e lo sticky continua a funzionare */
+  html, body { overscroll-behavior-y: contain; overflow-x: clip; }
   /* Le schermate si sostituiscono: lo scroll anchoring le farebbe partire a metà */
   html { overflow-anchor: none; }
   body {
@@ -51,7 +52,7 @@
 
 @keyframes shimmer { to { transform: translateX(100%); } }
 @keyframes blink { 50% { opacity: 0.35; } }
-@keyframes seg { from { opacity: 0; transform: scaleY(0.2); } }
+@keyframes bar { from { opacity: 0; clip-path: inset(0 100% 0 0); } }
 /* Installazione e benvenuto */
 @keyframes pop { from { opacity: 0; transform: scale(0.85); } }
 @keyframes draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }

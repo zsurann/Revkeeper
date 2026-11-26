@@ -6,7 +6,12 @@ import { startAutoSync } from './sync'
 import { findDuplicateBikes, getMeta, listBikes, listByBike, mergeBikes, save } from './db'
 import { currentKm, daysBetween, documentStatus, kmPerDay, nextDue } from './domain/due'
 import { DEFAULT_THRESHOLDS, type Bike, type BikeDocument, type Id, type MaintenanceItem, type OdometerReading, type Service, type Status } from './domain/types'
+import { Account } from './Account'
+import { Documents } from './Documents'
 import { Garage } from './Garage'
+import { Maintenance } from './Maintenance'
+import { renewGuestPush } from './Notifications'
+import { Services } from './Services'
 import { KmSheet } from './KmSheet'
 import { Mark } from './Mark'
 import { Splash } from './Splash'
@@ -21,11 +26,8 @@ import { btn, usePhoto } from './ui'
 
 // Schermate che non servono all'avvio: si scaricano a parte (restano nel precache, quindi vanno anche offline).
 // Il cruscotto e il benvenuto restano nel pacchetto principale.
-const Account = lazy(() => import('./Account').then((m) => ({ default: m.Account })))
+// Schede e profilo nel pacchetto principale (~14 KB compressi): caricarle al primo tocco mostrava lo scheletro e scattava
 const BikeForm = lazy(() => import('./BikeForm').then((m) => ({ default: m.BikeForm })))
-const Documents = lazy(() => import('./Documents').then((m) => ({ default: m.Documents })))
-const Maintenance = lazy(() => import('./Maintenance').then((m) => ({ default: m.Maintenance })))
-const Services = lazy(() => import('./Services').then((m) => ({ default: m.Services })))
 
 const ACTIVE = 'revkeeper.activeBike'
 const readActive = () => {
@@ -117,6 +119,14 @@ export const App = () => (
   </LazyMotion>
 )
 
+type PageDir = 'tab' | 'push' | 'pop'
+// Entrata morbida senza rimbalzo, uscita breve: con mode="wait" ogni millisecondo d'uscita ritarda la schermata nuova
+const pageMotion = {
+  enter: (d: PageDir) => (d === 'tab' ? { opacity: 0, y: 10 } : { opacity: 0, x: d === 'push' ? 44 : -44 }),
+  show: { opacity: 1, x: 0, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] as const } },
+  leave: (d: PageDir) => ({ opacity: 0, x: d === 'push' ? -16 : d === 'pop' ? 16 : 0, transition: { duration: 0.09, ease: [0.4, 0, 1, 1] as const } }),
+}
+
 const toTop = () => {
   scrollTo({ top: 0, behavior: 'instant' })
 }
@@ -127,6 +137,13 @@ const Main = () => {
   const [activeId, setActiveId] = useState(readActive)
   const [stack, setStack] = useState<Nav[]>([ROOT])
   const { view, tab } = stack[stack.length - 1]!
+  // Direzione della transizione, come nelle app native: avanti scorre da destra, indietro da sinistra, schede in dissolvenza
+  const pageKey = view === 'home' ? tab : view
+  const [motionNav, setMotionNav] = useState<{ key: string; depth: number; sub: boolean; dir: PageDir }>({ key: pageKey, depth: stack.length, sub: view !== 'home', dir: 'tab' })
+  if (motionNav.key !== pageKey) {
+    const sub = view !== 'home'
+    setMotionNav({ key: pageKey, depth: stack.length, sub, dir: !sub && !motionNav.sub ? 'tab' : stack.length >= motionNav.depth && sub ? 'push' : 'pop' })
+  }
   const [prevKm, setPrevKm] = useState<number>()
   const [detail, setDetail] = useState<Detail>()
   const [welcomed, setWelcomed] = useState(readWelcomed)
@@ -160,7 +177,7 @@ const Main = () => {
       setStack([ROOT])
       void load()
     }
-    const onGuestExpired = () => void import('./Notifications').then((n) => n.renewGuestPush()).catch(() => undefined)
+    const onGuestExpired = () => void renewGuestPush().catch(() => undefined)
     addEventListener('revkeeper:synced', onSynced)
     addEventListener('revkeeper:loggedout', onLoggedOut)
     addEventListener('revkeeper:guestexpired', onGuestExpired)
@@ -306,7 +323,6 @@ const Main = () => {
     if (tab === 'documents') return <Documents bike={bike} documents={detail.documents} onChange={refresh} />
     return <Dashboard next={next} rows={rest} docs={docs} last={last} labelOf={labelOf} km={km} from={prevKm} rate={detail ? kmPerDay(detail.readings, today()) : undefined} onKm={() => setKmOpen(true)} go={go} />
   })()
-  const pageKey = inTabs ? tab : view
 
   return (
     <LayoutGroup>
@@ -364,12 +380,11 @@ const Main = () => {
             </div>
           )}
           <EdgeSwipeBack enabled={!inTabs && stack.length > 1 && edgeSwipe} onBack={goBack}>
-          <AnimatePresence mode="wait" initial={false} onExitComplete={toTop}>
-            {/* Uscita quasi istantanea: con mode="wait" ogni millisecondo d'uscita ritarda la schermata nuova, come un'app nativa il tocco risponde subito */}
-            <m.div key={pageKey} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.06 } }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}>
+          <AnimatePresence mode="wait" initial={false} custom={motionNav.dir} onExitComplete={toTop}>
+            <m.div key={pageKey} custom={motionNav.dir} variants={pageMotion} initial="enter" animate="show" exit="leave">
               <Suspense fallback={<div className="mx-auto max-w-[480px] px-4 pt-2"><DashboardSkeleton /></div>}>
                 {inTabs ? (
-                  <main className="mx-auto grid max-w-[480px] content-start gap-6 px-4 pb-32 pt-2 lg:max-w-[1100px] lg:px-10 lg:pb-16 lg:pt-8">{content}</main>
+                  <main className="mx-auto grid max-w-[480px] grid-cols-1 content-start gap-6 px-4 pb-32 pt-2 lg:max-w-[1100px] lg:px-10 lg:pb-16 lg:pt-8">{content}</main>
                 ) : content}
               </Suspense>
             </m.div>
@@ -378,8 +393,9 @@ const Main = () => {
         </div>
       </div>
 
+      <AnimatePresence initial={false}>
       {inTabs && (
-        <nav aria-label="Sezioni" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[max(10px,env(safe-area-inset-bottom))] pt-1.5 lg:hidden">
+        <m.nav key="tabs" initial={{ y: '100%' }} animate={{ y: 0, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } }} exit={{ y: '100%', transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }} aria-label="Sezioni" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[max(10px,env(safe-area-inset-bottom))] pt-1.5 lg:hidden">
           <div className="mx-auto grid max-w-[480px] grid-cols-4">
             {TABS.map((t) => {
               const on = tab === t.id
@@ -394,8 +410,9 @@ const Main = () => {
               )
             })}
           </div>
-        </nav>
+        </m.nav>
       )}
+      </AnimatePresence>
       <KmSheet open={kmOpen} bike={bike} km={km} onClose={() => setKmOpen(false)} onSaved={async (prev) => { setPrevKm(prev); await load() }} onChange={async () => { setPrevKm(undefined); await load() }} />
     </LayoutGroup>
   )

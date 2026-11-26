@@ -1,4 +1,5 @@
 import { m } from 'motion/react'
+import { useEffect, useState } from 'react'
 import { ChevronRight, FileText, Plus, TriangleAlert, Wrench } from 'lucide-react'
 import { DisplayChip, Odometer, RevBar } from './Cluster'
 import { daysBetween, type Due } from './domain/due'
@@ -11,12 +12,16 @@ import { MiniBar, SectionTitle, Skeleton, StatusPill, btn, card, link } from './
 export type Row = { id: string; item: MaintenanceItem; status: Status; due: Due }
 export type DocRow = { kind: DocKind; doc?: BikeDocument; status?: Status; days?: number }
 
+let bigShown = false
 const bigTone: Record<Status, string> = { ok: 'text-[#D4FF3A]', warn: 'text-[#FFC24D]', overdue: 'text-[#FF8A75]' }
 
 // Il "vetro" del cruscotto: l'unico pannello scuro dell'app chiara. Prossima scadenza, contagiri a segmenti, contachilometri.
 // unverified: nessun intervento registrato, i conteggi partono dai km iniziali (moto usata: potrebbe essere già in ritardo)
 export const Cluster = ({ next, km, from, rate, onKm, unverified = false }: { next?: Row; km: number; from?: number; rate?: number; onKm: () => void; unverified?: boolean }) => {
   const due = next?.due
+  // Il numero entra dopo l'accensione solo alla prima apertura; tornando sulla scheda è già lì
+  const [firstView] = useState(() => !bigShown)
+  useEffect(() => { bigShown = true }, [])
   const days = due?.dueDate ? daysBetween(today(), due.dueDate) : undefined
   const over = due?.status === 'overdue'
   const big = due ? (due.kmLeft !== undefined ? int(Math.abs(due.kmLeft)) : days !== undefined ? String(Math.abs(days)) : '') : ''
@@ -35,7 +40,7 @@ export const Cluster = ({ next, km, from, rate, onKm, unverified = false }: { ne
           <div className="relative mt-1 flex items-end gap-2">
             <m.span
               className={`t-num text-[72px] leading-[0.9] lg:text-[92px] ${bigTone[due.status]}`}
-              initial={{ opacity: 0, y: 8 }}
+              initial={firstView ? { opacity: 0, y: 8 } : false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9, duration: 0.42 }}
             >

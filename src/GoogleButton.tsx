@@ -59,7 +59,9 @@ export const GoogleButton = ({ onDone, onBusy }: { onDone: (error?: string) => v
     const mine: Handlers = { onDone: (e) => cb.current.onDone(e), onBusy: (b) => cb.current.onBusy?.(b) }
     active = mine
     let alive = true
-    loadGis()
+    // Iframe di Google dopo la transizione di pagina (~350 ms): caricato durante lo scorrimento lo faceva scattare
+    new Promise((r) => setTimeout(r, 380))
+      .then(loadGis)
       .then((g) => {
         if (!alive) return
         if (!initialized) {
