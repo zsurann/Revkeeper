@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addMonths, currentKm, kmPerDay, nextDue, documentStatus } from './due'
+import { addMonths, currentKm, kmPerDay, nextDue, documentStatus, nextRevisionYear } from './due'
 import { DEFAULT_THRESHOLDS as T, type Bike, type MaintenanceItem, type OdometerReading, type Service } from './types'
 
 const bike: Bike = { id: 'b', updatedAt: 0, make: 'Honda', model: 'Africa Twin', year: 2022, startKm: 0, startDate: '2022-03-01' }
@@ -89,4 +89,10 @@ describe('ricalcolo dopo correzione km', () => {
     expect(d.kmLeft).toBe(8400)
     expect(d.status).toBe('ok')
   })
+})
+
+it('revisione: prima a 4 anni, poi ogni 2', () => {
+  expect(nextRevisionYear(2017, 2026)).toBe(2027)
+  expect(nextRevisionYear(2017, 2025)).toBe(2025)
+  expect(nextRevisionYear(2024, 2026)).toBe(2028)
 })

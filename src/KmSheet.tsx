@@ -3,6 +3,7 @@ import { Check, Trash2, TriangleAlert } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { addReading, correctReading, KmBelowServiceError, KmDecreasingError, listByBike, remove } from './db'
 import type { Bike, OdometerReading, Service } from './domain/types'
+import { daysBetween } from './domain/due'
 import { fullDate, int, km as fmtKm, today } from './format'
 import { dur, ease } from './motion'
 import { toast } from './toast'
@@ -42,6 +43,7 @@ export const KmSheet = ({ open, bike, km, onClose, onSaved, onChange }: { open: 
   const [done, setDone] = useState<{ diff: number; corrected: boolean; km: number }>()
   const [readings, setReadings] = useState<OdometerReading[]>([])
   const [services, setServices] = useState<Service[]>([])
+  const [confirmBig, setConfirmBig] = useState(false)
 
   const loadHistory = useCallback(async () => {
     const [r, s] = await Promise.all([listByBike('readings', bike.id), listByBike('services', bike.id)])
@@ -61,10 +63,13 @@ export const KmSheet = ({ open, bike, km, onClose, onSaved, onChange }: { open: 
   const belowService = isLowering && topService && n < topService.km ? topService : undefined
   const aboveReadings = isLowering && !belowService ? readings.filter((r) => r.km > n) : []
   const willLowerStart = isLowering && !belowService && n < bike.startKm
+  // Una cifra in più (27.000 → 270.000) sballa tutte le scadenze: oltre ~1.000 km al giorno chiediamo conferma
+  const lastDate = [...readings.map((r) => r.date), bike.startDate].sort().at(-1) ?? today()
+  const isBigJump = diff > Math.max(3000, 1000 * Math.max(1, daysBetween(lastDate, today())))
 
   const close = () => {
     onClose()
-    setTimeout(() => { setValue(''); setError(''); setDone(undefined) }, 250)
+    setTimeout(() => { setValue(''); setError(''); setDone(undefined); setConfirmBig(false) }, 250)
   }
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -72,18 +77,17 @@ export const KmSheet = ({ open, bike, km, onClose, onSaved, onChange }: { open: 
       setError(`I km non possono scendere sotto ${fmtKm(belowService.km)} (intervento registrato il ${fullDate(belowService.date)}).`)
       return
     }
+    if (isBigJump && !confirmBig) return setConfirmBig(true)
     try {
       if (isLowering) {
         await correctReading(bike, today(), n)
         setError('')
         setDone({ diff, corrected: true, km: n })
-        toast('Lettura corretta', { body: `${bike.make} ${bike.model} · ${fmtKm(n)}` })
         await onSaved(km)
       } else {
         await addReading(bike, today(), n)
         setError('')
         setDone({ diff, corrected: false, km: n })
-        toast(diff > 0 ? `+${int(diff)} km salvati` : 'Km confermati', { body: `${bike.make} ${bike.model} · ${fmtKm(n)}` })
         await onSaved(km)
       }
     } catch (err) {
@@ -114,6 +118,7 @@ export const KmSheet = ({ open, bike, km, onClose, onSaved, onChange }: { open: 
               value={value}
               onChange={(e) => {
                 setError('')
+                setConfirmBig(false)
                 setValue(e.target.value.replace(/[^\d]/g, '') ? int(Number(e.target.value.replace(/[^\d]/g, ''))) : '')
               }}
               className="t-num w-full min-w-0 bg-transparent text-[40px] text-ink outline-none placeholder:text-ink-3/60"
@@ -150,12 +155,18 @@ export const KmSheet = ({ open, bike, km, onClose, onSaved, onChange }: { open: 
               </span>
             </div>
           )}
+          {isBigJump && (
+            <div role="status" className="flex gap-3 rounded-md bg-amber-soft p-3.5 text-[13px] leading-snug text-ink ring-1 ring-amber/30">
+              <TriangleAlert size={18} className="mt-0.5 shrink-0 text-amber-ink" />
+              <span><b>+{int(diff)} km</b> dall'ultimo dato: è tanto. Controlla di non aver scritto una cifra in più.</span>
+            </div>
+          )}
           {error && !belowService && <ErrorText>{error}</ErrorText>}
           <button
             className={`${isLowering && !belowService ? btn.ink : btn.primary} w-full`}
             disabled={!value || Boolean(belowService)}
           >
-            <Check size={18} strokeWidth={2.6} />{isLowering && !belowService ? 'Correggi lettura' : 'Salva km'}
+            <Check size={18} strokeWidth={2.6} />{isLowering && !belowService ? 'Correggi lettura' : isBigJump && confirmBig ? `Sì, salva ${fmtKm(n)}` : 'Salva km'}
           </button>
           {open && <History rows={readings} onRemoved={async () => { await loadHistory(); await onChange() }} />}
         </form>

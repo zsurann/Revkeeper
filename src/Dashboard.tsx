@@ -1,5 +1,5 @@
 import { m } from 'motion/react'
-import { ChevronRight, FileText, Plus, Wrench } from 'lucide-react'
+import { ChevronRight, FileText, Plus, TriangleAlert, Wrench } from 'lucide-react'
 import { DisplayChip, Odometer, RevBar } from './Cluster'
 import { daysBetween, type Due } from './domain/due'
 import type { BikeDocument, DocKind, MaintenanceItem, Service, Status } from './domain/types'
@@ -14,7 +14,8 @@ export type DocRow = { kind: DocKind; doc?: BikeDocument; status?: Status; days?
 const bigTone: Record<Status, string> = { ok: 'text-[#D4FF3A]', warn: 'text-[#FFC24D]', overdue: 'text-[#FF8A75]' }
 
 // Il "vetro" del cruscotto: l'unico pannello scuro dell'app chiara. Prossima scadenza, contagiri a segmenti, contachilometri.
-export const Cluster = ({ next, km, from, rate, onKm }: { next?: Row; km: number; from?: number; rate?: number; onKm: () => void }) => {
+// unverified: nessun intervento registrato, i conteggi partono dai km iniziali (moto usata: potrebbe essere già in ritardo)
+export const Cluster = ({ next, km, from, rate, onKm, unverified = false }: { next?: Row; km: number; from?: number; rate?: number; onKm: () => void; unverified?: boolean }) => {
   const due = next?.due
   const days = due?.dueDate ? daysBetween(today(), due.dueDate) : undefined
   const over = due?.status === 'overdue'
@@ -28,7 +29,7 @@ export const Cluster = ({ next, km, from, rate, onKm }: { next?: Row; km: number
         <>
           <div className="relative flex items-center justify-between gap-3">
             <span className="t-label text-display-dim">Prossimo intervento</span>
-            <DisplayChip status={due.status} />
+            <DisplayChip status={due.status} label={unverified && due.status === 'ok' ? 'Da verificare' : undefined} />
           </div>
           <h2 className="t-title relative m-0 mt-3 text-[20px] lg:text-[24px]">{next.item.label}</h2>
           <div className="relative mt-1 flex items-end gap-2">
@@ -52,6 +53,7 @@ export const Cluster = ({ next, km, from, rate, onKm }: { next?: Row; km: number
             {over ? `Era da fare ${[due.dueKm !== undefined && `a ${fmtKm(due.dueKm)}`, due.dueDate && `entro ${monthYear(due.dueDate)}`].filter(Boolean).join(' o ')}` : dueRule(due)}
             <span className="sr-only">. {Math.round(due.progress * 100)}% dell'intervallo consumato</span>
           </p>
+          {unverified && <p className="relative m-0 mt-1 text-[12px] text-display-dim">Contato dai km iniziali: registra l'ultimo tagliando per scadenze precise.</p>}
         </>
       ) : (
         <div className="relative grid gap-2">
@@ -135,7 +137,17 @@ export const Dashboard = ({ next, rows, docs, last, labelOf, km, from, rate, onK
   go: (to: 'maint' | 'services' | 'documents') => void
 }) => (
   <div className="grid gap-6 lg:grid-cols-12">
-    <div className="lg:col-span-7"><Cluster next={next} km={km} from={from} rate={rate} onKm={onKm} /></div>
+    {docs.filter((d) => d.status === 'overdue').map((d) => (
+      <button key={d.kind} type="button" role="alert" onClick={() => go('documents')} className="flex items-center gap-3 rounded-lg bg-red-soft p-4 text-left ring-1 ring-red/30 lg:col-span-12">
+        <TriangleAlert size={20} className="shrink-0 text-red-ink" />
+        <span className="grid flex-1">
+          <b className="text-[15px] font-semibold text-red-ink">{DOC[d.kind].label} {d.days !== undefined ? daysText(d.days, d.kind === 'bollo') : d.kind === 'bollo' ? 'scaduto' : 'scaduta'}</b>
+          <span className="text-[13px] text-ink-2">{{ assicurazione: 'Senza copertura non puoi circolare.', bollo: 'Pagalo e aggiorna la data.', revisione: 'Prenota la revisione e aggiorna la data.' }[d.kind]}</span>
+        </span>
+        <ChevronRight size={18} className="text-ink-3" />
+      </button>
+    ))}
+    <div className="lg:col-span-7"><Cluster next={next} km={km} from={from} rate={rate} onKm={onKm} unverified={!last} /></div>
     <m.section aria-labelledby="h-docs" className="grid content-start gap-3 lg:col-span-5" variants={list} initial="initial" animate="animate">
       <SectionTitle id="h-docs" action={<button type="button" onClick={() => go('documents')} className={link}>Documenti<ChevronRight size={16} /></button>}>Scadenze</SectionTitle>
       <div className="-mx-4 flex gap-3 overflow-x-auto overscroll-x-contain px-4 pb-1 no-scrollbar lg:mx-0 lg:grid lg:overflow-visible lg:px-0">

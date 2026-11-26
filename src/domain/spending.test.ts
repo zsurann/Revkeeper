@@ -16,7 +16,7 @@ it('somma per anno (anche quelli vuoti), per voce e al km', () => {
   ])
   expect(s.total).toBe(400)
   expect(s.byYear).toEqual([{ year: '2023', total: 100 }, { year: '2024', total: 0 }, { year: '2025', total: 300 }])
-  expect(s.byItem).toEqual([{ label: 'Olio motore', total: 250 }, { label: 'Catena', total: 150 }])
+  expect(s.byItem).toEqual([{ label: 'Catena + Olio motore', total: 300 }, { label: 'Olio motore', total: 100 }])
   expect(s.perKm).toBe(0.1)
 })
 

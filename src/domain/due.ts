@@ -88,3 +88,10 @@ export const nextDue = (
 
 export const documentStatus = (doc: BikeDocument, today: IsoDate, t: Thresholds): Status =>
   statusOf(undefined, doc.dueDate, today, t)
+
+// Revisione moto: prima a 4 anni dall'immatricolazione, poi ogni 2
+export const nextRevisionYear = (year: number, now: number) => {
+  let y = year + 4
+  while (y < now) y += 2
+  return y
+}

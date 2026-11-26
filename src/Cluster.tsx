@@ -74,9 +74,9 @@ const chip: Record<Status, string> = {
   overdue: 'bg-[#FF4D2E]/16 text-[#FF8A75]',
 }
 const chipText: Record<Status, string> = { ok: 'In regola', warn: 'In scadenza', overdue: 'Scaduta' }
-export const DisplayChip = ({ status }: { status: Status }) => (
+export const DisplayChip = ({ status, label }: { status: Status; label?: string }) => (
   <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold ${chip[status]}`}>
     <i className="size-1.5 rounded-full bg-current" />
-    {chipText[status]}
+    {label ?? chipText[status]}
   </span>
 )
