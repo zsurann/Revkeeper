@@ -3,7 +3,7 @@ import { BookOpen, ChevronDown, Plus, Trash2, Wrench } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import type { Row } from './Dashboard'
 import { remove, save } from './db'
-import { DATA, findModel, itemsFor } from './domain/intervals'
+import { applyManual, DATA, findModel, itemsFor } from './domain/intervals'
 import type { Bike, MaintenanceItem } from './domain/types'
 import { dueRule, dueShort, every } from './format'
 import { itemIcon } from './icons'
@@ -23,6 +23,7 @@ const ORIGIN = { model: 'Dal libretto', preset: 'Valore tipico', user: 'Personal
 const ItemCard = ({ item, row, onChange }: { item: MaintenanceItem; row?: Row; onChange: () => void }) => {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
+  const [askRemove, setAskRemove] = useState(false)
   const Icon = itemIcon(item.item)
   const s = row?.status ?? 'ok'
   const submit = async (e: FormEvent<HTMLFormElement>) => {
@@ -46,7 +47,7 @@ const ItemCard = ({ item, row, onChange }: { item: MaintenanceItem; row?: Row; o
   }
   return (
     <m.li variants={listItem} className={`${card} overflow-hidden`}>
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="grid w-full grid-cols-[40px_1fr_auto] items-center gap-x-3 gap-y-2 p-4 text-left">
+      <button type="button" onClick={() => { setOpen((o) => !o); setAskRemove(false) }} aria-expanded={open} className="grid w-full grid-cols-[40px_1fr_auto] items-center gap-x-3 gap-y-2 p-4 text-left">
         <span className={`grid size-10 place-items-center rounded-[12px] ${s === 'overdue' ? 'bg-red-soft text-red-ink' : s === 'warn' ? 'bg-amber-soft text-amber-ink' : 'bg-sunken text-ink'}`}><Icon size={19} /></span>
         <span className="grid min-w-0">
           <span className="text-[15px] font-semibold leading-snug">{item.label}</span>
@@ -84,8 +85,9 @@ const ItemCard = ({ item, row, onChange }: { item: MaintenanceItem; row?: Row; o
               </label>
               {error && <ErrorText>{error}</ErrorText>}
               <div className="flex items-center justify-between gap-2">
-                <button type="button" onClick={() => void remove('items', item.id).then(() => { toast('Voce rimossa', { kind: 'info', body: item.label }); onChange() })} className={`${btn.ghost} -ml-2 text-red-ink hover:bg-red-soft`}>
-                  <Trash2 size={16} />Rimuovi
+                {/* Due tocchi, come per gli interventi: la voce sparisce dalle scadenze */}
+                <button type="button" onClick={() => (askRemove ? void remove('items', item.id).then(() => { toast('Voce rimossa', { kind: 'info', body: item.label }); onChange() }) : setAskRemove(true))} className={`${askRemove ? btn.danger : `${btn.ghost} -ml-2 text-red-ink hover:bg-red-soft`}`}>
+                  <Trash2 size={16} />{askRemove ? 'Sì, rimuovi' : 'Rimuovi'}
                 </button>
                 <button className={btn.ink}>Salva</button>
               </div>
@@ -120,19 +122,20 @@ export const Maintenance = ({ bike, items, rows, onChange }: { bike: Bike; items
     }
   }
   const modelManual = findModel(DATA, bike.make, bike.model, bike.year)
+  const fromManual = modelManual ? applyManual(items, itemsFor(bike)) : []
   const manualSource = modelManual?.source as { title?: string; page?: number; url?: string } | undefined
   const sorted = [...items].sort((a, b) => rows.findIndex((r) => r.id === a.id) - rows.findIndex((r) => r.id === b.id))
   return (
     <>
       <PageHead title="Manutenzione" sub="Ogni voce scade al primo traguardo tra km e mesi." action={!adding && <button type="button" onClick={() => setAdding(true)} className={`${btn.primary} h-11 px-5`}><Plus size={18} strokeWidth={2.6} />Voce</button>} />
-      {modelManual && items.some((i) => i.origin !== 'model') && (
+      {modelManual && fromManual.length > 0 && (
         <button
           type="button"
-          onClick={() => void Promise.all(items.map((i) => remove('items', i.id))).then(() => Promise.all(itemsFor(bike).map((i) => save('items', i)))).then(() => { toast('Intervalli del libretto applicati'); onChange() })}
+          onClick={() => void Promise.all(fromManual.map((i) => save('items', i))).then(() => { toast('Intervalli del libretto applicati', { body: 'Le tue voci restano' }); onChange() })}
           className={`${card} flex items-center gap-3 p-4 text-left`}
         >
           <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-lime-soft text-lime-ink"><BookOpen size={19} /></span>
-          <span className="grid"><b className="text-[15px] font-semibold">Usa gli intervalli del libretto</b><span className="text-[13px] text-ink-3">{bike.make} {bike.model} · sostituisce le voci attuali</span></span>
+          <span className="grid"><b className="text-[15px] font-semibold">Usa gli intervalli del libretto</b><span className="text-[13px] text-ink-3">{bike.make} {bike.model} · aggiorna i valori tipici, le tue voci restano</span></span>
         </button>
       )}
       <AnimatePresence initial={false}>

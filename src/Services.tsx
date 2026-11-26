@@ -102,8 +102,8 @@ const ServiceCard = ({ s, label, onRemove, onEdit }: { s: Service; label: (id: s
           </span>
         ) : (
           <span className="-ml-2 flex items-center">
-            <button type="button" onClick={onEdit} className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-sunken" aria-label={`Modifica l'intervento del ${fullDate(s.date)}`}><Pencil size={16} /></button>
-            <button type="button" onClick={() => setAsk(true)} className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-sunken" aria-label={`Elimina l'intervento del ${fullDate(s.date)}`}><Trash2 size={16} /></button>
+            <button type="button" onClick={onEdit} className="hitbox grid size-9 place-items-center rounded-full text-ink-2 hover:bg-sunken" aria-label={`Modifica l'intervento del ${fullDate(s.date)}`}><Pencil size={16} /></button>
+            <button type="button" onClick={() => setAsk(true)} className="hitbox grid size-9 place-items-center rounded-full text-ink-2 hover:bg-sunken" aria-label={`Elimina l'intervento del ${fullDate(s.date)}`}><Trash2 size={16} /></button>
           </span>
         )}
         <span className="grid justify-items-end text-right">
@@ -125,10 +125,11 @@ const Select = ({ label, value, onChange, children }: { label: string; value: st
   </span>
 )
 
-export const Services = ({ bike, km, items, services, readings, onChange }: {
+export const Services = ({ bike, km, items, labels, services, readings, onChange }: {
   bike: Bike
   km: number
   items: MaintenanceItem[]
+  labels: Record<string, string>
   services: Service[]
   readings: OdometerReading[]
   onChange: () => void
@@ -140,7 +141,7 @@ export const Services = ({ bike, km, items, services, readings, onChange }: {
   const [year, setYear] = useState('')
   const [itemId, setItemId] = useState('')
   const [printing, setPrinting] = useState(false)
-  const label = (id: string) => items.find((i) => i.id === id)?.label ?? 'Voce rimossa'
+  const label = (id: string) => labels[id] ?? 'Voce rimossa'
   const sorted = useMemo(() => [...services].sort((a, b) => b.date.localeCompare(a.date) || b.km - a.km), [services])
   const shown = filterServices(sorted, items, { q, year, itemId })
   const filtering = Boolean(q || year || itemId)

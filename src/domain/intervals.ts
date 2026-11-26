@@ -60,3 +60,13 @@ export const itemsFor = (
       origin: model ? 'model' : 'preset',
     }))
 }
+
+// Applica gli intervalli del libretto senza perdere niente: le voci con "valore tipico" si aggiornano al loro posto
+// (stesso id, così gli interventi registrati restano collegati), le mancanti si aggiungono,
+// quelle personalizzate o già dal libretto restano come sono. Restituisce solo ciò che va salvato.
+export const applyManual = (items: MaintenanceItem[], drafts: ItemDraft[]): (ItemDraft | MaintenanceItem)[] =>
+  drafts.flatMap((dr) => {
+    const old = items.find((i) => !i.deletedAt && i.item === dr.item && i.action === dr.action)
+    if (!old) return [dr]
+    return old.origin === 'preset' ? [{ ...old, ...dr, notes: old.notes }] : []
+  })

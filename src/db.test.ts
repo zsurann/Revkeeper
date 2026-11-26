@@ -90,3 +90,10 @@ it('removeBikeCascade riepiloga ed elimina tutti i record figli e gli allegati e
   expect(sharedRow?.deletedAt).toBeUndefined()
   expect(sharedRow?.blob).toBeDefined()
 })
+
+it('i nomi delle voci restano anche dopo averle eliminate (storico leggibile)', async () => {
+  const { itemLabels, remove, save } = await import('./db')
+  const it1 = await save('items', { bikeId: 'lbl-bike', item: 'custom', label: 'Pastiglie', action: 'inspect', km: 15000, origin: 'user' })
+  await remove('items', it1.id)
+  expect((await itemLabels('lbl-bike'))[it1.id]).toBe('Pastiglie')
+})

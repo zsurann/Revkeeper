@@ -103,7 +103,18 @@ export const buildCatalog = (
   }
   for (const [brand, e] of Object.entries(extra.brands)) {
     if (!byBrand.has(brand)) byBrand.set(brand, new Map())
-    for (const m of e.models ?? []) add(brand, m)
+    for (const m of e.models ?? []) {
+      // Alias curati ("SH 125" di "SH125i"): il modello dei registri con quel nome confluisce in quello curato,
+      // che vince dagli anni che copre; gli anni precedenti restano dai registri
+      const models = byBrand.get(brand)!
+      for (const a of m.aliases ?? []) {
+        const dup = key(a) !== key(m.name) ? models.get(key(a)) : undefined
+        if (!dup) continue
+        models.delete(key(a))
+        add(brand, { ...dup, name: m.name, aliases: [...(dup.aliases ?? []), dup.name] })
+      }
+      add(brand, m)
+    }
   }
   const rank = (b: string) => {
     const i = extra.popular.indexOf(b)

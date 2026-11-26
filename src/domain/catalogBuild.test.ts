@@ -98,3 +98,14 @@ it('nessun modello con parentesi vuote, anni futuri restano selezionabili e pref
   await loadBrand('Kawasaki')
   expect(specsOf('Kawasaki', 'Z650', 2018)?.hp).toBe(68)
 })
+
+it('un alias curato unisce il modello dei registri con quel nome (SH125 dentro SH125i)', () => {
+  const extra: Extra = {
+    popular: ['Honda'],
+    brands: { Honda: { models: [{ name: 'SH125i', aliases: ['SH 125'], from: 2001, to: null, specs: [{ from: 2020, to: null, cc: 125, source: 'https://www.honda.it/' }] }] } },
+  }
+  const c = buildCatalog([], extra, 2026, 'x', [{ make: 'Honda', model: 'SH125', from: 2001, to: 2026, cc: 125, kw: 9, kg: 0, sources: ['astra'] }])
+  const models = c.brands[0]!.models
+  expect(models.map((m) => m.name)).toEqual(['SH125i'])
+  expect(models[0]!.specs?.map((s) => [s.from, s.to])).toEqual([[2001, 2019], [2020, null]])
+})
