@@ -55,7 +55,7 @@ const ItemCard = ({ item, row, onChange }: { item: MaintenanceItem; row?: Row; o
         </span>
         <span className="flex items-center gap-2">
           {row && s !== 'ok' ? <StatusPill status={s}>{dueShort(row.due)}</StatusPill> : row && <span className="text-[13px] font-semibold text-ink-2">{dueShort(row.due)}</span>}
-          <m.span animate={{ rotate: open ? 180 : 0 }} className="text-ink-3"><ChevronDown size={18} /></m.span>
+          <span className={`text-ink-3 transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)] ${open ? 'rotate-180' : ''}`}><ChevronDown size={18} /></span>
         </span>
         {row && <span className="col-start-2 col-end-4"><MiniBar progress={row.due.progress} status={s} /></span>}
       </button>

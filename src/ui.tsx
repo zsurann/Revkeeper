@@ -30,14 +30,10 @@ export const Card = ({ className = '', children, ...p }: { className?: string; c
 
 // Contenitore delle pagine: entra con una dissolvenza breve dal basso
 export const Screen = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <m.main
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: dur.slow, ease: ease.out }}
-    className={`mx-auto grid w-full max-w-[480px] content-start gap-6 px-4 pb-32 pt-[max(20px,env(safe-area-inset-top))] lg:max-w-[760px] lg:px-8 lg:pb-16 lg:pt-10 ${className}`}
-  >
+  // Niente animazione propria: entra già con la transizione di pagina (due animazioni insieme davano un movimento storto)
+  <main className={`mx-auto grid w-full max-w-[480px] grid-cols-1 content-start gap-6 px-4 pb-32 pt-[max(20px,env(safe-area-inset-top))] lg:max-w-[760px] lg:px-8 lg:pb-16 lg:pt-10 ${className}`}>
     {children}
-  </m.main>
+  </main>
 )
 
 // Titolo di pagina con indietro facoltativo e un'azione a destra
@@ -87,14 +83,19 @@ export const StatusPill = ({ status, children }: { status: Status; children?: Re
 // Barra sottile a segmenti per le righe degli elenchi (stessa grammatica del contagiri del cruscotto)
 export const MiniBar = ({ progress, status, segments = 24 }: { progress: number; status: Status; segments?: number }) => {
   const lit = Math.max(progress > 0 ? 1 : 0, Math.round(Math.min(1, progress) * segments))
-  const on = status === 'overdue' ? 'bg-red' : status === 'warn' ? 'bg-amber' : 'bg-ink'
+  const on = status === 'overdue' ? 'var(--color-red)' : status === 'warn' ? 'var(--color-amber)' : 'var(--color-ink)'
+  // Un solo elemento: colore fino al segmento acceso, poi una maschera ritaglia i segmenti (prima erano 24 elementi per riga)
+  const step = `((100% + 2px) / ${segments})`
+  const edge = `calc(${lit} * ${step})`
   return (
-    <span className="grid h-1.5 w-full gap-[2px]" style={{ gridTemplateColumns: `repeat(${segments},1fr)` }} aria-hidden="true">
-      {Array.from({ length: segments }, (_, i) => (
-        // CSS puro: 24 segmenti per riga × 10 righe come componenti animati in JS bloccavano il cambio scheda
-        <i key={i} className={`block rounded-[1px] animate-[seg_var(--duration-base)_var(--ease-out)_both] ${i < lit ? on : 'bg-line'}`} style={{ animationDelay: `${150 + i * 20}ms` }} />
-      ))}
-    </span>
+    <span
+      aria-hidden="true"
+      className="block h-1.5 w-full origin-left animate-[bar_var(--duration-slow)_var(--ease-out)_150ms_both]"
+      style={{
+        background: `linear-gradient(90deg, ${on} ${edge}, var(--color-line) ${edge})`,
+        maskImage: `repeating-linear-gradient(90deg, #000 0 calc(${step} - 2px), transparent 0 calc(${step}))`,
+      }}
+    />
   )
 }
 
