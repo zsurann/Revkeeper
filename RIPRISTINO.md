@@ -15,9 +15,11 @@ Per tutti i comandi: `export CLOUDFLARE_ACCOUNT_ID=…` e un token API con perme
 ## 1. Database: tornare a un istante (Time Travel) — primo tentativo
 
 ```bash
-npx wrangler d1 time-travel info revkeeper --timestamp=2026-12-01T10:00:00Z   # controlla il punto
-npx wrangler d1 time-travel restore revkeeper --timestamp=2026-12-01T10:00:00Z
+npx wrangler d1 time-travel info revkeeper --timestamp=2026-12-01T10:00:00Z   # stampa il bookmark di quell'istante
+npx wrangler d1 time-travel restore revkeeper --bookmark=<bookmark>
 ```
+
+Usare il bookmark: il ripristino diretto con `--timestamp` ha dato un errore interno di Cloudflare nella prova, quello con `--bookmark` no.
 
 Sovrascrive il database con lo stato di quel momento: le modifiche successive si perdono (i telefoni le rimandano se le hanno ancora). Il comando stampa un bookmark per annullare il ripristino.
 
@@ -51,6 +53,8 @@ I file caricati prima dell'ultima copia ma oltre i 30 giorni non hanno copia: re
 - Annotare cosa è successo, quando e quali utenti sono coinvolti.
 - Se dati personali sono andati persi o esposti: avviso agli utenti coinvolti (notifica ed email) e, se c'è rischio per loro, notifica al Garante entro 72 ore (`docs/registro-trattamenti.md`).
 
-## Prova
+## Prove (27/11/2026)
 
-Copia del database ripristinata in un SQLite di prova il 27/11/2026: integrità ok, conteggi uguali alla produzione, meno di 1 secondo. Time Travel e ripristino dei file vanno provati una volta prima del lancio.
+- Copia del database ripristinata in un SQLite di prova: integrità ok, conteggi uguali alla produzione, meno di 1 secondo.
+- Time Travel su un database D1 di prova (poi eliminato): righe cancellate tornate con `--bookmark`, 4 secondi.
+- File: caricato e riscaricato da `revkeeper-backups` con `wrangler r2 object put/get --jurisdiction eu`, contenuto identico (SHA-256).

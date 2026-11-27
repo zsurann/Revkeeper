@@ -3,7 +3,11 @@ import { expect, test, type Page } from '@playwright/test'
 // PNG 1×1: basta per provare allegati e compressione
 const png = { name: 'scontrino.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') }
 
-const tab = (page: Page, name: string) => page.locator('nav[aria-label=Sezioni]:visible').getByRole('button', { name, exact: true }).click()
+const tab = async (page: Page, name: string) => {
+  await page.locator('nav[aria-label=Sezioni]:visible').getByRole('button', { name, exact: true }).click()
+  // fine della transizione di pagina (il cruscotto non ha un titolo di pagina)
+  if (name !== 'Cruscotto') await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible()
+}
 
 const fillCombo = async (page: Page, id: string, text: string, isMobile: boolean) => {
   const el = page.locator(id)
@@ -27,7 +31,7 @@ const addBike = async (page: Page, isMobile: boolean) => {
   await page.getByRole('option').first().click()
   await page.locator('#startKm').fill('12000')
   await page.getByRole('button', { name: 'Salva moto' }).click()
-  await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible({ timeout: 15_000 }) // carica il catalogo e crea le voci
 }
 
 // Nessun errore JavaScript non gestito durante i flussi
@@ -43,6 +47,7 @@ test('ospite: moto, km, cancellazione di una lettura sbagliata', async ({ page, 
   await page.getByRole('button', { name: 'Aggiorna km' }).first().click()
   await page.locator('#km').fill('120000') // una cifra in più
   await page.getByRole('button', { name: 'Salva km' }).click()
+  await page.getByRole('button', { name: /Sì, salva/ }).click() // salto grande: chiede conferma
   await expect(page.getByRole('heading', { name: /km registrati/ })).toBeVisible()
   await page.getByRole('button', { name: 'Chiudi', exact: true }).last().click()
 
@@ -203,7 +208,7 @@ test('garage: elimina moto con doppia conferma, cambio moto attiva e stato vuoto
   await page.getByRole('option').first().click()
   await page.locator('#startKm').fill('5000')
   await page.getByRole('button', { name: 'Salva moto' }).click()
-  await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible({ timeout: 15_000 }) // carica il catalogo e crea le voci
 
   // Elimina la moto attiva (Yamaha): passa a Honda
   await openGarage()
