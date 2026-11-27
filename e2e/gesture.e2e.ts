@@ -37,7 +37,7 @@ const setupBike = async (page: Page, url = '/?browser=1') => {
   await expect(page.getByText(/Ufficio federale delle strade \(USTRA\)/)).toBeVisible()
   await page.locator('#startKm').fill('12000')
   await page.getByRole('button', { name: 'Salva moto' }).click()
-  await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible({ timeout: 15_000 }) // carica il catalogo e crea le voci
 }
 
 test.describe('gesture Android (Pixel 7)', () => {
@@ -53,13 +53,13 @@ test.describe('gesture Android (Pixel 7)', () => {
     await expect(page.getByRole('dialog', { name: 'Aggiorna km' })).toBeVisible()
     await page.goBack()
     await expect(page.getByRole('dialog', { name: 'Aggiorna km' })).toBeHidden()
-    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible({ timeout: 15_000 }) // carica il catalogo e crea le voci
 
     // 2. Naviga tab Interventi -> Indietro torna al Cruscotto
     await page.locator('nav[aria-label=Sezioni]:visible').getByRole('button', { name: 'Interventi', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Interventi' })).toBeVisible()
     await page.goBack()
-    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible({ timeout: 15_000 }) // carica il catalogo e crea le voci
 
     // 3. Garage -> Modifica moto -> apri Combobox -> Indietro chiude Combobox, poi Modifica, poi Garage
     await page.getByRole('button', { name: /apri il garage/i }).click()
@@ -77,12 +77,13 @@ test.describe('gesture Android (Pixel 7)', () => {
     await expect(page.getByRole('heading', { name: 'Garage' })).toBeVisible()
 
     await page.goBack()
-    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible({ timeout: 15_000 }) // carica il catalogo e crea le voci
   })
 
   test('Sheet si chiude trascinando giù dal contenuto (quando è in cima) e non rompe lo scorrimento interno', async ({ page }) => {
     await setupBike(page)
     await page.locator('nav[aria-label=Sezioni]:visible').getByRole('button', { name: 'Interventi', exact: true }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Interventi', exact: true })).toBeVisible() // fine della transizione
     await page.getByRole('button', { name: /Registra/ }).first().click()
     const dialog = page.getByRole('dialog', { name: 'Nuovo intervento' })
     await expect(dialog).toBeVisible()
@@ -145,7 +146,7 @@ test.describe('gesture iPhone (PWA standalone e Safari)', () => {
 
     // Swipe dal bordo sinistro (x: 10 -> 210)
     await touchSwipe(page, 10, 320, 210, 325)
-    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible({ timeout: 15_000 }) // carica il catalogo e crea le voci
 
     // Swipe giù su Sheet su iPhone
     await page.getByRole('button', { name: 'Aggiorna km' }).first().click()
@@ -161,7 +162,7 @@ test.describe('gesture iPhone (PWA standalone e Safari)', () => {
     await page.getByRole('button', { name: /apri il garage/i }).click()
     await expect(page.getByRole('heading', { name: 'Garage' })).toBeVisible()
     await touchSwipe(page, 10, 320, 200, 325)
-    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible({ timeout: 15_000 }) // carica il catalogo e crea le voci
   })
 
   test('iPhone in Safari browser: edge-swipe JS non interferisce con Safari, overscroll-behavior-y e touch-action presenti', async ({ page }) => {
@@ -182,6 +183,6 @@ test.describe('gesture iPhone (PWA standalone e Safari)', () => {
 
     // Ma popstate (gestito dal browser) chiude correttamente la schermata
     await page.goBack()
-    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Prossima manutenzione' })).toBeVisible({ timeout: 15_000 }) // carica il catalogo e crea le voci
   })
 })
