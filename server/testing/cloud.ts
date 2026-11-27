@@ -50,19 +50,21 @@ export class FakeD1 {
   }
 }
 
-type Obj = { body: Uint8Array; type?: string }
+type Obj = { body: Uint8Array; type?: string; uploaded: Date }
 
 export class FakeR2 {
   objects = new Map<string, Obj>()
   failPut = false
-  async put(key: string, value: ArrayBuffer | ArrayBufferView | Blob | string | null, opts?: { httpMetadata?: { contentType?: string } }) {
+  now = () => new Date() // data di caricamento dei nuovi oggetti, sovrascrivibile nei test
+  async put(key: string, value: ArrayBuffer | ArrayBufferView | Blob | ReadableStream | string | null, opts?: { httpMetadata?: { contentType?: string } }) {
     if (this.failPut) throw new Error('R2 non disponibile')
     const body = value instanceof Uint8Array ? value.slice()
       : value instanceof ArrayBuffer ? new Uint8Array(value)
       : typeof value === 'string' ? new TextEncoder().encode(value)
       : value && typeof (value as Blob).arrayBuffer === 'function' ? new Uint8Array(await (value as Blob).arrayBuffer())
+      : value instanceof ReadableStream ? new Uint8Array(await new Response(value).arrayBuffer())
       : new Uint8Array()
-    this.objects.set(key, { body, type: opts?.httpMetadata?.contentType })
+    this.objects.set(key, { body, type: opts?.httpMetadata?.contentType, uploaded: this.now() })
   }
   async get(key: string) {
     const o = this.objects.get(key)
@@ -83,6 +85,6 @@ export class FakeR2 {
     const start = opts?.cursor ? all.indexOf(opts.cursor) + 1 : 0
     const slice = all.slice(start, start + (opts?.limit ?? 1000))
     const truncated = start + slice.length < all.length
-    return { objects: slice.map((key) => ({ key }) as { key: string }), delimitedPrefixes: [] as string[], truncated, ...(truncated ? { cursor: slice.at(-1)! } : {}) }
+    return { objects: slice.map((key) => ({ key, uploaded: this.objects.get(key)!.uploaded })), delimitedPrefixes: [] as string[], truncated, ...(truncated ? { cursor: slice.at(-1)! } : {}) }
   }
 }

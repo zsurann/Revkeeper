@@ -188,6 +188,9 @@ const parseStored = (raw: string | null, label: string): { ok: true; data: unkno
 }
 
 const pull = async (url: URL, env: Env, userId: string) => {
+  // Ultimo accesso per la cancellazione degli account inattivi: al massimo una scrittura al giorno
+  const now = Date.now()
+  await env.DB.prepare('UPDATE users SET seen_at = ?1, warned_at = NULL WHERE id = ?2 AND (seen_at IS NULL OR seen_at < ?1 - 86400000)').bind(now, userId).run()
   const since = Number(url.searchParams.get('since') ?? 0)
   const cursorIn = Number.isFinite(since) ? since : 0
   const { results } = await env.DB.prepare(
@@ -228,7 +231,8 @@ const subscribe = async (req: Request, env: Env, userId: string) => {
       `INSERT INTO push_subs(endpoint, user_id, p256dh, auth) VALUES (?1, ?2, ?3, ?4)
        ON CONFLICT(endpoint) DO UPDATE SET user_id = ?2, p256dh = ?3, auth = ?4 WHERE push_subs.user_id = ?2 OR push_subs.user_id LIKE 'guest-%'`,
     ).bind(endpoint, userId, s.keys.p256dh, s.keys.auth),
-    env.DB.prepare('UPDATE users SET notify_hour = ?, tz = ? WHERE id = ?').bind(hour, tz, userId),
+    // remind_at azzerato: il cron lo ricalcola con l'ora nuova (e recupera quella di oggi se è appena passata)
+    env.DB.prepare('UPDATE users SET notify_hour = ?, tz = ?, remind_at = NULL WHERE id = ?').bind(hour, tz, userId),
   ])
   return json({ ok: true })
 }
@@ -390,7 +394,8 @@ const exportAccount = async (env: Env, userId: string) => {
   })
 }
 
-const deleteStoredFiles = async (env: Env, userId: string) => {
+type Store = Pick<Env, 'DB' | 'FILES'>
+const deleteStoredFiles = async (env: Store, userId: string) => {
   let cursor: string | undefined
   for (;;) {
     const page = await env.FILES.list({ prefix: `${userId}/`, cursor })
@@ -400,7 +405,7 @@ const deleteStoredFiles = async (env: Env, userId: string) => {
   }
 }
 
-const deleteAccount = async (env: Env, userId: string) => {
+export const deleteAccount = async (env: Store, userId: string) => {
   await deleteStoredFiles(env, userId)
   await env.DB.batch([
     env.DB.prepare('DELETE FROM push_subs WHERE user_id = ?').bind(userId),

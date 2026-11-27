@@ -48,3 +48,12 @@ export const pushText = (lines: string[]) => {
   const i = lines[0]!.indexOf(': ')
   return i < 0 ? { title: lines[0]!, body: '' } : { title: lines[0]!.slice(i + 2).replace(/^./, (c) => c.toUpperCase()), body: lines[0]!.slice(0, i) }
 }
+
+// Istante (ms, inizio dell'ora) in cui scatta il promemoria all'ora `hour` del fuso `tz`:
+// il più recente non nel futuro (dir -1) o il primo strettamente dopo `now` (dir 1). Ora per ora: regge l'ora legale.
+export const remindAt = (now: number, tz: string, hour: number, dir: 1 | -1) => {
+  let t = Math.floor(now / 3_600_000) * 3_600_000
+  if (dir === 1) t += 3_600_000
+  for (let i = 0; i < 50; i++, t += dir * 3_600_000) if (localParts(new Date(t), tz).hour === hour) return t
+  throw new Error(`Ora ${hour} mai raggiunta nel fuso ${tz}`)
+}

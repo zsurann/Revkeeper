@@ -93,3 +93,14 @@ it('un giro del cron saltato non fa perdere il promemoria del giorno', async () 
   await runReminders(env, new Date(NOW.getTime() + CATCH_UP_HOURS * 3600_000 + 3600_000))
   expect(sent()).toEqual([])
 })
+
+it('dopo il giro il prossimo promemoria è il giorno dopo alla stessa ora', async () => {
+  const { DB, env } = setup()
+  addUser(DB, 'roma', 'Europe/Rome', 0)
+  await runReminders(env, NOW)
+  const r = DB.prepare('SELECT remind_at AS t FROM users WHERE id = ?').bind('roma').first<{ t: number }>()
+  expect(new Date(r!.t).toISOString()).toBe('2026-11-21T23:00:00.000Z') // 00:00 del 22 a Roma
+  vi.mocked(sendPush).mockClear()
+  await runReminders(env, new Date(NOW.getTime() + 3600_000))
+  expect(sent()).toEqual([]) // non più in scadenza: il giro non lo rilegge
+})
