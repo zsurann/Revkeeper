@@ -103,7 +103,7 @@ export const checkQuota = async (env: PushEnv, now = new Date()) => {
   return used
 }
 
-export const WEEKLY_CRON = '30 2 * * 0' // domenica 03:30 in Italia d'inverno, 04:30 d'estate
+export const WEEKLY_CRON = '30 2 * * SUN' // domenica 03:30 in Italia d'inverno, 04:30 d'estate
 
 type CronEnv = InactiveEnv & BackupEnv & LiteEnv
 const HOURLY: Monitor = { slug: 'revkeeper-cron', schedule: '0 * * * *', failureIssueThreshold: 2 }
