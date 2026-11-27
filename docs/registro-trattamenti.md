@@ -1,6 +1,6 @@
 # Registro delle attività di trattamento (art. 30 GDPR)
 
-Titolare: _nome e cognome_ — contatto: _email dedicata_ (gli stessi di `VITE_OWNER_NAME` e `VITE_CONTACT_EMAIL`).
+Titolare: Gennaro Celentano — contatto: revkeeper.app@gmail.com.
 Nessun DPO (non obbligatorio). Aggiornato il 27/11/2026.
 
 | Trattamento | Finalità | Base giuridica | Interessati e dati | Destinatari | Trasferimenti extra-UE | Conservazione |
