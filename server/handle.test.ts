@@ -364,3 +364,25 @@ it('ospite: notifiche senza Google, poi al login passano all\'account e l\'ospit
   expect((await d1.prepare("SELECT count(*) n FROM records WHERE user_id LIKE 'guest-%'").first<{ n: number }>())?.n).toBe(0)
   expect((await call(env, '/me', { cookie: guest })).status).toBe(401)
 })
+
+it('statistiche solo per le email admin, con conteggi aggregati', async () => {
+  const { env, login } = await session()
+  const user = await login('altro@b.it', '7')
+  await push(env, user, [{ kind: 'bikes', id: BIKE, updatedAt: Date.now(), data: bike({ updatedAt: Date.now(), plate: 'AB123CD' }) }])
+  expect((await call(env, '/admin/stats', { cookie: user })).status).toBe(404)
+
+  env.ADMIN_EMAILS = ' io@b.it , altro2@b.it'
+  const admin = await login('IO@b.it', '1')
+  expect((await (await call(env, '/me', { cookie: admin })).json()).admin).toBe(true)
+  expect((await (await call(env, '/me', { cookie: user })).json()).admin).toBe(false)
+  expect((await call(env, '/admin/stats', { cookie: user })).status).toBe(404)
+  expect((await call(env, '/admin/stats')).status).toBe(401)
+
+  const res = await call(env, '/admin/stats', { cookie: admin })
+  expect(res.status).toBe(200)
+  const s = await res.json()
+  expect(s).toMatchObject({ google: 2, guests: 0, new7: 2, active7: 1, records: { bikes: 1 }, makes: [{ make: 'Kawasaki', n: 1 }] })
+  expect(s.weeks).toHaveLength(8)
+  expect(s.weeks[7]).toEqual({ google: 2, guests: 0 })
+  expect(JSON.stringify(s)).not.toMatch(/@|AB123CD/)
+})

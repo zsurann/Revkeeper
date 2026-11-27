@@ -5,7 +5,8 @@ import { hit, ipKey, type RateName } from './ratelimit'
 import { isId, recordError } from './schema'
 import { zipStoreStream, type ZipEntry } from './zip'
 
-export type Env = PushEnv & { FILES: R2Bucket; GOOGLE_CLIENT_ID: string }
+// ADMIN_EMAILS: email Google (separate da virgola) che vedono le statistiche. Variabile su Cloudflare, non nel repo.
+export type Env = PushEnv & { FILES: R2Bucket; GOOGLE_CLIENT_ID: string; ADMIN_EMAILS?: string }
 
 // Tetti per restare nel piano gratuito (vedi Notes della mappa)
 export const LIMITS = {
@@ -497,6 +498,47 @@ const deleteBike = async (env: Env, userId: string, bikeId: string) => {
   return json({ ok: true, deletedRecords, deletedFiles: filesToDelete.length })
 }
 
+// Statistiche riservate: solo conteggi aggregati, mai email, targhe o contenuti
+const isAdmin = async (env: Env, userId: string) => {
+  const admins = (env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+  if (!admins.length || userId.startsWith(GUEST)) return false
+  const row = await env.DB.prepare('SELECT email FROM users WHERE id = ?').bind(userId).first<{ email: string }>()
+  return !!row && admins.includes(row.email.toLowerCase())
+}
+
+const WEEK = 7 * 86_400_000
+const stats = async (env: Env) => {
+  const now = Date.now()
+  const [totals, kinds, makes, weeks] = await Promise.all([
+    env.DB.prepare(
+      `SELECT
+         (SELECT COUNT(*) FROM users WHERE id NOT LIKE 'guest-%') AS google,
+         (SELECT COUNT(*) FROM users WHERE id LIKE 'guest-%') AS guests,
+         (SELECT COUNT(*) FROM users WHERE created_at > ?1) AS new7,
+         (SELECT COUNT(*) FROM users WHERE created_at > ?2) AS new30,
+         (SELECT COUNT(DISTINCT user_id) FROM records WHERE updated_at > ?1) AS active7,
+         (SELECT COUNT(DISTINCT user_id) FROM records WHERE updated_at > ?2) AS active30,
+         (SELECT COUNT(DISTINCT user_id) FROM push_subs) AS push,
+         (SELECT COUNT(*) FROM files) AS files,
+         (SELECT COALESCE(SUM(bytes), 0) FROM users) AS bytes`,
+    ).bind(now - WEEK, now - 30 * 86_400_000).all(),
+    env.DB.prepare('SELECT kind, COUNT(*) AS n FROM records WHERE deleted = 0 GROUP BY kind').all(),
+    env.DB.prepare("SELECT json_extract(data, '$.make') AS make, COUNT(*) AS n FROM records WHERE kind = 'bikes' AND deleted = 0 GROUP BY make ORDER BY n DESC LIMIT 8").all(),
+    env.DB.prepare("SELECT CAST((?1 - created_at) / ?2 AS INTEGER) AS ago, SUM(id NOT LIKE 'guest-%') AS google, SUM(id LIKE 'guest-%') AS guests FROM users WHERE created_at > ?1 - 8 * ?2 GROUP BY ago")
+      .bind(now, WEEK).all(),
+  ])
+  return {
+    at: now,
+    ...(totals.results[0] as Record<string, number>),
+    records: Object.fromEntries((kinds.results as { kind: string; n: number }[]).map((r) => [r.kind, r.n])),
+    makes: makes.results,
+    weeks: Array.from({ length: 8 }, (_, i) => {
+      const w = (weeks.results as { ago: number; google: number; guests: number }[]).find((r) => r.ago === 7 - i)
+      return { google: w?.google ?? 0, guests: w?.guests ?? 0 }
+    }),
+  }
+}
+
 export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>): Promise<Response> => {
   const url = new URL(req.url)
   const path = url.pathname.replace(/^\/api/, '')
@@ -506,8 +548,11 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
     if (req.method === 'POST' && path === '/auth/guest') return await guestLogin(req, env)
 
     const userId = await userOf(req, env)
-    if (path === '/me' && req.method === 'GET')
-      return userId ? json(await env.DB.prepare('SELECT email, bytes, notify_hour AS notifyHour FROM users WHERE id = ?').bind(userId).first()) : fail(401, 'Non autenticato')
+    if (path === '/me' && req.method === 'GET') {
+      if (!userId) return fail(401, 'Non autenticato')
+      const me = await env.DB.prepare('SELECT email, bytes, notify_hour AS notifyHour FROM users WHERE id = ?').bind(userId).first()
+      return json(me && { ...me, admin: await isAdmin(env, userId) })
+    }
     if (!userId) return fail(401, 'Non autenticato')
 
     if (req.method === 'POST' && path === '/auth/logout') {
@@ -522,6 +567,7 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
       ])
       return json({ ok: true }, 200, { 'set-cookie': setCookie('', 0) })
     }
+    if (req.method === 'GET' && path === '/admin/stats') return (await isAdmin(env, userId)) ? json(await stats(env)) : fail(404, 'Non trovato')
     if (req.method === 'GET' && path === '/account/export') return await exportAccount(env, userId)
     if (req.method === 'POST' && path === '/account/delete') return await deleteAccount(env, userId)
     const bikeId = /^\/bikes\/([^/]+)$/.exec(path)?.[1]
