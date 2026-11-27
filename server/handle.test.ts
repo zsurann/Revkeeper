@@ -160,7 +160,7 @@ it('carica e rilegge un file, con la quota sui byte veri', async () => {
 it('iscrive e disiscrive un dispositivo', async () => {
   const { env, d1, login } = await session()
   const cookie = await login()
-  const body = { subscription: { endpoint: 'https://push.example/a', keys: { p256dh: 'k', auth: 'a' } }, hour: 9, tz: 'Europe/Rome' }
+  const body = { subscription: { endpoint: 'https://fcm.googleapis.com/fcm/send/a', keys: { p256dh: 'k', auth: 'a' } }, hour: 9, tz: 'Europe/Rome' }
   expect((await call(env, '/push/subscribe', { method: 'POST', cookie, body: JSON.stringify({ ...body, hour: 25 }) })).status).toBe(400)
   expect((await call(env, '/push/subscribe', { method: 'POST', cookie, body: JSON.stringify(body) })).status).toBe(200)
   expect(d1.prepare('SELECT notify_hour AS h, tz FROM users WHERE id = ?').bind('42').first()).toMatchObject({ h: 9, tz: 'Europe/Rome' })
@@ -180,7 +180,7 @@ it('esporta i dati in uno zip ed elimina account, file e sessioni', async () => 
     { kind: 'attachments', id: FILE, updatedAt: AT, data: { id: FILE, updatedAt: AT, name: 'fattura.pdf', type: 'application/pdf', size: 4 } },
   ])
   expect((await putFile(env, cookie, FILE, new Uint8Array([9, 8, 7, 6]))).status).toBe(200)
-  await call(env, '/push/subscribe', { method: 'POST', cookie, body: JSON.stringify({ subscription: { endpoint: 'https://push.example/a', keys: { p256dh: 'k', auth: 'a' } }, hour: 8, tz: 'Europe/Rome' }) })
+  await call(env, '/push/subscribe', { method: 'POST', cookie, body: JSON.stringify({ subscription: { endpoint: 'https://fcm.googleapis.com/fcm/send/a', keys: { p256dh: 'k', auth: 'a' } }, hour: 8, tz: 'Europe/Rome' }) })
 
   const exp = await call(env, '/account/export', { cookie })
   expect(exp.status).toBe(200)
@@ -189,7 +189,7 @@ it('esporta i dati in uno zip ed elimina account, file e sessioni', async () => 
   const dati = JSON.parse(new TextDecoder().decode(zip.get('dati.json')!)) as { account: { email: string }; records: { id: string }[]; files: { path: string }[]; notifications: string[] }
   expect(dati.account.email).toBe('a@b.it')
   expect(dati.records.map((r) => r.id).sort()).toEqual([BIKE, FILE].sort())
-  expect(dati.notifications).toEqual(['https://push.example/a'])
+  expect(dati.notifications).toEqual(['https://fcm.googleapis.com/fcm/send/a'])
   expect([...zip.get(dati.files[0]!.path)!]).toEqual([9, 8, 7, 6])
 
   expect((await call(env, '/account/export')).status).toBe(401)
@@ -215,8 +215,8 @@ it('esci ovunque spegne anche le notifiche di tutti i telefoni', async () => {
   const { env, d1, login } = await session()
   const a = await login()
   const sub = (endpoint: string) => ({ subscription: { endpoint, keys: { p256dh: 'k', auth: 'a' } }, hour: 9, tz: 'Europe/Rome' })
-  await call(env, '/push/subscribe', { method: 'POST', cookie: a, body: JSON.stringify(sub('https://push.example/a')) })
-  await call(env, '/push/subscribe', { method: 'POST', cookie: a, body: JSON.stringify(sub('https://push.example/perso')) })
+  await call(env, '/push/subscribe', { method: 'POST', cookie: a, body: JSON.stringify(sub('https://fcm.googleapis.com/fcm/send/a')) })
+  await call(env, '/push/subscribe', { method: 'POST', cookie: a, body: JSON.stringify(sub('https://fcm.googleapis.com/fcm/send/perso')) })
   expect((await call(env, '/auth/logout-all', { method: 'POST', cookie: a })).status).toBe(200)
   expect(d1.prepare('SELECT count(*) AS n FROM push_subs').first<{ n: number }>()?.n).toBe(0)
 })
@@ -351,7 +351,7 @@ it('ospite: notifiche senza Google, poi al login passano all\'account e l\'ospit
   expect(g.status).toBe(200)
   const guest = tokenOf(g)
   expect((await push(env, guest, [{ kind: 'bikes', id: BIKE, updatedAt: AT, data: bike() }])).status).toBe(200)
-  const sub = { endpoint: 'https://push.example/1', keys: { p256dh: 'p', auth: 'a' } }
+  const sub = { endpoint: 'https://fcm.googleapis.com/fcm/send/1', keys: { p256dh: 'p', auth: 'a' } }
   expect((await call(env, '/push/subscribe', { method: 'POST', cookie: guest, body: JSON.stringify({ subscription: sub, hour: 8, tz: 'Europe/Rome' }) })).status).toBe(200)
 
   const res = await call(env, '/auth/google', { method: 'POST', cookie: guest, body: JSON.stringify({ credential: await sign('77', 'c@d.it') }) }, keys)
@@ -385,4 +385,39 @@ it('statistiche solo per le email admin, con conteggi aggregati', async () => {
   expect(s.weeks).toHaveLength(8)
   expect(s.weeks[7]).toEqual({ google: 2, guests: 0 })
   expect(JSON.stringify(s)).not.toMatch(/@|AB123CD/)
+})
+
+it('notifiche: solo servizi dei browser, e un telefono di un altro account non si sposta', async () => {
+  const { env, d1, login } = await session()
+  const a = await login('a@b.it', '1')
+  const b = await login('b@b.it', '2')
+  const sub = (endpoint: string) => JSON.stringify({ subscription: { endpoint, keys: { p256dh: 'k', auth: 'a' } }, hour: 9, tz: 'Europe/Rome' })
+  for (const bad of ['https://evil.example/x', 'https://fcm.googleapis.com.evil.it/x', 'http://fcm.googleapis.com/x', 'https://169.254.169.254/'])
+    expect((await call(env, '/push/subscribe', { method: 'POST', cookie: a, body: sub(bad) })).status).toBe(400)
+  for (const ok of ['https://fcm.googleapis.com/fcm/send/x', 'https://web.push.apple.com/x', 'https://updates.push.services.mozilla.com/wpush/v2/x', 'https://wns2-par02p.notify.windows.com/w/?token=x'])
+    expect((await call(env, '/push/subscribe', { method: 'POST', cookie: a, body: sub(ok) })).status).toBe(200)
+
+  await call(env, '/push/subscribe', { method: 'POST', cookie: b, body: sub('https://fcm.googleapis.com/fcm/send/x') })
+  expect(d1.prepare('SELECT user_id FROM push_subs WHERE endpoint = ?').bind('https://fcm.googleapis.com/fcm/send/x').all().results).toEqual([{ user_id: '1' }])
+})
+
+it('sincronizzazione con tetto orario per utente', async () => {
+  const { env, login } = await session()
+  const cookie = await login()
+  for (let i = 0; i < 120; i++) expect((await push(env, cookie, [])).status).toBe(200)
+  const res = await push(env, cookie, [])
+  expect(res.status).toBe(429)
+  expect(Number(res.headers.get('retry-after'))).toBeGreaterThan(0)
+})
+
+it('un nuovo ospite pulisce gli ospiti senza sessione da oltre 7 giorni', async () => {
+  const { env, d1 } = await session()
+  const old = Date.now() - 8 * 86_400_000
+  d1.exec("INSERT INTO users(id, email, created_at) VALUES ('guest-vecchio', '', ?), ('guest-attivo', '', ?), ('guest-nuovo', '', ?)", old, old, Date.now())
+  d1.exec("INSERT INTO sessions(token_hash, user_id, expires_at) VALUES ('h', 'guest-attivo', ?)", Date.now() + 1000)
+  d1.exec("INSERT INTO push_subs(endpoint, user_id, p256dh, auth) VALUES ('https://fcm.googleapis.com/fcm/send/v', 'guest-vecchio', 'k', 'a')")
+  expect((await call(env, '/auth/guest', { method: 'POST' })).status).toBe(200)
+  const ids = d1.prepare("SELECT id FROM users WHERE id IN ('guest-vecchio', 'guest-attivo', 'guest-nuovo') ORDER BY id").all().results.map((r) => r.id)
+  expect(ids).toEqual(['guest-attivo', 'guest-nuovo'])
+  expect(d1.prepare('SELECT * FROM push_subs').all().results).toEqual([])
 })

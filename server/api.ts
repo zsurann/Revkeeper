@@ -12,7 +12,7 @@ export type Env = PushEnv & { FILES: R2Bucket; GOOGLE_CLIENT_ID: string; ADMIN_E
 export const LIMITS = {
   pushBatch: 50,
   pullPage: 500,
-  recordBytes: 100_000,
+  recordBytes: 20_000, // il record valido più grande (note e liste di allegati al massimo) sta sotto i 13 kB
   fileBytes: 15 * 1024 * 1024,
   userBytes: 500 * 1024 * 1024,
   sessionDays: 180,
@@ -100,12 +100,23 @@ const newSession = async (env: Env, userId: string, before: D1PreparedStatement[
   return { token, maxAge }
 }
 
+// Ospiti senza più una sessione valida (il telefono ne ha già creato uno nuovo): via dati, file e notifiche,
+// che altrimenti manderebbero promemoria doppi. Pochi per volta, sfruttando le nuove iscrizioni.
+const dropStaleGuests = async (env: Env) => {
+  const { results } = await env.DB.prepare(
+    `SELECT id FROM users u WHERE id LIKE 'guest-%' AND created_at < ?1
+       AND NOT EXISTS (SELECT 1 FROM sessions s WHERE s.user_id = u.id AND s.expires_at > ?2) LIMIT 3`,
+  ).bind(Date.now() - 7 * 86_400_000, Date.now()).all<{ id: string }>()
+  for (const g of results) await deleteAccount(env, g.id)
+}
+
 // Ospite: account anonimo legato al telefono, serve solo perché il server possa calcolare e inviare i promemoria
 const GUEST = 'guest-'
 const guestLogin = async (req: Request, env: Env) => {
   const ip = req.headers.get('cf-connecting-ip') ?? 'sconosciuto'
   const stop = await limited(env, 'login', await sha256(`ip:${ipKey(ip)}`))
   if (stop) return stop
+  await dropStaleGuests(env)
   const id = GUEST + crypto.randomUUID()
   const { token, maxAge } = await newSession(env, id, [
     env.DB.prepare("INSERT INTO users(id, email, created_at) VALUES (?, '', ?)").bind(id, Date.now()),
@@ -194,12 +205,15 @@ const pull = async (url: URL, env: Env, userId: string) => {
   return json({ changes, cursor: page.cursor, more: page.more })
 }
 
+// Solo i servizi di notifica dei browser: il server non deve contattare indirizzi scelti da chi si iscrive
+export const PUSH_HOST = /^https:\/\/(fcm\.googleapis\.com|android\.googleapis\.com|updates\.push\.services\.mozilla\.com|[a-z0-9-]+(\.[a-z0-9-]+)*\.push\.apple\.com|[a-z0-9-]+(\.[a-z0-9-]+)*\.notify\.windows\.com)\//
+
 type SubBody = { subscription?: { endpoint?: string; keys?: { p256dh?: string; auth?: string } }; hour?: number; tz?: string }
 
 const subscribe = async (req: Request, env: Env, userId: string) => {
   const { subscription: s, hour, tz } = (await req.json()) as SubBody
   const endpoint = s?.endpoint ?? ''
-  if (!endpoint.startsWith('https://') || !s?.keys?.p256dh || !s.keys.auth) return fail(400, 'Iscrizione non valida')
+  if (!PUSH_HOST.test(endpoint) || !s?.keys?.p256dh || !s.keys.auth) return fail(400, 'Iscrizione non valida')
   if (!Number.isInteger(hour) || hour! < 0 || hour! > 23) return fail(400, 'Ora non valida')
   try {
     new Intl.DateTimeFormat('it', { timeZone: tz })
@@ -209,8 +223,11 @@ const subscribe = async (req: Request, env: Env, userId: string) => {
   const n = await env.DB.prepare('SELECT count(*) n FROM push_subs WHERE user_id = ? AND endpoint != ?').bind(userId, endpoint).first<{ n: number }>()
   if ((n?.n ?? 0) >= LIMITS.subsPerUser) return fail(429, 'Troppi dispositivi con notifiche: disattivale su uno')
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO push_subs(endpoint, user_id, p256dh, auth) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(endpoint) DO UPDATE SET user_id = ?2, p256dh = ?3, auth = ?4')
-      .bind(endpoint, userId, s.keys.p256dh, s.keys.auth),
+    // Un telefono già legato a un altro account Google non si sposta da qui: ci si arriva solo uscendo da quello
+    env.DB.prepare(
+      `INSERT INTO push_subs(endpoint, user_id, p256dh, auth) VALUES (?1, ?2, ?3, ?4)
+       ON CONFLICT(endpoint) DO UPDATE SET user_id = ?2, p256dh = ?3, auth = ?4 WHERE push_subs.user_id = ?2 OR push_subs.user_id LIKE 'guest-%'`,
+    ).bind(endpoint, userId, s.keys.p256dh, s.keys.auth),
     env.DB.prepare('UPDATE users SET notify_hour = ?, tz = ? WHERE id = ?').bind(hour, tz, userId),
   ])
   return json({ ok: true })
@@ -575,7 +592,10 @@ export const handle = async (req: Request, env: Env, keys?: () => Promise<Jwk[]>
       if (!isId(bikeId)) return fail(400, 'Moto non valida')
       return await deleteBike(env, userId, bikeId)
     }
-    if (req.method === 'POST' && path === '/sync/push') return await push(req, env, userId)
+    if (req.method === 'POST' && path === '/sync/push') {
+      const ip = await sha256(`ip:${ipKey(req.headers.get('cf-connecting-ip') ?? 'sconosciuto')}`)
+      return (await limited(env, 'sync', userId)) ?? (await limited(env, 'syncIp', ip)) ?? (await push(req, env, userId))
+    }
     if (req.method === 'POST' && path === '/push/subscribe') return await subscribe(req, env, userId)
     if (req.method === 'POST' && path === '/push/unsubscribe') {
       const { endpoint } = (await req.json()) as { endpoint?: string }
