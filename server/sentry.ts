@@ -16,4 +16,5 @@ export const sentryOptions = (env: SentryEnv): CloudflareOptions => ({
   dataCollection: { userInfo: false, cookies: false, httpHeaders: false, httpBodies: [], urlQueryParams: false },
   integrations: [captureConsoleIntegration({ levels: ['error'] })],
   tracesSampleRate: 0.05,
+  beforeSend: (e) => { delete e.user; if (e.request) delete e.request.headers; return e }, // niente IP né user-agent
 })

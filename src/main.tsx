@@ -4,6 +4,7 @@ import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import { Guard, initSentry, reactErrorHandlers } from './sentry'
 import { App } from './App'
+import { Legal, LEGAL_PATHS } from './Legal'
 import { browserAllowed, detectPlatform, isInstalled } from './domain/platform'
 import { captureInstallPrompt } from './installPrompt'
 import { THEME_KEY } from './theme'
@@ -16,7 +17,8 @@ initSentry()
 
 // Sui telefoni Revkeeper si usa solo installata: nel browser c'è la pagina di installazione. Computer e tablet: sito normale
 const platform = detectPlatform(navigator.userAgent)
-const gate = platform.os !== 'desktop' && !isInstalled() && !browserAllowed()
+const legal = LEGAL_PATHS.includes(location.pathname)
+const gate = !legal && platform.os !== 'desktop' && !isInstalled() && !browserAllowed()
 if (gate) captureInstallPrompt()
 
 // Azzeramento di tutti i dati del 25/11/2026 (anche sul server): ogni dispositivo cancella una volta i suoi dati locali.
@@ -51,5 +53,5 @@ const updateSW = registerSW({
   onRegisteredSW: (_url, reg) => { if (reg) setInterval(() => void reg.update().catch(() => undefined), 3_600_000) },
 })
 void resetLocalData().then(() =>
-  createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode><Guard>{gate ? <Suspense><Install platform={platform} /></Suspense> : <App />}</Guard></StrictMode>),
+  createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode><Guard>{legal ? <Legal path={location.pathname} /> : gate ? <Suspense><Install platform={platform} /></Suspense> : <App />}</Guard></StrictMode>),
 )
