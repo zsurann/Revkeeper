@@ -16,6 +16,8 @@ type Stats = {
   records: Partial<Record<'bikes' | 'services' | 'documents' | 'readings' | 'items' | 'attachments', number>>
   makes: { make: string | null; n: number }[]
   weeks: { google: number; guests: number }[]
+  dbBytes: number | null
+  quota: { dbBytes: number; fileBytes: number }
 }
 
 const n = (v: number) => v.toLocaleString('it-IT')
@@ -57,6 +59,20 @@ export const AdminStats = () => {
         <Tile label="Documenti" value={n(r.documents ?? 0)} sub={`${n(r.readings ?? 0)} letture km`} />
         <Tile label="File" value={n(s.files)} sub={mb(s.bytes)} />
       </div>
+
+      <section aria-labelledby="h-quota" className="grid gap-2">
+        <h3 id="h-quota" className="m-0 text-[14px] font-semibold">Piano gratuito</h3>
+        {([['Database', s.dbBytes, s.quota.dbBytes], ['File', s.bytes, s.quota.fileBytes]] as const).map(([label, used, max]) => {
+          const pct = used == null ? null : Math.min(100, (used / max) * 100)
+          return (
+            <div key={label} className="grid gap-1 text-[13px]">
+              <div className="flex justify-between"><span>{label}</span><span className="t-num text-ink-3">{used == null ? 'n.d.' : `${mb(used)} su ${mb(max)}`}</span></div>
+              <span className="h-2 rounded-full bg-sunken"><span className={`block h-full rounded-full ${pct != null && pct >= 80 ? 'bg-red' : 'bg-ink dark:bg-lime'}`} style={{ width: `${pct ?? 0}%` }} /></span>
+            </div>
+          )
+        })}
+        <p className="m-0 text-[12px] text-ink-3">Oltre l'80% arriva un avviso su Sentry (controllo della domenica). Letture, scritture e CPU sono nella dashboard di Cloudflare.</p>
+      </section>
 
       <section aria-labelledby="h-weeks" className="grid gap-2">
         <h3 id="h-weeks" className="m-0 text-[14px] font-semibold">Nuovi utenti, ultime 8 settimane</h3>

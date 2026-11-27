@@ -1,4 +1,4 @@
-import { lazy, StrictMode, Suspense } from 'react'
+import { lazy, StrictMode, Suspense, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
@@ -12,6 +12,7 @@ import { offerUpdate } from './UpdatePrompt'
 
 // La pagina di installazione si vede solo nel browser del telefono: non pesa sull'app installata
 const Install = lazy(() => import('./Install').then((m) => ({ default: m.Install })))
+const Landing = lazy(() => import('./Install').then((m) => ({ default: m.Landing })))
 
 initSentry()
 
@@ -19,6 +20,15 @@ initSentry()
 const platform = detectPlatform(navigator.userAgent)
 const legal = LEGAL_PATHS.includes(location.pathname)
 const gate = !legal && platform.os !== 'desktop' && !isInstalled() && !browserAllowed()
+// Computer, prima volta: presentazione con QR. Chi ha già usato l'app (benvenuto fatto) o ha scelto il computer entra diretto
+const WEB = 'revkeeper.web'
+const seen = () => { try { return localStorage.getItem(WEB) === '1' || localStorage.getItem('revkeeper.welcomed') === '1' } catch { return true } }
+const landing = !legal && platform.os === 'desktop' && !isInstalled() && !browserAllowed() && !seen()
+const Desktop = () => {
+  const [enter, setEnter] = useState(!landing)
+  if (enter) return <App />
+  return <Suspense><Landing onEnter={() => { try { localStorage.setItem(WEB, '1') } catch { /* resta per questa visita */ } setEnter(true) }} /></Suspense>
+}
 if (gate) captureInstallPrompt()
 
 // Azzeramento di tutti i dati del 25/11/2026 (anche sul server): ogni dispositivo cancella una volta i suoi dati locali.
@@ -53,5 +63,5 @@ const updateSW = registerSW({
   onRegisteredSW: (_url, reg) => { if (reg) setInterval(() => void reg.update().catch(() => undefined), 3_600_000) },
 })
 void resetLocalData().then(() =>
-  createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode><Guard>{legal ? <Legal path={location.pathname} /> : gate ? <Suspense><Install platform={platform} /></Suspense> : <App />}</Guard></StrictMode>),
+  createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode><Guard>{legal ? <Legal path={location.pathname} /> : gate ? <Suspense><Install platform={platform} /></Suspense> : <Desktop />}</Guard></StrictMode>),
 )

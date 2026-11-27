@@ -16,6 +16,12 @@ test.beforeEach(async ({ page }) => {
 })
 test.afterEach(({ page }) => expect(errors.get(page)).toEqual([]))
 
+// Prima la presentazione, la guida parte dal pulsante
+const open = async (page: Page) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Installa sul telefono' }).click()
+}
+
 const guide = (page: Page) => page.getByTestId('install-guide')
 const steps = (page: Page) => page.getByTestId('install-guide-step')
 
@@ -54,7 +60,7 @@ const simulateShareSheet = async (page: Page, ratio = 0.42) => {
 }
 
 test('prima apertura: tutti i passaggi sono nella scheda, visibili o scorrevoli, senza sovrapporsi alla freccia', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
   await expect(guide(page)).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Aggiungila alla schermata Home' })).toBeVisible()
   const n = await steps(page).count()
@@ -85,7 +91,7 @@ test('prima apertura: tutti i passaggi sono nella scheda, visibili o scorrevoli,
 })
 
 test('con il foglio Condividi aperto la guida resta interamente nella parte visibile', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
   await expect(guide(page)).toBeVisible()
   await simulateShareSheet(page, 0.42)
   await expect(guide(page)).toBeVisible()
@@ -105,7 +111,7 @@ test('con il foglio Condividi aperto la guida resta interamente nella parte visi
 })
 
 test('si può nascondere e rimostrare una sola scheda, senza copie sovrapposte', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
   await expect(guide(page)).toHaveCount(1)
   await page.getByTestId('install-guide-dismiss').click()
   await expect(guide(page)).toHaveCount(0)
@@ -117,7 +123,7 @@ test('si può nascondere e rimostrare una sola scheda, senza copie sovrapposte',
 })
 
 test('Chrome iOS: il primo passo indica Condividi in alto; Safari: in basso', async ({ page }) => {
-  await page.goto('/')
+  await open(page)
   const ua = await page.evaluate(() => navigator.userAgent)
   if (/CriOS/.test(ua)) {
     await expect(steps(page).first()).toContainText(/Condividi/)

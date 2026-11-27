@@ -1,4 +1,5 @@
 import { localParts, pushText, remindAt, remindersFor, type Rec } from '../server/reminders'
+import { QUOTA } from '../server/api'
 import { sendPush, type PushEnv } from '../server/push'
 import { runBackup, type BackupEnv } from './backup'
 import { runInactive, type InactiveEnv } from './inactive'
@@ -93,6 +94,15 @@ export const runReminders = async (env: PushEnv, now: Date) => {
   }
 }
 
+// Spazio vicino ai tetti del piano gratuito: un console.error diventa evento Sentry (avviso al titolare)
+export const checkQuota = async (env: PushEnv, now = new Date()) => {
+  const r = await env.DB.prepare('SELECT COALESCE(SUM(bytes), 0) AS b FROM users').all<{ b: number }>()
+  const used = { db: (r.meta as { size_after?: number } | undefined)?.size_after ?? 0, files: r.results[0]?.b ?? 0 }
+  for (const [k, max] of [['db', QUOTA.dbBytes], ['files', QUOTA.fileBytes]] as const)
+    if (used[k] > 0.8 * max) console.error(`Quota ${k} oltre l'80%: ${Math.round(used[k] / 1048576)} MB su ${Math.round(max / 1048576)} MB (${now.toISOString().slice(0, 10)})`)
+  return used
+}
+
 export const WEEKLY_CRON = '30 2 * * 0' // domenica 03:30 in Italia d'inverno, 04:30 d'estate
 
 type CronEnv = InactiveEnv & BackupEnv & LiteEnv
@@ -105,7 +115,7 @@ export default {
   scheduled: (controller, env, ctx) =>
     ctx.waitUntil(
       controller.cron === WEEKLY_CRON
-        ? monitored(env, WEEKLY, async () => ({ backup: await runBackup(env, new Date()), inactive: await runInactive(env, Date.now()) }))
+        ? monitored(env, WEEKLY, async () => ({ backup: await runBackup(env, new Date()), inactive: await runInactive(env, Date.now()), quota: await checkQuota(env) }))
         : monitored(env, HOURLY, () => runReminders(env, new Date())),
     ),
 } satisfies ExportedHandler<CronEnv>

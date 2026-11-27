@@ -25,6 +25,7 @@ const fillCombo = async (page: Page, id: string, text: string) => {
 const setupBike = async (page: Page, url = '/?browser=1') => {
   await page.goto(url)
   await page.getByRole('button', { name: 'Più tardi' }).click()
+  await page.getByRole('button', { name: 'Non ora' }).click() // passo notifiche del benvenuto
   await page.getByRole('button', { name: 'Aggiungi moto' }).click()
   await fillCombo(page, '#make', 'Kawasaki')
   await page.getByRole('option', { name: 'Kawasaki', exact: true }).click()

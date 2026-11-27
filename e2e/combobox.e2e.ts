@@ -5,6 +5,7 @@ const { defaultBrowserType: _d1, ...iphone } = devices['iPhone 13']
 const openMakeList = async (page: Page, isMobile: boolean) => {
   await page.goto('/?browser=1')
   await page.getByRole('button', { name: 'Più tardi' }).click()
+  await page.getByRole('button', { name: 'Non ora' }).click() // passo notifiche del benvenuto
   await page.getByRole('button', { name: 'Aggiungi moto' }).click()
   if (isMobile) await page.locator('#make').tap()
   else await page.locator('#make').click()
@@ -140,6 +141,7 @@ test.describe('combobox touch: primo tocco lista alta senza tastiera, secondo to
   test('fonti in Account e Manutenzione hanno link cliccabili e citazioni corrette', async ({ page }) => {
     await page.goto('/?browser=1')
     await page.getByRole('button', { name: 'Più tardi' }).click()
+    await page.getByRole('button', { name: 'Non ora' }).click() // passo notifiche del benvenuto
     await page.getByRole('button', { name: 'Aggiungi moto' }).click()
     await page.locator('#make').tap()
     await page.locator('#make').tap()

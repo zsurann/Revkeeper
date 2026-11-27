@@ -529,6 +529,8 @@ const isAdmin = async (env: Env, userId: string) => {
 }
 
 const WEEK = 7 * 86_400_000
+// Tetti del piano gratuito per lo spazio (D1 per database, R2 per account)
+export const QUOTA = { dbBytes: 500 * 1024 * 1024, fileBytes: 10 * 1024 * 1024 * 1024 }
 const stats = async (env: Env) => {
   const now = Date.now()
   const [totals, kinds, makes, weeks] = await Promise.all([
@@ -552,6 +554,8 @@ const stats = async (env: Env) => {
   return {
     at: now,
     ...(totals.results[0] as Record<string, number>),
+    dbBytes: (totals.meta as { size_after?: number } | undefined)?.size_after ?? null,
+    quota: QUOTA,
     records: Object.fromEntries((kinds.results as { kind: string; n: number }[]).map((r) => [r.kind, r.n])),
     makes: makes.results,
     weeks: Array.from({ length: 8 }, (_, i) => {

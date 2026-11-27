@@ -17,6 +17,7 @@ const fillCombo = async (page: Page, id: string, text: string, isMobile: boolean
 const addBike = async (page: Page, isMobile: boolean) => {
   await page.goto('/?browser=1')
   await page.getByRole('button', { name: 'Più tardi' }).click()
+  await page.getByRole('button', { name: 'Non ora' }).click() // passo notifiche del benvenuto
   await page.getByRole('button', { name: 'Aggiungi moto' }).click()
   await fillCombo(page, '#make', 'Honda', isMobile)
   await page.getByRole('option').first().click()
