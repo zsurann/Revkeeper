@@ -28,3 +28,13 @@ export const reactErrorHandlers = {
   onCaughtError: Sentry.reactErrorHandler(),
   onRecoverableError: Sentry.reactErrorHandler(),
 }
+
+// Se un componente si rompe, al posto dello schermo bianco: messaggio e ricarica. I dati restano sul telefono.
+const Fallback = () => (
+  <main role="alert" className="mx-auto grid min-h-dvh max-w-[420px] content-center gap-4 px-6 text-center">
+    <h1 className="t-title m-0 text-[22px]">Qualcosa non ha funzionato</h1>
+    <p className="m-0 text-[15px] text-ink-2">I tuoi dati sono al sicuro sul telefono. Ricarica l'app per continuare.</p>
+    <button type="button" onClick={() => location.reload()} className="h-12 rounded-full bg-ink px-6 font-semibold text-bg">Ricarica</button>
+  </main>
+)
+export const Guard = ({ children }: { children: React.ReactNode }) => <Sentry.ErrorBoundary fallback={<Fallback />}>{children}</Sentry.ErrorBoundary>

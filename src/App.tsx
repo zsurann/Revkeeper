@@ -249,6 +249,8 @@ const Main = () => {
     }
     await load()
     pick(b.id)
+    // Dati solo sul telefono: chiede al browser di non cancellarli quando serve spazio (installata di solito lo concede senza chiedere)
+    void navigator.storage?.persist?.().catch(() => undefined)
     toast('Moto salvata', { body: `${b.make} ${b.model}` })
   }
   const deleted = async (id: Id) => {
