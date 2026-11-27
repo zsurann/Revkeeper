@@ -5,6 +5,8 @@ export const RATE = {
   login: { max: 20, seconds: 600 }, // per IP: tentativi di accesso con Google
   pushTest: { max: 5, seconds: 3600 }, // per utente: notifiche di prova
   upload: { max: 120, seconds: 3600 }, // per utente: file caricati
+  sync: { max: 120, seconds: 3600 }, // per utente: lotti di sincronizzazione (il telefono ne manda pochi all'ora)
+  syncIp: { max: 1500, seconds: 86_400 }, // per IP: tetto giornaliero, anche cambiando account ospite
 } as const
 export type RateName = keyof typeof RATE
 
