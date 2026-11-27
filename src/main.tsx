@@ -2,7 +2,7 @@ import { lazy, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
-import { initSentry, reactErrorHandlers } from './sentry'
+import { Guard, initSentry, reactErrorHandlers } from './sentry'
 import { App } from './App'
 import { browserAllowed, detectPlatform, isInstalled } from './domain/platform'
 import { captureInstallPrompt } from './installPrompt'
@@ -51,5 +51,5 @@ const updateSW = registerSW({
   onRegisteredSW: (_url, reg) => { if (reg) setInterval(() => void reg.update().catch(() => undefined), 3_600_000) },
 })
 void resetLocalData().then(() =>
-  createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode>{gate ? <Suspense><Install platform={platform} /></Suspense> : <App />}</StrictMode>),
+  createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode><Guard>{gate ? <Suspense><Install platform={platform} /></Suspense> : <App />}</Guard></StrictMode>),
 )
