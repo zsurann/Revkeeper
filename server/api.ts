@@ -521,12 +521,12 @@ const stats = async (env: Env) => {
          (SELECT COUNT(DISTINCT user_id) FROM push_subs) AS push,
          (SELECT COUNT(*) FROM files) AS files,
          (SELECT COALESCE(SUM(bytes), 0) FROM users) AS bytes`,
-    ).bind(now - WEEK, now - 30 * 86_400_000),
-    env.DB.prepare('SELECT kind, COUNT(*) AS n FROM records WHERE deleted = 0 GROUP BY kind'),
-    env.DB.prepare("SELECT json_extract(data, '$.make') AS make, COUNT(*) AS n FROM records WHERE kind = 'bikes' AND deleted = 0 GROUP BY make ORDER BY n DESC LIMIT 8"),
+    ).bind(now - WEEK, now - 30 * 86_400_000).all(),
+    env.DB.prepare('SELECT kind, COUNT(*) AS n FROM records WHERE deleted = 0 GROUP BY kind').all(),
+    env.DB.prepare("SELECT json_extract(data, '$.make') AS make, COUNT(*) AS n FROM records WHERE kind = 'bikes' AND deleted = 0 GROUP BY make ORDER BY n DESC LIMIT 8").all(),
     env.DB.prepare("SELECT CAST((?1 - created_at) / ?2 AS INTEGER) AS ago, SUM(id NOT LIKE 'guest-%') AS google, SUM(id LIKE 'guest-%') AS guests FROM users WHERE created_at > ?1 - 8 * ?2 GROUP BY ago")
-      .bind(now, WEEK),
-  ].map((q) => q.all()))
+      .bind(now, WEEK).all(),
+  ])
   return {
     at: now,
     ...(totals.results[0] as Record<string, number>),
