@@ -4,7 +4,7 @@ vi.mock('../server/push', () => ({ sendPush: vi.fn(async () => 201) }))
 
 import { sendPush, type PushEnv } from '../server/push'
 import { FakeD1 } from '../server/testing/cloud'
-import { CATCH_UP_HOURS, MAX_SENDS, runReminders } from './worker'
+import { CATCH_UP_HOURS, checkQuota, MAX_SENDS, runReminders } from './worker'
 
 const bike = JSON.stringify({ id: 'b', updatedAt: 0, make: 'Kawasaki', model: 'Z650', year: 2017, startKm: 30000, startDate: '2026-01-01' })
 const doc = (due: string) => JSON.stringify({ id: 'd', updatedAt: 0, bikeId: 'b', kind: 'revisione', dueDate: due, attachmentIds: [] })
@@ -92,4 +92,24 @@ it('un giro del cron saltato non fa perdere il promemoria del giorno', async () 
   vi.mocked(sendPush).mockClear()
   await runReminders(env, new Date(NOW.getTime() + CATCH_UP_HOURS * 3600_000 + 3600_000))
   expect(sent()).toEqual([])
+})
+
+it('dopo il giro il prossimo promemoria è il giorno dopo alla stessa ora', async () => {
+  const { DB, env } = setup()
+  addUser(DB, 'roma', 'Europe/Rome', 0)
+  await runReminders(env, NOW)
+  const r = DB.prepare('SELECT remind_at AS t FROM users WHERE id = ?').bind('roma').first<{ t: number }>()
+  expect(new Date(r!.t).toISOString()).toBe('2026-11-21T23:00:00.000Z') // 00:00 del 22 a Roma
+  vi.mocked(sendPush).mockClear()
+  await runReminders(env, new Date(NOW.getTime() + 3600_000))
+  expect(sent()).toEqual([]) // non più in scadenza: il giro non lo rilegge
+})
+
+it("avvisa quando i file superano l'80% del piano gratuito", async () => {
+  const { DB, env } = setup()
+  DB.exec("INSERT INTO users(id, email, created_at, bytes) VALUES ('pieno', 'p@x.it', 0, ?)", 9 * 1024 ** 3)
+  const err = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+  await checkQuota(env)
+  expect(err).toHaveBeenCalledWith(expect.stringContaining('Quota files'))
+  err.mockRestore()
 })

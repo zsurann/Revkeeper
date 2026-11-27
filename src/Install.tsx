@@ -3,6 +3,7 @@ import { IgnitionMark, Mark } from './Mark'
 import { guideLayout, shareChromeSide, type SafeArea, type ViewportBox } from './domain/installGuide'
 import type { Platform } from './domain/platform'
 import { promptInstall, useInstallState } from './installPrompt'
+import { LegalLinks } from './Legal'
 import { btn } from './ui'
 
 // Pagina mostrata sui telefoni fuori dall'app installata: porta a installare Revkeeper sulla schermata Home.
@@ -38,6 +39,7 @@ const Shell = ({ children }: { children: ReactNode }) => (
     </header>
     {children}
     <p className="m-0 mt-3 text-[13px] text-ink-3">Già installata? Aprila dall'icona sulla schermata Home.</p>
+    <LegalLinks className="mt-2" />
   </main>
 )
 
@@ -102,6 +104,29 @@ const Hero = ({ title, text }: { title: string; text: string }) => (
   </>
 )
 
+// Presentazione comune a telefono e computer (decisa sul prototipo: issue 52)
+const POINTS = [
+  'Scegli marca, modello e anno: gli intervalli si compilano da soli',
+  'Aggiorni i km con un tocco e le scadenze si ricalcolano',
+  'Ti avvisa 30 giorni, 7 giorni e il giorno stesso',
+]
+const Pitch = () => (
+  <>
+    <Hero
+      title="Ogni scadenza della moto, al momento giusto."
+      text="Tagliandi dal libretto del tuo modello, promemoria per assicurazione, bollo e revisione, spese e ricevute in un posto solo. Gratis, senza pubblicità, funziona anche senza rete."
+    />
+    <ol className="m-0 mt-5 grid list-none gap-3 p-0 text-[15px]">
+      {POINTS.map((t, i) => (
+        <li key={i} className="flex items-center gap-3">
+          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-lime t-num text-[14px] text-black">{i + 1}</span>
+          {t}
+        </li>
+      ))}
+    </ol>
+  </>
+)
+
 const ANDROID_HELP: Partial<Record<Platform['browser'], ReactNode>> = {
   chrome: <>In Chrome tocca <B>⋮</B> in alto a destra, poi <B>Installa e crea scorciatoia</B> e <B>Installa</B>.</>,
   samsung: <>Tocca <B>≡</B> in basso a destra, poi <B>Aggiungi pagina a</B> e <B>Schermata Home</B>.</>,
@@ -119,12 +144,7 @@ const Android = ({ p }: { p: Platform }) => {
   }
   return (
     <>
-      <Hero title="La manutenzione della moto, sempre sotto controllo" text="Revkeeper si usa come app: installala sul telefono. È gratis e funziona anche senza rete." />
-      <ul className="m-0 mt-5 grid list-none gap-3 p-0 text-[15px]">
-        <li className="flex items-center gap-3"><Icon className="text-lime-ink" d={<path d="M14.7 6.3a4 4 0 0 0-5.3 5.2l-5.6 5.6a1.6 1.6 0 0 0 2.3 2.3l5.6-5.6a4 4 0 0 0 5.2-5.3l-2.5 2.5-2.1-.6-.6-2.1z" />} />Tagliandi e intervalli dal libretto</li>
-        <li className="flex items-center gap-3"><Icon className="text-lime-ink" d={<><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z" /><path d="M10 20a2 2 0 0 0 4 0" /></>} />Promemoria per assicurazione, bollo e revisione</li>
-        <li className="flex items-center gap-3"><Icon className="text-lime-ink" d={<><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M10 12h5M10 16h5" /></>} />Interventi e ricevute in un posto solo</li>
-      </ul>
+      <Pitch />
       <div className="mt-auto grid gap-3 pt-6">
         {state === 'installed' ? (
           <p role="status" className="m-0 flex items-center gap-3 rounded-lg bg-surface px-4 py-3.5 shadow-1 ring-1 ring-line animate-[pop_520ms_var(--ease-out)]">
@@ -134,7 +154,7 @@ const Android = ({ p }: { p: Platform }) => {
         ) : (
           <button onClick={() => void install()} className={big}>
             <Icon d={<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />} />
-            Scarica app
+            Installa sul telefono
           </button>
         )}
         {canSelf && state !== 'installed' && (
@@ -360,8 +380,54 @@ const Iphone = ({ p }: { p: Platform }) => {
   )
 }
 
+const STARTED = 'revkeeper.installStarted'
+const IphoneStart = ({ p }: { p: Platform }) => {
+  const [started, setStarted] = useState(() => {
+    try { return sessionStorage.getItem(STARTED) === '1' } catch { return false }
+  })
+  if (started) return <Iphone p={p} />
+  const start = () => {
+    try { sessionStorage.setItem(STARTED, '1') } catch { /* private mode */ }
+    setStarted(true)
+  }
+  return (
+    <Shell>
+      <Pitch />
+      <div className="mt-auto grid gap-3 pt-6">
+        <button type="button" onClick={start} className={big}>
+          <Icon d={<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />} />
+          Installa sul telefono
+        </button>
+      </div>
+    </Shell>
+  )
+}
+
 export const Install = ({ platform: p }: { platform: Platform }) => {
   if (p.os === 'android') return <Shell>{p.inApp ? <OpenElsewhere p={p} /> : <Android p={p} />}</Shell>
   if (p.inApp || p.browser === 'opera' || p.browser === 'other') return <Shell><OpenElsewhere p={p} /></Shell>
-  return <Iphone p={p} />
+  return <IphoneStart p={p} />
 }
+
+// Computer, prima volta: presentazione con QR per il telefono, oppure si entra subito
+export const Landing = ({ onEnter }: { onEnter: () => void }) => (
+  <main className="mx-auto grid min-h-dvh max-w-[1080px] content-center gap-10 px-6 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+    <section className="flex flex-col">
+      <header className="flex items-center gap-2.5">
+        <Mark size={36} />
+        <span className="t-display text-[22px]">revkeeper</span>
+      </header>
+      <Pitch />
+      <div className="mt-8 flex max-w-md items-center gap-4 rounded-lg bg-surface p-4 shadow-1 ring-1 ring-line">
+        <img src="/qr.svg" alt="Codice QR per aprire revkeeper.pages.dev sul telefono" width={104} height={104} className="shrink-0 rounded-md bg-white p-1" />
+        <div className="grid gap-2">
+          <b className="text-[16px] font-semibold">È fatta per il telefono</b>
+          <p className="m-0 text-[14px] leading-normal text-ink-3">Inquadra il codice con la fotocamera per aprirla e installarla. Oppure usala qui dal computer.</p>
+          <button type="button" onClick={onEnter} className={`${btn.secondary} h-11 justify-self-start px-5 text-[15px]`}>Usala dal computer →</button>
+        </div>
+      </div>
+      <LegalLinks className="mt-6" />
+    </section>
+    <img src="/landing/cruscotto.webp" alt="Il cruscotto di Revkeeper con il prossimo intervento e le scadenze" width={680} height={1472} className="mx-auto w-full max-w-[340px] rounded-[32px] shadow-3 ring-1 ring-line max-lg:hidden" />
+  </main>
+)

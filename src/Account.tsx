@@ -1,5 +1,8 @@
-import { BarChart3, Cloud, Download, LogOut, Monitor, Moon, RefreshCw, Sun, Trash2, TriangleAlert } from 'lucide-react'
+import { BarChart3, Cloud, Mail, Download, LogOut, Monitor, Moon, RefreshCw, Sun, Trash2, TriangleAlert } from 'lucide-react'
 import { AdminStats } from './AdminStats'
+import { EMAIL, mailto } from './contact'
+import { generatedAt as catalogDate } from './data/catalog/_brands.json'
+import { LegalLinks } from './Legal'
 import { useEffect, useState, type ReactNode } from 'react'
 import { getMeta } from './db'
 import { GoogleButton } from './GoogleButton'
@@ -8,7 +11,7 @@ import { Notifications } from './Notifications'
 import { deleteAccount, downloadAccountExport, logout, logoutAll, syncNow, unsynced } from './sync'
 import { readTheme, setTheme, type ThemePref } from './theme'
 import { toast } from './toast'
-import { PageHead, Screen, Segmented, Sheet, btn, card } from './ui'
+import { PageHead, Screen, Segmented, Sheet, btn, card, link } from './ui'
 
 const ago = (ms?: number) => (ms ? new Date(ms).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) : 'mai')
 
@@ -210,8 +213,14 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
         (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="underline decoration-ink-3 underline-offset-2 hover:text-ink">CC BY 4.0</a>),{' '}
         <a href="https://www.dgt.es/menusecundario/dgt-en-cifras/dgt-en-cifras-resultados/dgt-en-cifras-detalle/Microdatos-de-Matriculaciones-de-Vehiculos-mensual/" target="_blank" rel="noopener noreferrer" className="underline decoration-ink-3 underline-offset-2 hover:text-ink">DGT</a>,{' '}
         <a href="https://opendata.astra.admin.ch/ivzod/4000-Typengenehmigungen_TAS/4300-Datensaetze/TAS_Motorrad.csv" target="_blank" rel="noopener noreferrer" className="underline decoration-ink-3 underline-offset-2 hover:text-ink">Ufficio federale delle strade (USTRA/ASTRA)</a>,{' '}
-        schede tecniche e libretti ufficiali dei costruttori.
+        schede tecniche e libretti ufficiali dei costruttori. Fonti: Dirección General de Tráfico (Spagna), Traficom (Agenzia finlandese dei trasporti e delle comunicazioni).
+        Dati elaborati e aggregati per modello, aggiornati al {new Date(catalogDate).toLocaleDateString('it-IT')}, senza garanzia di esattezza; nessuna fonte partecipa a Revkeeper né lo sostiene.
+        Marchi e nomi dei modelli appartengono ai rispettivi proprietari.
       </p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1">
+        {EMAIL && <a href={mailto('Revkeeper: assistenza')} className={link}><Mail size={15} />Scrivici</a>}
+        <LegalLinks />
+      </div>
 
       <Sheet open={ask === 'stats'} onClose={() => setAsk(undefined)} title="Statistiche">
         {ask === 'stats' && <AdminStats />}

@@ -63,7 +63,7 @@ Restano tuoi. Non vengono venduti né condivisi, e quelli salvati online restano
 
 ---
 
-<sub>Elenco dei modelli basato su dati pubblici: NHTSA vPIC, Traficom (CC BY 4.0), DGT, Ufficio federale delle strade (USTRA/ASTRA, Svizzera).</sub>
+<sub>Elenco dei modelli basato su dati pubblici: NHTSA vPIC; Traficom, Agenzia finlandese dei trasporti e delle comunicazioni ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)); Dirección General de Tráfico (Spagna); Ufficio federale delle strade (USTRA/ASTRA, Svizzera, su autorizzazione). I file in `data/` e `src/data/catalog/` sono dati **elaborati e aggregati per modello** (date in `_brands.json`), forniti senza garanzia di esattezza; nessuna fonte partecipa a Revkeeper né lo sostiene. Marchi e nomi dei modelli appartengono ai rispettivi proprietari.</sub>
 
 ## Per pubblicare gli aggiornamenti
 

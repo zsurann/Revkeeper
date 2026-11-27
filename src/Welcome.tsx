@@ -3,6 +3,7 @@ import { Bell, Plus } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { listBikes } from './db'
 import { GoogleButton } from './GoogleButton'
+import { LegalLinks } from './Legal'
 import { IgnitionMark, Mark } from './Mark'
 import { HourSelect, enablePush, pushSupported } from './Notifications'
 import { ease } from './motion'
@@ -95,6 +96,7 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
               <GoogleButton onBusy={setBusy} onDone={(err) => (err ? setMsg(err) : void after('login'))} />
               <button type="button" onClick={() => void after('login')} className={later}>Più tardi</button>
               <p className="m-0 text-center text-[12px] text-ink-3">Puoi accedere quando vuoi da Account.</p>
+              <LegalLinks className="text-center" />
             </div>
           </m.section>
         )}
@@ -111,10 +113,11 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
               Ora dei promemoria
               <HourSelect id="welcome-hour" value={hour} onChange={setHour} />
             </label>
-            <p className="m-0 mt-3 text-[12px] text-ink-3">Funzionano anche senza account Google: il server riceve solo i dati della moto, in forma anonima.</p>
+            <p className="m-0 mt-3 text-[12px] text-ink-3">Funzionano anche senza account Google: il server riceve solo i dati della moto, senza email né nome.</p>
             <div className="mt-auto grid gap-2.5 pt-8">
               <button type="button" onClick={() => void enable()} disabled={busy} className={big}><Bell size={19} />Attiva notifiche</button>
               <button type="button" onClick={() => void after('push')} className={later}>Non ora</button>
+              <LegalLinks className="text-center" />
             </div>
           </m.section>
         )}
