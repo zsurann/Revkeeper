@@ -1,4 +1,5 @@
-import { Cloud, Download, LogOut, Monitor, Moon, RefreshCw, Sun, Trash2, TriangleAlert } from 'lucide-react'
+import { BarChart3, Cloud, Download, LogOut, Monitor, Moon, RefreshCw, Sun, Trash2, TriangleAlert } from 'lucide-react'
+import { AdminStats } from './AdminStats'
 import { useEffect, useState, type ReactNode } from 'react'
 import { getMeta } from './db'
 import { GoogleButton } from './GoogleButton'
@@ -23,7 +24,8 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
   const [lastSync, setLastSync] = useState<number>()
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
-  const [ask, setAsk] = useState<'out' | 'del'>()
+  const [ask, setAsk] = useState<'out' | 'del' | 'stats'>()
+  const [admin, setAdmin] = useState(false)
   const [theme, pickTheme] = useState<ThemePref>(readTheme)
 
   const refresh = async () => {
@@ -33,6 +35,13 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
     setLastSync(await getMeta<number>('lastSync'))
   }
   useEffect(() => void refresh(), []) // eslint-disable-line react-hooks/exhaustive-deps
+  // Il server decide chi è admin (ADMIN_EMAILS su Cloudflare): qui serve solo a mostrare il pulsante
+  useEffect(() => {
+    if (!email) return setAdmin(false)
+    fetch('/api/me')
+      .then((r) => (r.ok ? (r.json() as Promise<{ admin?: boolean } | null>) : null))
+      .then((me) => setAdmin(me?.admin === true), () => undefined)
+  }, [email])
 
   const changeTheme = (t: ThemePref) => {
     pickTheme(t)
@@ -178,6 +187,13 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
         <Notifications />
       </section>
 
+      {admin && (
+        <Section title="Statistiche · solo per te" id="h-stats">
+          <p className="m-0 text-[14px] text-ink-2">Utenti, moto e interventi registrati, in numeri aggregati.</p>
+          <button type="button" onClick={() => setAsk('stats')} className={`${btn.secondary} w-full`}><BarChart3 size={16} />Apri statistiche</button>
+        </Section>
+      )}
+
       {email && (
         <Section title="I tuoi dati" id="h-data">
           <p className="m-0 text-[14px] text-ink-2">Scarica una copia di moto, interventi, documenti e file salvati online, oppure elimina l'account.</p>
@@ -197,6 +213,9 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
         schede tecniche e libretti ufficiali dei costruttori.
       </p>
 
+      <Sheet open={ask === 'stats'} onClose={() => setAsk(undefined)} title="Statistiche">
+        {ask === 'stats' && <AdminStats />}
+      </Sheet>
       <Sheet open={ask === 'del'} onClose={() => setAsk(undefined)} title="Eliminare l'account?">
         <div className="grid gap-4 pb-1">
           <div className="flex gap-3 rounded-md bg-red-soft p-4 text-[14px] text-ink">
