@@ -173,7 +173,10 @@ const Main = () => {
       const h = document.querySelector<HTMLElement>('main h1, h1')
       document.title = h?.textContent ? `${h.textContent} · Revkeeper` : 'Revkeeper'
       if (firstPage.current) return void (firstPage.current = false)
-      if (h) {
+      // Se nel frattempo si è già toccato un campo o un pulsante della nuova pagina, il focus resta lì
+      const active = document.activeElement
+      const busy = active && active !== document.body && document.querySelector('main')?.contains(active)
+      if (h && !busy) {
         h.tabIndex = -1
         h.focus({ preventScroll: true })
       }

@@ -85,7 +85,7 @@ test.describe('combobox touch: primo tocco lista alta senza tastiera, secondo to
       scrollH: el.scrollHeight,
       optionCount: el.querySelectorAll('[role="option"]').length,
     }))
-    expect(listMetrics.clientH).toBeGreaterThanOrEqual(280)
+    expect(listMetrics.clientH).toBeGreaterThanOrEqual(260) // con la foto 4:3 il campo Marca sta più in basso (28/11/2026)
     expect(listMetrics.optionCount).toBeGreaterThan(100)
 
     // Secondo tocco sul campo: sblocca la scrittura e dà focus per aprire la tastiera
@@ -191,10 +191,30 @@ test.describe('combobox touch su iPhone (iPhone 13)', () => {
 
     // Simula riduzione del viewport (tastiera aperta) e verifica che la lista resti dentro lo schermo visibile
     await page.setViewportSize({ width: 390, height: 420 })
-    await page.waitForTimeout(100)
+    // All'apertura della tastiera il telefono porta il campo in vista da solo: qui lo si fa a mano
+    await make.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+    await page.waitForTimeout(150)
     const box = await list.boundingBox()
     expect(box).toBeTruthy()
     expect(box!.y).toBeGreaterThanOrEqual(0)
     expect(box!.y + box!.height).toBeLessThanOrEqual(420)
+  })
+})
+
+test.describe('tocco su una voce della lista', () => {
+  test.beforeEach(({}, testInfo) => { test.skip(testInfo.project.name !== 'telefono', 'Solo tocco') })
+
+  test('scegliere una voce non tocca l\'elemento che c\'era sotto la lista', async ({ page }) => {
+    await openMakeList(page, true)
+    await page.getByRole('option', { name: 'Kawasaki', exact: true }).tap()
+    await page.locator('#model').tap()
+    await expect(page.getByRole('listbox')).toBeVisible()
+    // Una voce in basso nella lista: sotto c'è il resto del modulo (anno, km, tipo di moto)
+    const options = page.getByRole('option')
+    await options.nth(Math.min(5, (await options.count()) - 1)).tap()
+    await page.waitForTimeout(600)
+    await expect(page.getByRole('listbox')).toHaveCount(0)
+    const focused = await page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName)
+    expect(['model', 'BODY']).toContain(focused)
   })
 })
