@@ -1,6 +1,7 @@
 import { db, getMeta, removeBikeCascade, setMeta, STORES, type StoreName } from './db'
 import type { Id } from './domain/types'
 import { toast } from './toast'
+import { zipStoreStream, type ZipEntry } from '../server/zip'
 
 type Change = { kind: StoreName; id: string; data: unknown; updatedAt: number; deleted?: boolean; deviceId?: string }
 type Rec = { id: string; updatedAt: number; deletedAt?: number; dirty?: 1; blob?: Blob; uploaded?: 1; type?: string }
@@ -250,11 +251,25 @@ export const deleteBikeEverywhere = async (bikeId: Id): Promise<{ synced: boolea
   return { synced: true }
 }
 
-export const downloadAccountExport = async () => {
-  const res = await fetch('/api/account/export')
+// ZIP con dati.json e i file, composto qui: il server dà i dati, i file arrivano uno per uno da /api/files
+export const buildAccountExport = async (get: typeof fetch = fetch) => {
+  const res = await get('/api/account/export')
   if (res.status === 401) throw new LoggedOut()
   if (!res.ok) throw new Error(`Export non riuscito: ${res.status}`)
-  const blob = await res.blob()
+  const dati = (await res.json()) as { files?: { id: string; path: string }[] }
+  async function* entries(): AsyncGenerator<ZipEntry> {
+    yield { name: 'dati.json', data: new TextEncoder().encode(JSON.stringify(dati, null, 2)) }
+    for (const f of dati.files ?? []) {
+      const r = await get(`/api/files/${f.id}`)
+      if (!r.ok) throw new Error(`Export non riuscito: file ${f.path} (${r.status})`)
+      yield { name: f.path, data: new Uint8Array(await r.arrayBuffer()) }
+    }
+  }
+  return new Response(zipStoreStream(entries())).blob()
+}
+
+export const downloadAccountExport = async () => {
+  const blob = new Blob([await buildAccountExport()], { type: 'application/zip' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url

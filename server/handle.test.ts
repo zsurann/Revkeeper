@@ -183,10 +183,10 @@ it('esporta i dati in uno zip ed elimina account, file e sessioni', async () => 
   expect((await putFile(env, cookie, FILE, new Uint8Array([9, 8, 7, 6]))).status).toBe(200)
   await call(env, '/push/subscribe', { method: 'POST', cookie, body: JSON.stringify({ subscription: { endpoint: 'https://fcm.googleapis.com/fcm/send/a', keys: { p256dh: 'k', auth: 'a' } }, hour: 8, tz: 'Europe/Rome' }) })
 
-  const exp = await call(env, '/account/export', { cookie })
-  expect(exp.status).toBe(200)
-  expect(exp.headers.get('content-disposition')).toContain('revkeeper-dati.zip')
-  const zip = unzip(new Uint8Array(await exp.arrayBuffer()))
+  // lo ZIP lo compone il telefono (src/sync.ts) con i dati del server e i file da /api/files
+  const { buildAccountExport } = await import('../src/sync')
+  const blob = await buildAccountExport(((path: string) => call(env, path.replace(/^\/api/, ''), { cookie })) as typeof fetch)
+  const zip = unzip(new Uint8Array(await blob.arrayBuffer()))
   const dati = JSON.parse(new TextDecoder().decode(zip.get('dati.json')!)) as { account: { email: string }; records: { id: string }[]; files: { path: string }[]; notifications: string[] }
   expect(dati.account.email).toBe('a@b.it')
   expect(dati.records.map((r) => r.id).sort()).toEqual([BIKE, FILE].sort())
@@ -371,6 +371,7 @@ it('statistiche solo per le email admin, con conteggi aggregati', async () => {
   const user = await login('altro@b.it', '7')
   await push(env, user, [{ kind: 'bikes', id: BIKE, updatedAt: Date.now(), data: bike({ updatedAt: Date.now(), plate: 'AB123CD' }) }])
   expect((await call(env, '/admin/stats', { cookie: user })).status).toBe(404)
+  await call(env, '/sync/pull?since=0', { cookie: user }) // attivo = ha aperto l'app (seen_at)
 
   env.ADMIN_EMAILS = ' io@b.it , altro2@b.it'
   const admin = await login('IO@b.it', '1')

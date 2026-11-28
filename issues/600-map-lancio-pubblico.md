@@ -38,18 +38,18 @@ Revkeeper si può aprire a tutti: nessun problema BLOCCANTE o ALTO del [controll
 - [SECURITY.md, security.txt e action fissate](615-security-txt.md): file aggiunti, SHA delle action no.
 - [Controlli nei pannelli Cloudflare e Sentry](616-pannelli.md): piano gratuito, avviso di spesa attivo, migrazione applicata; restano Sentry IP, permessi del token, CPU reale (checklist nel ticket).
 - [Anteprime dei branch sui dati di produzione](617-anteprime-separate.md): D1 e R2 separati per le anteprime.
+- [Copia settimanale che non trascina giù gli altri lavori](618-copia-isolata.md): lavori della domenica separati, avviso oltre 50.000 righe.
+- [Statistiche admin senza scansioni complete](619-statistiche-leggere.md): attivi da seen_at, cache di un'ora.
+- [Export dei dati senza CRC dei file sul server](620-export-sul-telefono.md): ZIP composto sul telefono.
+- [Sentry leggero sulle API](621-sentry-leggero-api.md): niente SDK, un evento per richiesta con errori.
 
 ## Not yet specified
 
-- **Pulizia dei record cancellati** (dalla mappa 500): i tombstone restano in D1 per sempre; con i tetti di [Gli ospiti sul server](601-ospiti-e-tetti.md) potrebbe servire.
-- **Copia settimanale del DB a pezzi** (`cron/backup.ts`): tutta in memoria in una sola esecuzione; serve verso 1k utenti.
-- **Action GitHub fissate a uno SHA**.
-- **Statistiche admin ed export ZIP pesanti**: 4 scansioni complete di `records`, CRC32 in JS tutto in memoria. Quanto servono dipende dal piano e dal numero di utenti.
-- **SDK Sentry completo su ogni `/api`**: sostituirlo con la versione leggera del cron dipende dalla CPU misurata in [Controlli nei pannelli Cloudflare e Sentry](616-pannelli.md).
-- **Retry del sync dopo 5xx/429**: oggi nessuno; forma da decidere dopo i limiti per IP.
-- **Test e2e su WebKit e il test instabile `gesture.e2e.ts:168`**.
+- **Copia del DB a pezzi su più giri**: serve quando [Copia settimanale che non trascina giù gli altri lavori](618-copia-isolata.md) comincia ad avvisare.
 
 ## Out of scope
+
+- MEDI e BASSI del controllo oltre la destinazione (solo BLOCCANTI e ALTI): pulizia dei tombstone, retry del sync dopo 5xx/429, action GitHub fissate a SHA, e2e su WebKit e `gesture.e2e.ts:168` instabile, `Mark.tsx` con `animate`.
 
 - Nuove funzioni: questa mappa ripara e rinforza, non aggiunge.
 - Pubblicazione su Play Store (TWA): resta una PWA; `assetlinks.json` si sistema solo perché oggi risponde con HTML.

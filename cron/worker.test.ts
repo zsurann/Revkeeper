@@ -113,3 +113,17 @@ it("avvisa quando i file superano l'80% del piano gratuito", async () => {
   expect(err).toHaveBeenCalledWith(expect.stringContaining('Quota files'))
   err.mockRestore()
 })
+
+it('domenica: se la copia fallisce, pulizia e quota girano lo stesso', async () => {
+  const { DB, env } = setup()
+  const err = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+  const { default: worker, WEEKLY_CRON } = await import('./worker')
+  const BACKUPS = { put: async () => { throw new Error('R2 giù') }, list: async () => ({ objects: [], truncated: false }), delete: async () => undefined }
+  const FILES = { list: async () => ({ objects: [], truncated: false }) }
+  let job: Promise<unknown> = Promise.resolve()
+  worker.scheduled({ cron: WEEKLY_CRON } as never, { ...env, BACKUPS, FILES } as never, { waitUntil: (p: Promise<unknown>) => void (job = p) } as never)
+  await job
+  expect(DB.prepare("SELECT value FROM flags WHERE name = 'guests_closed'").first<{ value: number }>()?.value).toBe(0)
+  expect(err.mock.calls.some((c) => String(c[0]).includes('copia non riuscita'))).toBe(true)
+  err.mockRestore()
+})

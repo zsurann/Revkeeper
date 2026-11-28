@@ -4,6 +4,28 @@
 export type LiteEnv = { SENTRY_DSN?: string; SENTRY_ENVIRONMENT?: string; CF_VERSION_METADATA?: { id: string } }
 export type Monitor = { slug: string; schedule: string; failureIssueThreshold: number }
 
+const endpoint = (dsn: string) => {
+  const u = new URL(dsn)
+  return `https://${u.host}/api${u.pathname}/envelope/?sentry_key=${u.username}&sentry_version=7`
+}
+const errorItems = (tag: string, errors: string[], env: string, release?: string) => [
+  { type: 'event' },
+  {
+    event_id: crypto.randomUUID().replace(/-/g, ''),
+    timestamp: Date.now() / 1000,
+    platform: 'javascript',
+    level: 'error',
+    environment: env,
+    release,
+    tags: { source: tag },
+    message: { formatted: `${tag}: ${errors.length} errori. ${errors.slice(0, 5).join(' | ')}`.slice(0, 2000) },
+  } as never,
+]
+const pack = (items: unknown[]) => [JSON.stringify({ sent_at: new Date().toISOString() }), ...items.map((i) => JSON.stringify(i))].join('\n')
+
+// Solo errori (API): un evento che riassume i console.error di una richiesta
+export const errorEnvelope = (dsn: string, tag: string, errors: string[], env: string, release?: string) => ({ url: endpoint(dsn), body: pack(errorItems(tag, errors, env, release)) })
+
 export const envelopeFor = (
   dsn: string,
   m: Monitor,
@@ -13,9 +35,8 @@ export const envelopeFor = (
   env: string,
   release?: string,
 ) => {
-  const u = new URL(dsn)
-  const url = `https://${u.host}/api${u.pathname}/envelope/?sentry_key=${u.username}&sentry_version=7`
-  const items = [
+  const url = endpoint(dsn)
+  const items: unknown[] = [
     { type: 'check_in' },
     {
       check_in_id: crypto.randomUUID().replace(/-/g, ''),
@@ -30,18 +51,8 @@ export const envelopeFor = (
       },
     },
   ]
-  if (errors.length)
-    items.push({ type: 'event' }, {
-      event_id: crypto.randomUUID().replace(/-/g, ''),
-      timestamp: Date.now() / 1000,
-      platform: 'javascript',
-      level: 'error',
-      environment: env,
-      release,
-      tags: { monitor: m.slug },
-      message: { formatted: `${m.slug}: ${errors.length} errori. ${errors.slice(0, 5).join(' | ')}`.slice(0, 2000) },
-    } as never)
-  return { url, body: [JSON.stringify({ sent_at: new Date().toISOString() }), ...items.map((i) => JSON.stringify(i))].join('\n') }
+  if (errors.length) items.push(...errorItems(m.slug, errors, env, release))
+  return { url, body: pack(items) }
 }
 
 // Esegue il giro raccogliendo i console.error; un'eccezione chiude il check-in come "error" e viene rilanciata

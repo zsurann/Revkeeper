@@ -133,6 +133,16 @@ export const checkQuota = async (env: PushEnv, now = new Date()) => {
 
 export const WEEKLY_CRON = '30 2 * * SUN' // domenica 03:30 in Italia d'inverno, 04:30 d'estate
 
+// Ogni lavoro della domenica gira da solo: un errore (es. copia oltre i limiti) diventa evento Sentry e non ferma gli altri
+const step = async <T>(name: string, run: () => Promise<T>) => {
+  try {
+    return await run()
+  } catch (e) {
+    console.error(`Giro settimanale, ${name} non riuscita`, e)
+    return undefined
+  }
+}
+
 type CronEnv = InactiveEnv & BackupEnv & LiteEnv
 export const REMINDERS_CRON = '*/10 * * * *'
 const HOURLY: Monitor = { slug: 'revkeeper-cron', schedule: REMINDERS_CRON, failureIssueThreshold: 3 }
@@ -145,7 +155,11 @@ export default {
   scheduled: (controller, env, ctx) =>
     ctx.waitUntil(
       controller.cron === WEEKLY_CRON
-        ? monitored(env, WEEKLY, async () => ({ backup: await runBackup(env, new Date()), inactive: await runInactive(env, Date.now()), quota: await checkQuota(env) }))
+        ? monitored(env, WEEKLY, async () => ({
+            backup: await step('copia', () => runBackup(env, new Date())),
+            inactive: await step('pulizia inattivi', () => runInactive(env, Date.now())),
+            quota: await step('quota', () => checkQuota(env)),
+          }))
         : monitored(env, HOURLY, async () => {
             const now = new Date()
             await runReminders(env, now)
