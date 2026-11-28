@@ -15,6 +15,14 @@ console.error = (...a: unknown[]) => {
   original(...a)
 }
 
+// Al massimo 20 eventi al minuto per isolate: un guasto che fa fallire ogni richiesta non esaurisce la quota di Sentry
+let windowStart = 0
+let sent = 0
+const budget = (now = Date.now()) => {
+  if (now - windowStart > 60_000) [windowStart, sent] = [now, 0]
+  return ++sent <= 20
+}
+
 export const onRequest: PagesFunction<MwEnv> = (ctx) => {
   const errors: string[] = []
   return sink.run(errors, async () => {
@@ -25,7 +33,7 @@ export const onRequest: PagesFunction<MwEnv> = (ctx) => {
       throw e
     } finally {
       const { SENTRY_DSN: dsn, SENTRY_ENVIRONMENT, CF_PAGES_BRANCH: branch, CF_PAGES_COMMIT_SHA: release } = ctx.env
-      if (dsn && errors.length) {
+      if (dsn && errors.length && budget()) {
         const env = SENTRY_ENVIRONMENT ?? (branch && branch !== 'main' ? 'preview' : 'production')
         const where = `${ctx.request.method} ${new URL(ctx.request.url).pathname.replace(/[0-9a-f-]{36}/g, ':id')}`
         const { url, body } = errorEnvelope(dsn, `api ${where}`, errors, env, release)

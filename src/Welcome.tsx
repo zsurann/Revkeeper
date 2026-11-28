@@ -134,7 +134,7 @@ export const Welcome = ({ onDone }: { onDone: () => void }) => {
         )}
       </AnimatePresence>
 
-      {msg && <p role="status" className="m-0 mt-3 text-center text-[14px] font-medium text-red-ink">{busy ? 'Attendi…' : msg}</p>}
+      {msg && <p role={busy ? 'status' : 'alert'} className="m-0 mt-3 text-center text-[14px] font-medium text-red-ink">{busy ? 'Attendi…' : msg}</p>}
     </main>
     </EdgeSwipeBack>
   )

@@ -13,7 +13,7 @@ export const LIMITS = {
   pullPage: 500,
   recordBytes: 20_000, // il record valido più grande (note e liste di allegati al massimo) sta sotto i 13 kB
   fileBytes: 15 * 1024 * 1024,
-  userBytes: 500 * 1024 * 1024,
+  userBytes: 100 * 1024 * 1024, // R2 gratuito: 10 GB in tutto (decisione del 28/11/2026)
   sessionDays: 180,
   renewDays: 30, // la sessione si rinnova (di nuovo 180 giorni) al massimo una volta ogni 30 giorni d'uso
   subsPerUser: 5,
@@ -357,7 +357,7 @@ const putFile = async (req: Request, env: Env, userId: string, id: string) => {
   const held = await reserve(env, userId, id, body.byteLength)
   if (!held) {
     const user = await env.DB.prepare('SELECT id FROM users WHERE id = ?').bind(userId).first()
-    return user ? fail(507, 'Spazio online esaurito (500 MB)') : fail(401, 'Non autenticato')
+    return user ? fail(507, 'Spazio online esaurito (100 MB)') : fail(401, 'Non autenticato')
   }
   try {
     await env.FILES.put(`${userId}/${id}`, body, { httpMetadata: { contentType: mime(req) } })

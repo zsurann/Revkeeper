@@ -22,6 +22,9 @@ const doneStmt = (env: PushEnv, u: Due, now: Date, reminded: boolean) =>
   env.DB.prepare(`UPDATE users SET remind_at = ?1${reminded ? ', last_reminded_at = ?3' : ''} WHERE id = ?2`)
     .bind(remindAt(now.getTime(), u.tz, u.notify_hour, 1), u.id, ...(reminded ? [now.getTime()] : []))
 
+// Negli errori (vanno a Sentry) niente id: l'id di un account Google è il suo identificativo personale
+export const who = (id: string) => (id.startsWith('guest-') ? 'ospite' : 'account Google')
+
 const placeholders = (n: number, from = 1) => Array.from({ length: n }, (_, i) => `?${i + from}`).join(', ')
 
 export const runReminders = async (env: PushEnv, now: Date) => {
@@ -45,7 +48,7 @@ export const runReminders = async (env: PushEnv, now: Date) => {
       due = u.remind_at ?? remindAt(now.getTime(), u.tz, u.notify_hour, -1)
       date = localParts(new Date(due), u.tz).date
     } catch (e) {
-      console.error(`Fuso non valido per ${u.id}`, e)
+      console.error(`Fuso non valido (${who(u.id)})`, e)
       continue
     }
     if (now.getTime() - due >= CATCH_UP_HOURS * 3_600_000 || (u.last != null && localParts(new Date(u.last), u.tz).date === date)) {
@@ -67,7 +70,7 @@ export const runReminders = async (env: PushEnv, now: Date) => {
     ).bind(...ids).all<{ user_id: string; kind: string; data: string | null }>()
     for (const r of results) {
       if (typeof r.data !== 'string') {
-        console.error(`Record non leggibile per ${r.user_id} (${r.kind})`)
+        console.error(`Record non leggibile (${who(r.user_id)}, ${r.kind})`)
         continue
       }
       try {
@@ -75,7 +78,7 @@ export const runReminders = async (env: PushEnv, now: Date) => {
         list.push({ kind: r.kind, data: JSON.parse(r.data) })
         recsBy.set(r.user_id, list)
       } catch (e) {
-        console.error(`Record JSON non valido per ${r.user_id} (${r.kind})`, e)
+        console.error(`Record JSON non valido (${who(r.user_id)}, ${r.kind})`, e)
       }
     }
     const { results: subs } = await env.DB.prepare(`SELECT user_id, endpoint, p256dh, auth FROM push_subs WHERE user_id IN (${placeholders(ids.length)})`)
@@ -91,7 +94,7 @@ export const runReminders = async (env: PushEnv, now: Date) => {
     try {
       lines = remindersFor(recsBy.get(u.id) ?? [], date)
     } catch (e) {
-      console.error(`Promemoria non calcolabili per ${u.id}`, e)
+      console.error(`Promemoria non calcolabili (${who(u.id)})`, e)
       updates.push(doneStmt(env, u, now, true))
       continue
     }
@@ -111,7 +114,7 @@ export const runReminders = async (env: PushEnv, now: Date) => {
     try {
       await sendPush(env, sub, pushText(lines))
     } catch (e) {
-      console.error(`Invio non riuscito per ${u.id}`, e)
+      console.error(`Invio non riuscito (${who(u.id)})`, e)
     }
   }
 }
@@ -129,6 +132,21 @@ export const checkQuota = async (env: PushEnv, now = new Date()) => {
     }
   await env.DB.prepare("INSERT INTO flags(name, value) VALUES ('guests_closed', ?1) ON CONFLICT(name) DO UPDATE SET value = ?1").bind(full ? 1 : 0).run()
   return used
+}
+
+// Record cancellati (tombstone) oltre 180 giorni: via da D1 e dal contatore (decisione del 28/11/2026).
+// shortcut: un telefono offline da più di 180 giorni che rientra può far ricomparire cancellazioni così vecchie
+export const TOMBSTONE_DAYS = 180
+export const purgeTombstones = async (env: PushEnv, now = Date.now()) => {
+  const cutoff = now - TOMBSTONE_DAYS * 86_400_000
+  const [, gone] = await env.DB.batch([
+    env.DB.prepare(
+      `UPDATE users SET records = MAX(0, records - (SELECT COUNT(*) FROM records r WHERE r.user_id = users.id AND r.deleted = 1 AND r.updated_at < ?1))
+       WHERE id IN (SELECT user_id FROM records WHERE deleted = 1 AND updated_at < ?1)`,
+    ).bind(cutoff),
+    env.DB.prepare('DELETE FROM records WHERE deleted = 1 AND updated_at < ?').bind(cutoff),
+  ])
+  return gone?.meta.changes ?? 0
 }
 
 export const WEEKLY_CRON = '30 2 * * SUN' // domenica 03:30 in Italia d'inverno, 04:30 d'estate
@@ -159,6 +177,7 @@ export default {
         ? monitored(env, WEEKLY, async () => ({
             backup: await step('copia', () => runBackup(env, new Date())),
             inactive: await step('pulizia inattivi', () => runInactive(env, Date.now())),
+            tombstones: await step('pulizia cancellati', () => purgeTombstones(env)),
             quota: await step('quota', () => checkQuota(env)),
           }))
         : monitored(env, HOURLY, async () => {

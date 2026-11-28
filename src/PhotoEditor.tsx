@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { clampPose, drawRect, MAX_ZOOM, type Pose, type View } from './domain/crop'
 import { useBackLayer } from './historyLayers'
@@ -66,6 +67,7 @@ export const PhotoEditor = ({ file, onDone, onCancel }: { file: File; onDone: (b
     }
   })
 
+  const nudge = (x: number, y: number) => update((q) => ({ ...q, tx: q.tx + x * 20, ty: q.ty + y * 20 }))
   const move = (e: React.PointerEvent) => {
     const p = pts.current.get(e.pointerId)
     if (!p) return
@@ -115,6 +117,14 @@ export const PhotoEditor = ({ file, onDone, onCancel }: { file: File; onDone: (b
         onPointerUp={(e) => pts.current.delete(e.pointerId)}
         onPointerCancel={(e) => pts.current.delete(e.pointerId)}
         onDoubleClick={() => update(() => ({ z: 1, tx: 0, ty: 0 }))}
+        tabIndex={0}
+        aria-label="Foto: frecce per spostare"
+        onKeyDown={(e) => {
+          const d = ({ ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] } as Record<string, [number, number]>)[e.key]
+          if (!d) return
+          e.preventDefault()
+          nudge(d[0], d[1])
+        }}
         className="relative aspect-[16/9] w-full max-w-xl cursor-grab touch-none self-center justify-self-center overflow-hidden rounded-md outline outline-2 outline-[#D4FF3A] active:cursor-grabbing"
       >
         <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
@@ -125,7 +135,13 @@ export const PhotoEditor = ({ file, onDone, onCancel }: { file: File; onDone: (b
       <footer className="mx-auto grid w-full max-w-xl gap-3">
         <input id="photo-zoom" type="range" min="1" max={MAX_ZOOM} step="0.01" value={pose.z} aria-label="Zoom"
           onChange={(e) => update((p) => ({ ...p, z: Number(e.target.value) }))} className="w-full accent-[#D4FF3A]" />
-        <p className="m-0 text-center text-[13px] text-ink-3">Trascina per spostare · pizzica o usa la barra per lo zoom · doppio tocco per ripartire</p>
+        {/* Anche senza trascinare (WCAG 2.5.7): quattro pulsanti per spostare */}
+        <div className="flex justify-center gap-2">
+          {([[ArrowLeft, -1, 0, 'Sposta a sinistra'], [ArrowUp, 0, -1, 'Sposta in alto'], [ArrowDown, 0, 1, 'Sposta in basso'], [ArrowRight, 1, 0, 'Sposta a destra']] as const).map(([Icon, x, y, label]) => (
+            <button key={label} type="button" onClick={() => nudge(x, y)} disabled={!img} aria-label={label} className={`${btn.secondary} size-11 p-0`}><Icon size={18} /></button>
+          ))}
+        </div>
+        <p className="m-0 text-center text-[13px] text-ink-3">Trascina o usa le frecce per spostare · pizzica o usa la barra per lo zoom · doppio tocco per ripartire</p>
         {error && <p role="alert" className="m-0 text-center text-[14px] text-red-ink">{error}</p>}
       </footer>
     </div>

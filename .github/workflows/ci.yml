@@ -21,8 +21,23 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  # Flussi veri nel browser, su Chrome e su Safari (WebKit) (decisione del 28/11/2026)
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test --trace off
+
   deploy-cron:
-    needs: test
+    needs: [test, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -43,4 +58,8 @@ jobs:
             exit 0
           fi
           if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then unset CLOUDFLARE_ACCOUNT_ID; fi
+          # Prima il database, poi il codice: una colonna nuova non arriva mai prima della sua migrazione.
+          # Il token serve con Workers Scripts:Edit e D1:Edit. Pages si pubblica da sé in parallelo:
+          # le migrazioni devono restare additive (colonne e tabelle nuove), così il codice vecchio regge.
+          npx wrangler d1 migrations apply revkeeper --remote
           npx wrangler deploy --config cron/wrangler.toml

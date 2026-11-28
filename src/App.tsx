@@ -84,7 +84,7 @@ class Boundary extends Component<{ children: ReactNode }, { error?: Error }> {
         <h1 className="t-display m-0 text-[28px]">Qualcosa si è inceppato</h1>
         <p className="m-0 text-[15px] text-ink-2">I tuoi dati sono al sicuro sul telefono. Riapri l'app per ripartire.</p>
         <button type="button" onClick={() => location.reload()} className={btn.primary}>Ricarica</button>
-        <p className="m-0 text-[12px] text-ink-3">{this.state.error.message}</p>
+        <p className="m-0 text-[12px] text-ink-3">Se si ripete, scrivici da Account: l'errore ci è già arrivato.</p>
       </main>
     )
   }
@@ -377,7 +377,7 @@ const Main = () => {
           )}
           {inTabs && (
             <header className={`sticky z-20 mx-auto flex max-w-[480px] items-center justify-between gap-3 bg-bg/95 px-4 pb-3 lg:hidden ${online ? 'top-0 pt-[max(14px,env(safe-area-inset-top))]' : 'top-[calc(32px+env(safe-area-inset-top))] pt-3'}`}>
-              <button type="button" onClick={() => openView('garage')} className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-3 hover:bg-sunken" aria-label={`${bike.make} ${bike.model}, apri il garage`}>
+              <button type="button" onClick={() => openView('garage')} className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-3 hover:bg-sunken" aria-label={`${bike.make} ${bike.model} ${garageLabel}: apri il garage`}>
                 <BikeThumb bike={bike} className="size-9 shrink-0 rounded-full ring-2 ring-surface" />
                 <span className="grid min-w-0 text-left leading-tight"><b className="t-title truncate text-[16px]">{bike.make} {bike.model}</b><span className="text-[12px] text-ink-3">{garageLabel}</span></span>
                 <ChevronDown size={16} className="shrink-0 text-ink-3" />
@@ -388,7 +388,7 @@ const Main = () => {
           {dup && inTabs && (
             <div role="alert" className="mx-auto mb-2 grid max-w-[480px] gap-2 px-4 lg:max-w-[760px] lg:px-8 lg:pt-6">
               <div className="grid gap-2 rounded-lg bg-amber-soft p-4 text-[14px] text-ink ring-1 ring-amber/40">
-                <span>Sembrano la stessa moto: <b className="font-semibold">{dup[0].make} {dup[0].model} {dup[0].plate}</b>. Unisco i dati in una sola?</span>
+                <span>Sembrano la stessa moto: <b className="font-semibold">{dup[0].make} {dup[0].model} {dup[0].plate}</b>. Unisco i dati in una sola? Km, interventi e scadenze passano su questa scheda e il doppione sparisce; non si può annullare.</span>
                 <button type="button" onClick={() => void mergeBikes(dup[0].id, dup[1].id).then(load).then(() => toast('Moto unite'))} className={`${btn.secondary} justify-self-start`}>Unisci</button>
               </div>
             </div>

@@ -19,7 +19,7 @@ export const runInactive = async (env: InactiveEnv, now: number) => {
   for (const { id } of warn) {
     const { results: subs } = await env.DB.prepare('SELECT endpoint, p256dh, auth FROM push_subs WHERE user_id = ?').bind(id).all<{ endpoint: string; p256dh: string; auth: string }>()
     for (const sub of subs)
-      await sendPush(env, sub, { title: 'Il tuo garage verrà eliminato tra un mese', body: "Non apri Revkeeper da quasi due anni: aprila per tenere i dati." }).catch((e) => console.error(`Avviso inattività non inviato per ${id}`, e))
+      await sendPush(env, sub, { title: 'Il tuo garage verrà eliminato tra un mese', body: "Non apri Revkeeper da quasi due anni: aprila per tenere i dati." }).catch((e) => console.error('Avviso inattività non inviato', e))
     await env.DB.prepare('UPDATE users SET warned_at = ? WHERE id = ?').bind(now, id).run()
   }
   // Eliminati solo dopo l'avviso (anche senza notifiche: l'avviso registra la data) e almeno 25 giorni dopo

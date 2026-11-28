@@ -24,6 +24,9 @@ export default defineConfig({
   use: { baseURL: 'http://localhost:4173', locale: 'it-IT', timezoneId: 'Europe/Rome', trace: 'retain-on-failure', launchOptions: { executablePath } },
   projects: [
     { name: 'telefono', testIgnore: '**/install.e2e.ts', use: { ...devices['Pixel 7'] } },
+    // Safari vero (WebKit) sui flussi principali. I contesti di Playwright sono effimeri come la navigazione privata,
+    // dove WebKit non salva Blob in IndexedDB: i flussi con foto e allegati restano su Chrome (la PWA installata non è privata)
+    { name: 'safari', testMatch: '**/flussi.e2e.ts', grepInvert: /interventi: registra|documenti: scadenza|garage: elimina moto/, use: { ...devices['iPhone 13'], browserName: 'webkit' } },
     { name: 'computer', testIgnore: '**/install.e2e.ts', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 860 } } },
     iosGuide('iphone-se', devices['iPhone SE'], SAFARI26),
     iosGuide('iphone-13', devices['iPhone 13'], SAFARI26),

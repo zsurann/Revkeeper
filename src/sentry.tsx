@@ -8,7 +8,8 @@ const env = import.meta.env.VITE_SENTRY_ENVIRONMENT // production (main), previe
 
 export const initSentry = () => {
   const dsn = import.meta.env.VITE_SENTRY_DSN
-  if (!dsn || env === 'local') return
+  // localhost: build di prova (anche i test e2e in GitHub Actions), mai su Sentry
+  if (!dsn || env === 'local' || ['localhost', '127.0.0.1'].includes(location.hostname)) return
   Sentry.init({
     dsn,
     release: import.meta.env.VITE_SENTRY_RELEASE,

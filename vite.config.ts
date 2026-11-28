@@ -35,9 +35,15 @@ export default defineConfig({
         orientation: 'portrait',
         background_color: '#F4F5F7', // schermata di avvio del telefono: stesso fondo chiaro dell'app
         theme_color: '#F4F5F7',
+        // Anteprime nel prompt di installazione di Chrome (dati di esempio)
+        screenshots: [
+          { src: '/screenshots/cruscotto.png', sizes: '780x1688', type: 'image/png', form_factor: 'narrow', label: 'Cruscotto con il prossimo intervento' },
+          { src: '/screenshots/manutenzione.png', sizes: '780x1688', type: 'image/png', form_factor: 'narrow', label: 'Voci di manutenzione' },
+        ],
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
           { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml' },
         ],
@@ -47,7 +53,7 @@ export default defineConfig({
         importScripts: ['push-sw.js'],
         inlineWorkboxRuntime: true, // il service worker non carica script da storage.googleapis.com
         // I modelli di ogni marca non si scaricano all'installazione: solo quando la marca viene scelta
-        globIgnores: ['**/b-*.js', '**/_headers'],
+        globIgnores: ['**/b-*.js', '**/_headers', '**/screenshots/**'],
         // Archivo è incluso nell'app: si precarica solo l'alfabeto latino, il resto arriva se serve
         globPatterns: ['**/*.{js,css,html,svg,png}', '**/archivo-latin-wdth-normal-*.woff2', '**/archivo-latin-ext-wdth-normal-*.woff2'],
         runtimeCaching: [

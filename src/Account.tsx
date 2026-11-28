@@ -67,35 +67,30 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
     }
   }
 
-  const exit = async () => {
+  // Uscita o eliminazione: prima prova a salvare online le ultime modifiche; se ne restano, chiede conferma in un foglio
+  const [lose, setLose] = useState<{ n: number; go: () => void }>()
+  const leave = async (go: () => Promise<void>, failMsg: string, force = false) => {
     setBusy(true)
     try {
-      await syncNow().catch(() => undefined) // prima prova a salvare online le ultime modifiche
-      const n = await unsynced()
-      if (n && !confirm(`${n} modifiche non sono ancora online e andranno perse. Esci lo stesso?`)) return
-      await logout()
+      if (!force) {
+        await syncNow().catch(() => undefined)
+        const n = await unsynced()
+        if (n) {
+          setAsk(undefined)
+          setLose({ n, go: () => void leave(go, failMsg, true) })
+          return
+        }
+      }
+      await go()
       location.reload() // l'app riparte vuota
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Uscita non riuscita')
+      setMsg(e instanceof Error ? e.message : failMsg)
     } finally {
       setBusy(false)
     }
   }
-
-  const exitAll = async () => {
-    setBusy(true)
-    try {
-      await syncNow().catch(() => undefined)
-      const n = await unsynced()
-      if (n && !confirm(`${n} modifiche non sono ancora online e andranno perse. Esci lo stesso?`)) return
-      await logoutAll()
-      location.reload()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Uscita non riuscita')
-    } finally {
-      setBusy(false)
-    }
-  }
+  const exit = () => leave(logout, 'Uscita non riuscita')
+  const exitAll = () => leave(logoutAll, 'Uscita non riuscita')
 
   const download = async () => {
     setBusy(true)
@@ -124,20 +119,8 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
     }
   }
 
-  const wipe = async () => {
-    setBusy(true)
-    try {
-      await syncNow().catch(() => undefined)
-      const n = await unsynced()
-      if (n && !confirm(`${n} modifiche non sono ancora online e verranno perse. Eliminare lo stesso?`)) return
-      await deleteAccount()
-      location.reload()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Eliminazione non riuscita')
-    } finally {
-      setBusy(false)
-    }
-  }
+  const wipe = () => leave(deleteAccount, 'Eliminazione non riuscita')
+
 
   const wipeGuest = async () => {
     setBusy(true)
@@ -257,6 +240,16 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
           </div>
           <button type="button" onClick={() => void wipe()} disabled={busy} className={`${btn.danger} w-full`}><Trash2 size={17} />Elimina definitivamente</button>
           <button type="button" onClick={() => setAsk(undefined)} disabled={busy} className={`${btn.secondary} w-full`}>Annulla</button>
+        </div>
+      </Sheet>
+      <Sheet open={!!lose} onClose={() => setLose(undefined)} title="Modifiche non ancora online">
+        <div className="grid gap-4 pb-1">
+          <div className="flex gap-3 rounded-md bg-red-soft p-4 text-[14px] text-ink">
+            <TriangleAlert size={20} className="mt-0.5 shrink-0 text-red-ink" />
+            <span>{lose?.n} {lose?.n === 1 ? 'modifica non è ancora online e andrà persa' : 'modifiche non sono ancora online e andranno perse'}. Riprova quando c'è rete, oppure continua lo stesso.</span>
+          </div>
+          <button type="button" onClick={() => { const go = lose?.go; setLose(undefined); go?.() }} disabled={busy} className={`${btn.danger} w-full`}>Continua lo stesso</button>
+          <button type="button" onClick={() => setLose(undefined)} disabled={busy} className={`${btn.secondary} w-full`}>Annulla</button>
         </div>
       </Sheet>
       <Sheet open={ask === 'delGuest'} onClose={() => setAsk(undefined)} title="Eliminare la copia online?">

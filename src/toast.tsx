@@ -17,13 +17,12 @@ const tone = { success: 'bg-lime text-black', info: 'bg-white/12 text-white', wa
 const Toast = ({ t, onClose }: { t: Item; onClose: () => void }) => {
   const Icon = icon[t.kind]
   useEffect(() => {
-    const id = setTimeout(onClose, 3800)
+    const id = setTimeout(onClose, t.kind === 'warn' ? 7000 : 3800) // un avviso si legge con calma
     return () => clearTimeout(id)
   }, [t.id]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <m.div
       layout
-      role="status"
       initial={{ opacity: 0, y: -24, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -16, scale: 0.98, transition: { duration: dur.fast } }}

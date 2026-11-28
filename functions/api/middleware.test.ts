@@ -27,3 +27,14 @@ it('i console.error di una richiesta arrivano a Sentry in un solo evento, senza 
   quiet.mockRestore()
   vi.unstubAllGlobals()
 })
+
+it('un guasto ripetuto non manda più di 20 eventi al minuto', async () => {
+  const fetch = vi.fn(async () => new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  const quiet = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+  const waits: Promise<unknown>[] = []
+  for (let i = 0; i < 30; i++) await onRequest(ctx(async () => { console.error('D1 giù'); return new Response('', { status: 500 }) }, waits))
+  expect(fetch.mock.calls.length).toBeLessThanOrEqual(20)
+  quiet.mockRestore()
+  vi.unstubAllGlobals()
+})
