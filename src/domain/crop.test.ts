@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 import { clampPose, drawRect, type View } from './crop'
 
-const v: View = { iw: 900, ih: 1200, vw: 320, vh: 180 } // foto verticale in riquadro 16:9
+const v: View = { iw: 900, ih: 1200, vw: 320, vh: 180 } // foto verticale in un riquadro largo (la geometria non dipende dal formato)
 
 it('a zoom 1 la foto copre il riquadro e si sposta solo in verticale', () => {
   const p = clampPose(v, { z: 1, tx: 50, ty: -9999 })

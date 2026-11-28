@@ -5,9 +5,9 @@ import { useBackLayer } from './historyLayers'
 import { btn } from './ui'
 
 const OUT_W = 1600
-const OUT_H = 900
+const OUT_H = 1200 // 4:3: riquadro più grande sullo schermo (decisione del 28/11/2026)
 
-// Editor a schermo intero: trascina, pizzica, rotella o barra per lo zoom; Conferma esporta 1600×900 JPEG
+// Editor a schermo intero: trascina, pizzica, rotella o barra per lo zoom; Conferma esporta 1600×1200 JPEG
 export const PhotoEditor = ({ file, onDone, onCancel }: { file: File; onDone: (b: Blob) => void; onCancel: () => void }) => {
   const stage = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -125,7 +125,7 @@ export const PhotoEditor = ({ file, onDone, onCancel }: { file: File; onDone: (b
           e.preventDefault()
           nudge(d[0], d[1])
         }}
-        className="relative aspect-[16/9] w-full max-w-xl cursor-grab touch-none self-center justify-self-center overflow-hidden rounded-md outline outline-2 outline-[#D4FF3A] active:cursor-grabbing"
+        className="relative aspect-[4/3] w-full max-w-xl cursor-grab touch-none self-center justify-self-center overflow-hidden rounded-md outline outline-2 outline-[#D4FF3A] active:cursor-grabbing"
       >
         <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-50 [&>i]:border-white/40 [&>i]:border-[0.5px]">
@@ -136,9 +136,9 @@ export const PhotoEditor = ({ file, onDone, onCancel }: { file: File; onDone: (b
         <input id="photo-zoom" type="range" min="1" max={MAX_ZOOM} step="0.01" value={pose.z} aria-label="Zoom"
           onChange={(e) => update((p) => ({ ...p, z: Number(e.target.value) }))} className="w-full accent-[#D4FF3A]" />
         {/* Anche senza trascinare (WCAG 2.5.7): quattro pulsanti per spostare */}
-        <div className="flex justify-center gap-2">
+        <div className="inline-flex justify-self-center rounded-full bg-white/[0.06] p-0.5 ring-1 ring-white/10">
           {([[ArrowLeft, -1, 0, 'Sposta a sinistra'], [ArrowUp, 0, -1, 'Sposta in alto'], [ArrowDown, 0, 1, 'Sposta in basso'], [ArrowRight, 1, 0, 'Sposta a destra']] as const).map(([Icon, x, y, label]) => (
-            <button key={label} type="button" onClick={() => nudge(x, y)} disabled={!img} aria-label={label} className={`${btn.secondary} size-11 p-0`}><Icon size={18} /></button>
+            <button key={label} type="button" onClick={() => nudge(x, y)} disabled={!img} aria-label={label} className="hitbox grid size-8 place-items-center rounded-full text-ink-3 transition-colors hover:bg-white/10 hover:text-ink active:bg-white/15 disabled:opacity-40"><Icon size={15} strokeWidth={2.2} /></button>
           ))}
         </div>
         <p className="m-0 text-center text-[13px] text-ink-3">Trascina o usa le frecce per spostare · pizzica o usa la barra per lo zoom · doppio tocco per ripartire</p>
