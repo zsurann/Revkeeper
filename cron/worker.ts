@@ -146,7 +146,8 @@ const step = async <T>(name: string, run: () => Promise<T>) => {
 type CronEnv = InactiveEnv & BackupEnv & LiteEnv
 export const REMINDERS_CRON = '*/10 * * * *'
 const HOURLY: Monitor = { slug: 'revkeeper-cron', schedule: REMINDERS_CRON, failureIssueThreshold: 3 }
-const WEEKLY: Monitor = { slug: 'revkeeper-backup', schedule: WEEKLY_CRON, failureIssueThreshold: 1 }
+// Per Sentry la domenica è 0 (Cloudflare vuole SUN): stesso orario, sintassi crontab standard
+const WEEKLY: Monitor = { slug: 'revkeeper-backup', schedule: '30 2 * * 0', failureIssueThreshold: 1 }
 
 // Due giri seguiti da un monitor Sentry ciascuno (avvisa se un giro salta o fallisce): promemoria ogni 10 minuti
 // (con il controllo dello spazio una volta all'ora);
