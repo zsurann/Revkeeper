@@ -2,11 +2,11 @@
 // Limiti di frequenza su D1: un contatore per chiave e finestra fissa. Un solo UPDATE ... RETURNING,
 // quindi due richieste insieme non superano il tetto. Le finestre vecchie si cancellano strada facendo.
 export const RATE = {
-  login: { max: 20, seconds: 600 }, // per IP: tentativi di accesso con Google
+  login: { max: 60, seconds: 600 }, // per IP: accessi con Google e nuovi ospiti (alto per chi è dietro il CGNAT dell'operatore)
   pushTest: { max: 5, seconds: 3600 }, // per utente: notifiche di prova
   upload: { max: 120, seconds: 3600 }, // per utente: file caricati
   sync: { max: 120, seconds: 3600 }, // per utente: lotti di sincronizzazione (il telefono ne manda pochi all'ora)
-  syncIp: { max: 1500, seconds: 86_400 }, // per IP: tetto giornaliero, anche cambiando account ospite
+  export: { max: 5, seconds: 3600 }, // per utente: ogni export rilegge tutti i file da R2
 } as const
 export type RateName = keyof typeof RATE
 

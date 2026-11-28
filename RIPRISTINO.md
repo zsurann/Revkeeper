@@ -8,7 +8,7 @@ Cosa c'è per ripartire:
 | Database, copia di riserva | R2 `revkeeper-backups` (UE), `d1/revkeeper-AAAA-MM-GG.json.gz` | ogni domenica, tenuta 5 settimane |
 | Foto e PDF caricati nella settimana | R2 `revkeeper-backups`, `files/AAAA-MM-GG/<utente>/<file>` | ogni domenica, tenuti 30 giorni |
 
-I telefoni hanno anche la loro copia locale e rimandano al server ciò che manca alla prossima sincronizzazione.
+I telefoni hanno anche la loro copia locale: con una sessione valida rimandano le modifiche non ancora inviate; se la sessione non c'è più, tengono i dati e li reinviano tutti al nuovo accesso.
 
 Per tutti i comandi: `export CLOUDFLARE_ACCOUNT_ID=…` e un token API con permessi D1 e R2 (`CLOUDFLARE_API_TOKEN`).
 
@@ -38,6 +38,16 @@ npx wrangler d1 execute <nuovo-db> --remote --file=dati.sql
 
 Poi puntare `database_id` in `wrangler.toml` e `cron/wrangler.toml` al nuovo database e pubblicare. Le sessioni non sono nella copia: gli utenti devono rifare l'accesso.
 Se l'account di qualcuno è stato eliminato dopo la copia, va rieliminato (Account → dati, o `DELETE` per `user_id`).
+
+## Subito dopo un ripristino del database (1 o 2)
+
+Il contatore delle versioni (`users.rev`) torna indietro: senza questo passo i telefoni che erano più avanti non vedrebbero i record scritti dopo il ripristino.
+
+```bash
+npx wrangler d1 execute revkeeper --remote --command "UPDATE users SET rev = rev + 1000000"
+```
+
+I telefoni con un cursore oltre il server ripartono da zero da soli (`/sync/pull`), senza perdere i dati più recenti che hanno in locale. Se le sessioni non ci sono più (copia settimanale), l'app mostra "Accesso scaduto": i dati restano sul telefono e, al nuovo accesso con Google, vengono reinviati tutti.
 
 ## 3. File degli utenti
 

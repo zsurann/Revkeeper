@@ -8,7 +8,7 @@ import { getMeta } from './db'
 import { GoogleButton } from './GoogleButton'
 import { downloadBlob, localBackup } from './localExport'
 import { Notifications } from './Notifications'
-import { deleteAccount, downloadAccountExport, logout, logoutAll, syncNow, unsynced } from './sync'
+import { deleteAccount, deleteGuestCopy, downloadAccountExport, logout, logoutAll, syncNow, unsynced } from './sync'
 import { readTheme, setTheme, type ThemePref } from './theme'
 import { toast } from './toast'
 import { PageHead, Screen, Segmented, Sheet, btn, card, link } from './ui'
@@ -24,16 +24,18 @@ const Section = ({ title, children, id }: { title: string; children: ReactNode; 
 
 export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount?: (email?: string) => void }) => {
   const [email, setEmail] = useState<string>()
+  const [guest, setGuest] = useState(false)
   const [lastSync, setLastSync] = useState<number>()
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
-  const [ask, setAsk] = useState<'out' | 'del' | 'stats'>()
+  const [ask, setAsk] = useState<'out' | 'del' | 'stats' | 'delGuest'>()
   const [admin, setAdmin] = useState(false)
   const [theme, pickTheme] = useState<ThemePref>(readTheme)
 
   const refresh = async () => {
     const e = await getMeta<string>('account')
     setEmail(e)
+    setGuest(!e && !!(await getMeta<boolean>('guest')))
     onAccount?.(e)
     setLastSync(await getMeta<number>('lastSync'))
   }
@@ -137,6 +139,20 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
     }
   }
 
+  const wipeGuest = async () => {
+    setBusy(true)
+    try {
+      await deleteGuestCopy()
+      setAsk(undefined)
+      toast('Copia online eliminata', { body: 'I dati restano su questo telefono; le notifiche sono spente' })
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Eliminazione non riuscita')
+    } finally {
+      setBusy(false)
+      void refresh()
+    }
+  }
+
   return (
     <Screen>
       <PageHead title="Account" sub="Accesso, promemoria, aspetto e dati." onBack={onClose} />
@@ -205,6 +221,14 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
         </Section>
       )}
 
+      {guest && (
+        <Section title="Copia per le notifiche" id="h-guest">
+          <p className="m-0 text-[14px] text-ink-2">Con le notifiche attive una copia anonima di moto, km e scadenze sta sul server per calcolare i promemoria. Foto e PDF restano solo qui.</p>
+          <button type="button" onClick={() => void download()} disabled={busy} className={`${btn.secondary} w-full`}><Download size={16} />Scarica la copia online</button>
+          <button type="button" onClick={() => setAsk('delGuest')} disabled={busy} className={`${btn.ghost} justify-self-start text-red-ink hover:bg-red-soft`}><Trash2 size={16} />Elimina la copia online</button>
+        </Section>
+      )}
+
       {msg && !busy && <p role="alert" className="m-0 rounded-md bg-red-soft px-4 py-3 text-[14px] font-medium text-red-ink">{msg}</p>}
       <p className="m-0 px-1 text-[12px] leading-relaxed text-ink-3">
         Elenco dei modelli e dati tecnici elaborati da{' '}
@@ -232,6 +256,13 @@ export const Account = ({ onClose, onAccount }: { onClose: () => void; onAccount
             <span>Verranno cancellati l'account, i dati online e i file. Su questo telefono sparisce tutto. Non si può annullare.</span>
           </div>
           <button type="button" onClick={() => void wipe()} disabled={busy} className={`${btn.danger} w-full`}><Trash2 size={17} />Elimina definitivamente</button>
+          <button type="button" onClick={() => setAsk(undefined)} disabled={busy} className={`${btn.secondary} w-full`}>Annulla</button>
+        </div>
+      </Sheet>
+      <Sheet open={ask === 'delGuest'} onClose={() => setAsk(undefined)} title="Eliminare la copia online?">
+        <div className="grid gap-4 pb-1">
+          <p className="m-0 text-[14px] text-ink-2">Il server cancella la copia anonima e smette di mandare i promemoria. Su questo telefono non cambia niente; puoi riattivare le notifiche quando vuoi.</p>
+          <button type="button" onClick={() => void wipeGuest()} disabled={busy} className={`${btn.danger} w-full`}><Trash2 size={17} />Elimina la copia online</button>
           <button type="button" onClick={() => setAsk(undefined)} disabled={busy} className={`${btn.secondary} w-full`}>Annulla</button>
         </div>
       </Sheet>

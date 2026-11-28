@@ -142,7 +142,7 @@ export const Maintenance = ({ bike, items, rows, onChange }: { bike: Bike; items
         {adding && (
           <m.form onSubmit={add} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className={`${card} grid gap-3 p-4`}>
             <b className="t-title text-[17px]">Nuova voce</b>
-            <input id="new-label" name="label" placeholder="Es. Pastiglie freni anteriori" className={field} autoFocus />
+            <input id="new-label" name="label" aria-label="Nome della voce" placeholder="Es. Pastiglie freni anteriori" className={field} autoFocus />
             <div className="grid grid-cols-2 gap-3">
               <input id="new-km" name="km" inputMode="numeric" pattern="[0-9.]*" placeholder="Ogni km" aria-label="Ogni km" className={field} />
               <input id="new-months" name="months" inputMode="numeric" pattern="[0-9]*" placeholder="Ogni mesi" aria-label="Ogni mesi" className={field} />

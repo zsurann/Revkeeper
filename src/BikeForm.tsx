@@ -99,7 +99,8 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
   const [ready, setReady] = useState('')
   useEffect(() => {
     let live = true
-    void loadBrand(make).then(() => live && setReady(make))
+    // Offline e marca mai aperta: i menu restano vuoti finché torna la rete, nessun errore
+    void loadBrand(make).then(() => live && setReady(make), () => undefined)
     return () => { live = false }
   }, [make])
   const applySpecs = (mk: string, md: string, yr?: string) => {
@@ -119,7 +120,7 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
       {editing && <PhotoEditor file={editing} onDone={edited} onCancel={() => setEditing(undefined)} />}
       <PageHead title={bike ? 'Scheda moto' : 'Aggiungi moto'} sub={bike ? `${bike.make} ${bike.model}` : 'Marca, modello e anno bastano: il resto si compila dal catalogo.'} onBack={onCancel} />
       <form onSubmit={submit} className="grid gap-4">
-        <label className="group relative grid aspect-[16/9] max-w-full cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed border-line-strong bg-sunken text-[14px] font-medium text-ink-2">
+        <label className="focus-within:ring-2 focus-within:ring-ink group relative grid aspect-[16/9] max-w-full cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed border-line-strong bg-sunken text-[14px] font-medium text-ink-2">
           {preview ?? saved ? (
             <>
               <img src={preview ?? saved} alt="Foto della moto" className="h-full w-full object-cover" />

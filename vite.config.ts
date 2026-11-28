@@ -25,6 +25,7 @@ export default defineConfig({
       registerType: 'prompt', // "Aggiornamento disponibile" invece del ricaricamento silenzioso
       injectRegister: false, // lo registra main.tsx (nel bundle: la CSP non ammette script inline)
       manifest: {
+        id: '/',
         name: 'Revkeeper',
         short_name: 'Revkeeper',
         description: 'Il libretto di manutenzione della tua moto, sempre in tasca.',

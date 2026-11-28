@@ -72,6 +72,31 @@ const byKind: Record<string, (o: Obj) => boolean> = {
   attachments: (o) => any(str(o, 'name', 300, true), str(o, 'type', 120, true), num(o, 'size', 15 * 1024 * 1024, false, true)),
 }
 
+// Solo i campi del modello dati (src/domain/types.ts): il resto si scarta, così un record non porta riempitivo
+const META = ['id', 'updatedAt', 'deletedAt']
+const FIELDS: Record<string, string[]> = {
+  bikes: ['make', 'model', 'year', 'plate', 'vin', 'photoId', 'startKm', 'startDate', 'modelRef', 'category', 'tyres', 'fluids', 'specs'],
+  readings: ['bikeId', 'date', 'km'],
+  items: ['bikeId', 'item', 'label', 'action', 'km', 'months', 'firstKm', 'origin', 'notes'],
+  services: ['bikeId', 'date', 'km', 'itemIds', 'notes', 'costTotal', 'costParts', 'costLabour', 'attachmentIds'],
+  documents: ['bikeId', 'kind', 'dueDate', 'attachmentIds'],
+  attachments: ['name', 'type', 'size'],
+}
+const NESTED: Record<string, string[]> = {
+  tyres: ['front', 'rear', 'pressureSolo', 'pressureDuo'],
+  fluids: ['oilType', 'oilGrade', 'oilLitres', 'brakeFluid', 'sparkPlug'],
+  specs: ['cc', 'hp', 'kg', 'tankLitres', 'consumption'],
+  pressureSolo: ['front', 'rear'],
+  pressureDuo: ['front', 'rear'],
+}
+const pick = (o: Obj, keys: string[]): Obj => {
+  const out: Obj = {}
+  for (const k of keys) if (k in o) out[k] = obj(o[k]) && NESTED[k] ? pick(o[k] as Obj, NESTED[k]) : o[k]
+  return out
+}
+// Da chiamare dopo recordError: il record ridotto ai soli campi noti
+export const cleanRecord = (kind: string, data: Obj) => pick(data, [...META, ...(FIELDS[kind] ?? [])])
+
 // undefined se il record è accettabile
 export const recordError = (kind: string, data: unknown, id: string, updatedAt: number): string | undefined => {
   if (!obj(data) || data.id !== id || data.updatedAt !== updatedAt) return 'Record non valido'
