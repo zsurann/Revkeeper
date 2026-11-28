@@ -2,7 +2,7 @@
 id: 600
 title: "Mappa: pronti al lancio pubblico"
 labels: [wayfinder:map]
-status: open
+status: closed
 ---
 
 ## Destination
@@ -36,6 +36,8 @@ Revkeeper si può aprire a tutti: nessun problema BLOCCANTE o ALTO del [controll
 - [Accessibilità: focus nei fogli e al cambio pagina](613-a11y-focus.md): fatto.
 - [Peso al primo caricamento e PWA](614-peso-e-pwa.md): 515 → 299 kB.
 - [SECURITY.md, security.txt e action fissate](615-security-txt.md): file aggiunti, SHA delle action no.
+- [Controlli nei pannelli Cloudflare e Sentry](616-pannelli.md): piano gratuito, avviso di spesa attivo, migrazione applicata; restano Sentry IP, permessi del token, CPU reale (checklist nel ticket).
+- [Anteprime dei branch sui dati di produzione](617-anteprime-separate.md): D1 e R2 separati per le anteprime.
 
 ## Not yet specified
 

@@ -21,3 +21,22 @@ migrations_dir = "migrations"
 binding = "FILES"
 bucket_name = "revkeeper-files"
 jurisdiction = "eu"
+
+# Anteprime dei branch: database e file separati, mai i dati veri (decisione del 28/11/2026, issues/617).
+# Per Pages vars e binding non si ereditano: vanno ripetuti tutti.
+[env.preview.vars]
+SENTRY_DSN = "https://3198cfd0a3547a793223b94a02d4f8c0@o4512444032352256.ingest.de.sentry.io/4512490393829456"
+VAPID_SUBJECT = "https://revkeeper.pages.dev"
+VAPID_PUBLIC_KEY = "BCuIILVL_fqPhBQ3QuT-qiYNLyj0Vn_9lcpRv3PrQ_rCBP5FcP91ezdYRwE3kpWK9o_aOL2cF_mUc7V1hg97PsQ"
+GOOGLE_CLIENT_ID = "517496172383-1l7otafbhost3ubro8ei3qqnlgsa77ma.apps.googleusercontent.com"
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "revkeeper-preview"
+database_id = "2cd04f2f-cc3c-46ba-877f-c2f980486099"
+migrations_dir = "migrations"
+
+[[env.preview.r2_buckets]]
+binding = "FILES"
+bucket_name = "revkeeper-files-preview"
+jurisdiction = "eu"
