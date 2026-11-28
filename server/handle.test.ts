@@ -547,3 +547,35 @@ it('esportare i dati ha un tetto orario', async () => {
   for (let i = 0; i < RATE.export.max; i++) expect((await call(env, '/account/export', { cookie })).status).toBe(200)
   expect((await call(env, '/account/export', { cookie })).status).toBe(429)
 })
+
+it('stesso account Google su PC e telefono: ognuno vede le modifiche dell\'altro, foto comprese', async () => {
+  const { env, login } = await session()
+  const pc = await login('io@b.it', '77')
+  const phone = await login('io@b.it', '77') // secondo dispositivo, stessa identità Google
+  const PC = '44444444-4444-4444-8444-444444444444'
+  const PHONE = '55555555-5555-4555-8555-555555555555'
+  const pushFrom = (cookie: string, device: string, changes: unknown[]) =>
+    call(env, '/sync/push', { method: 'POST', cookie, body: JSON.stringify({ deviceId: device, changes }) })
+  const pull = async (cookie: string, since = 0) =>
+    (await (await call(env, `/sync/pull?since=${since}`, { cookie })).json()) as { changes: { id: string; data: { km?: number; photoId?: string } }[]; cursor: number }
+
+  // Dal PC: moto con foto
+  expect((await call(env, `/files/${FILE}`, { method: 'PUT', cookie: pc, body: new Uint8Array([1, 2, 3]) })).status).toBe(200)
+  expect((await pushFrom(pc, PC, [
+    { kind: 'attachments', id: FILE, updatedAt: AT, data: { id: FILE, updatedAt: AT, name: 'moto.jpg', type: 'image/jpeg' } },
+    { kind: 'bikes', id: BIKE, updatedAt: AT, data: bike({ photoId: FILE }) },
+  ])).status).toBe(200)
+
+  // Il telefono riceve moto e foto
+  const first = await pull(phone)
+  expect(first.changes.map((c) => c.id).sort()).toEqual([BIKE, FILE].sort())
+  expect([...new Uint8Array(await (await call(env, `/files/${FILE}`, { cookie: phone })).arrayBuffer())]).toEqual([1, 2, 3])
+
+  // Dal telefono: una lettura km; il PC la riceve dal suo cursore
+  const pcCursor = (await pull(pc)).cursor
+  const R = '66666666-6666-4666-8666-666666666666'
+  expect((await pushFrom(phone, PHONE, [{ kind: 'readings', id: R, updatedAt: AT + 5, data: { id: R, updatedAt: AT + 5, bikeId: BIKE, date: '2026-11-28', km: 31000 } }])).status).toBe(200)
+  const fromPhone = await pull(pc, pcCursor)
+  expect(fromPhone.changes).toHaveLength(1)
+  expect(fromPhone.changes[0]).toMatchObject({ id: R, data: { km: 31000 } })
+})

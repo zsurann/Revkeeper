@@ -310,5 +310,7 @@ export const startAutoSync = () => {
   addEventListener('online', later)
   // App di nuovo in primo piano: le modifiche fatte da un altro telefono arrivano subito
   document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && later())
+  // App aperta e visibile (es. sul PC): ogni minuto controlla le modifiche arrivate dagli altri dispositivi
+  setInterval(() => document.visibilityState === 'visible' && navigator.onLine && later(), 60_000)
   void run()
 }
