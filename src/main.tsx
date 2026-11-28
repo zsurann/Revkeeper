@@ -6,6 +6,7 @@ import { Guard, initSentry, reactErrorHandlers } from './sentry'
 import { Legal, LEGAL_PATHS } from './Legal'
 import { browserAllowed, detectPlatform, isInstalled } from './domain/platform'
 import { captureInstallPrompt } from './installPrompt'
+import { THEME_KEY } from './theme'
 import { offerUpdate } from './UpdatePrompt'
 
 // La pagina di installazione si vede solo nel browser del telefono: non pesa sull'app installata
@@ -31,6 +32,30 @@ const Desktop = () => {
 }
 if (gate) captureInstallPrompt()
 
+// Azzeramento di tutti i dati del 28/11/2026 (deciso dal titolare, anche sul server): ogni dispositivo cancella una volta
+// i suoi dati locali alla prima apertura di questa versione. Cambiare la data cancella i dati di TUTTI i telefoni.
+const EPOCH = '2026-11-28'
+const resetLocalData = () =>
+  new Promise<void>((done) => {
+    try {
+      if (localStorage.getItem('revkeeper.epoch') === EPOCH) return done()
+      const dropPush = ('serviceWorker' in navigator
+        ? navigator.serviceWorker.getRegistration().then((r) => r?.pushManager.getSubscription()).then((s) => s?.unsubscribe())
+        : Promise.resolve()
+      ).catch(() => undefined)
+      const req = indexedDB.deleteDatabase('revkeeper')
+      req.onsuccess = req.onerror = req.onblocked = () => {
+        const theme = localStorage.getItem(THEME_KEY) // il tema è una preferenza del dispositivo, non un dato: resta
+        localStorage.clear()
+        localStorage.setItem('revkeeper.epoch', EPOCH)
+        if (theme) localStorage.setItem(THEME_KEY, theme)
+        void Promise.race([dropPush, new Promise((r) => setTimeout(r, 300))]).then(() => done())
+      }
+    } catch {
+      done()
+    }
+  })
+
 // Anche sulla pagina di installazione: senza service worker Chrome non offre il popup
 // Una nuova versione non si attiva da sola: App mostra "Aggiornamento disponibile". Controllo ogni ora per chi tiene l'app aperta.
 const updateSW = registerSW({
@@ -38,4 +63,6 @@ const updateSW = registerSW({
   onNeedRefresh: () => offerUpdate(() => updateSW(true)),
   onRegisteredSW: (_url, reg) => { if (reg) setInterval(() => void reg.update().catch(() => undefined), 3_600_000) },
 })
-createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode><Guard>{legal ? <Legal path={location.pathname} /> : gate ? <Suspense><Install platform={platform} /></Suspense> : <Desktop />}</Guard></StrictMode>)
+void resetLocalData().then(() =>
+  createRoot(document.getElementById('root')!, reactErrorHandlers).render(<StrictMode><Guard>{legal ? <Legal path={location.pathname} /> : gate ? <Suspense><Install platform={platform} /></Suspense> : <Desktop />}</Guard></StrictMode>)
+)
