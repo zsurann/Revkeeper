@@ -3,7 +3,6 @@ import { AuthError, verifyIdToken, type Jwk } from './google'
 import { sendPush, type PushEnv } from './push'
 import { hit, ipKey, type RateName } from './ratelimit'
 import { cleanRecord, isId, recordError } from './schema'
-import { zipStoreStream, type ZipEntry } from './zip'
 
 // ADMIN_EMAILS: email Google (separate da virgola) che vedono le statistiche. Variabile su Cloudflare, non nel repo.
 export type Env = PushEnv & { FILES: R2Bucket; GOOGLE_CLIENT_ID: string; ADMIN_EMAILS?: string }
@@ -430,22 +429,9 @@ const exportAccount = async (env: Env, userId: string) => {
     records,
     files,
   }
-  const body = zipStoreStream((async function* (): AsyncGenerator<ZipEntry> {
-    yield { name: 'dati.json', data: new TextEncoder().encode(JSON.stringify(payload, null, 2)) }
-    for (const file of files) {
-      const obj = await env.FILES.get(`${userId}/${file.id}`)
-      if (!obj) continue
-      yield { name: file.path, data: new Uint8Array(await obj.arrayBuffer()) }
-    }
-  })())
-  return new Response(body, {
-    headers: {
-      ...SECURITY,
-      'content-type': 'application/zip',
-      'content-disposition': 'attachment; filename="revkeeper-dati.zip"',
-      'cache-control': 'no-store',
-    },
-  })
+  // Il server consegna solo i dati: i file li scarica il telefono uno per uno e compone lo ZIP (src/sync.ts),
+  // così qui non si calcola il CRC di centinaia di MB (limite di 10 ms di CPU)
+  return json(payload, 200, { 'content-disposition': 'attachment; filename="dati.json"' })
 }
 
 type Store = Pick<Env, 'DB' | 'FILES'>
@@ -587,7 +573,17 @@ const isAdmin = async (env: Env, userId: string) => {
 const WEEK = 7 * 86_400_000
 // Tetti del piano gratuito per lo spazio (D1 per database, R2 per account)
 export const QUOTA = { dbBytes: 500 * 1024 * 1024, fileBytes: 10 * 1024 * 1024 * 1024 }
+// Righe lette: tabelle piccole (users, push_subs, files) intere, records due volte; risultato tenuto un'ora.
+// shortcut: cache nella memoria dell'isolate (si perde a ogni avvio a freddo); se le aperture crescono, salvarla su D1
+const statsCache = new WeakMap<D1Database, { at: number; data: Awaited<ReturnType<typeof computeStats>> }>()
 const stats = async (env: Env) => {
+  const hit = statsCache.get(env.DB)
+  if (hit && Date.now() - hit.at < 3_600_000) return hit.data
+  const data = await computeStats(env)
+  statsCache.set(env.DB, { at: Date.now(), data })
+  return data
+}
+const computeStats = async (env: Env) => {
   const now = Date.now()
   const [totals, kinds, makes, weeks] = await Promise.all([
     env.DB.prepare(
@@ -596,8 +592,8 @@ const stats = async (env: Env) => {
          (SELECT COUNT(*) FROM users WHERE id LIKE 'guest-%') AS guests,
          (SELECT COUNT(*) FROM users WHERE created_at > ?1) AS new7,
          (SELECT COUNT(*) FROM users WHERE created_at > ?2) AS new30,
-         (SELECT COUNT(DISTINCT user_id) FROM records WHERE updated_at > ?1) AS active7,
-         (SELECT COUNT(DISTINCT user_id) FROM records WHERE updated_at > ?2) AS active30,
+         (SELECT COUNT(*) FROM users WHERE seen_at > ?1) AS active7,
+         (SELECT COUNT(*) FROM users WHERE seen_at > ?2) AS active30,
          (SELECT COUNT(DISTINCT user_id) FROM push_subs) AS push,
          (SELECT COUNT(*) FROM files) AS files,
          (SELECT COALESCE(SUM(bytes), 0) FROM users) AS bytes`,

@@ -15,7 +15,6 @@
   "dependencies": {
     "@block65/webcrypto-web-push": "^2.0.0",
     "@fontsource-variable/archivo": "^5.3.0",
-    "@sentry/cloudflare": "^11.17.0",
     "@sentry/react": "^11.17.0",
     "idb": "^8.0.4",
     "lucide-react": "^1.79.0",

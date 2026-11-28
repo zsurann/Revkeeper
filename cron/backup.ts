@@ -8,6 +8,7 @@ export const FILE_KEEP_DAYS = 30
 // shortcut: copia in un solo giro; quando il database o i file della settimana superano i limiti di CPU/tempo, dividere per tabella o per pagine su più giri
 const MAX_FILES = 300
 const PAGE = 1000
+export const WARN_ROWS = 50_000
 
 export type BackupEnv = { DB: D1Database; BACKUPS: R2Bucket; FILES: R2Bucket }
 
@@ -30,6 +31,9 @@ export const runBackup = async (env: BackupEnv, now: Date) => {
     }
     dump[table] = rows
   }
+  // La copia sta in memoria in un solo giro: oltre questa soglia avvisa, prima che CPU (10 ms) o memoria (128 MB) la fermino
+  const total = Object.values(dump).reduce((n, r) => n + r.length, 0)
+  if (total > WARN_ROWS) console.error(`Copia settimanale: ${total} righe, vicina al limite di un solo giro. Dividerla su più giri o passare a Workers Paid`)
   const key = `d1/revkeeper-${day}.json.gz`
   const body = await gzip(JSON.stringify({ createdAt: now.toISOString(), tables: dump }))
   await env.BACKUPS.put(key, body, { httpMetadata: { contentType: 'application/json', contentEncoding: 'gzip' } })
