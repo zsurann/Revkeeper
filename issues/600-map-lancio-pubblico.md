@@ -21,6 +21,8 @@ Revkeeper si può aprire a tutti: nessun problema BLOCCANTE o ALTO del [controll
 
 <!-- una riga per ticket chiuso -->
 
+- [Gli ospiti sul server: cosa possono fare e con quali tetti](601-ospiti-e-tetti.md): allegati degli ospiti solo sul telefono; tetto di 500 record per l'ospite e 20.000 per l'account Google; nessun nuovo ospite oltre l'80% di D1 o R2.
+
 ## Not yet specified
 
 - **Pulizia dei record cancellati** (dalla mappa 500): i tombstone restano in D1 per sempre; con i tetti di [Gli ospiti sul server](601-ospiti-e-tetti.md) potrebbe servire.
