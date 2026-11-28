@@ -282,19 +282,33 @@ export const downloadAccountExport = async () => {
 
 // In automatico gli errori restano in console, tranne i file rifiutati: lì serve che la persona lo sappia (una volta)
 let warned = ''
+// Errore temporaneo (rete, 5xx, 429): si riprova da soli con attesa crescente, da 30 s fino a 15 minuti
+let delay = 0
+let retry: ReturnType<typeof setTimeout> | undefined
 const quiet = (e: unknown) => {
   if ((e instanceof FilesRejected || e instanceof RecordsFull) && e.message !== warned) {
     warned = e.message
     toast(e instanceof RecordsFull ? 'Dati non salvati online' : 'Alcuni allegati restano sul telefono', { kind: 'warn', body: e.message })
   } else console.warn(e)
+  if (e instanceof LoggedOut || e instanceof FilesRejected || e instanceof RecordsFull) return
+  delay = Math.min(delay ? delay * 2 : 30_000, 900_000)
+  clearTimeout(retry)
+  retry = setTimeout(() => void run(), delay)
 }
+const run = () =>
+  syncNow().then(() => {
+    delay = 0
+    clearTimeout(retry)
+  }, quiet)
 let timer: ReturnType<typeof setTimeout> | undefined
 const later = () => {
   clearTimeout(timer)
-  timer = setTimeout(() => void syncNow().catch(quiet), 2000) // debounce: un solo invio per raffica di modifiche
+  timer = setTimeout(() => void run(), 2000) // debounce: un solo invio per raffica di modifiche
 }
 export const startAutoSync = () => {
   addEventListener('revkeeper:changed', later)
   addEventListener('online', later)
-  void syncNow().catch(quiet)
+  // App di nuovo in primo piano: le modifiche fatte da un altro telefono arrivano subito
+  document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && later())
+  void run()
 }

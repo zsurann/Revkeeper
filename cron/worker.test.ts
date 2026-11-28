@@ -127,3 +127,16 @@ it('domenica: se la copia fallisce, pulizia e quota girano lo stesso', async () 
   expect(err.mock.calls.some((c) => String(c[0]).includes('copia non riuscita'))).toBe(true)
   err.mockRestore()
 })
+
+it('i record cancellati da oltre 180 giorni spariscono e il contatore scende', async () => {
+  const { DB, env } = setup()
+  const { purgeTombstones } = await import('./worker')
+  const old = Date.now() - 181 * 86_400_000
+  DB.exec("INSERT INTO users(id, email, created_at, records) VALUES ('u', 'u@x.it', 0, 3)")
+  DB.exec("INSERT INTO records(user_id, kind, id, data, updated_at, device_id, deleted, rev) VALUES ('u', 'readings', 'a', NULL, ?, 'd', 1, 1)", old)
+  DB.exec("INSERT INTO records(user_id, kind, id, data, updated_at, device_id, deleted, rev) VALUES ('u', 'readings', 'b', NULL, ?, 'd', 1, 1)", Date.now())
+  DB.exec("INSERT INTO records(user_id, kind, id, data, updated_at, device_id, deleted, rev) VALUES ('u', 'bikes', 'c', ?, ?, 'd', 0, 1)", bike, old)
+  expect(await purgeTombstones(env)).toBe(1)
+  expect(DB.prepare('SELECT id FROM records ORDER BY id').all().results.map((r) => (r as { id: string }).id)).toEqual(['b', 'c'])
+  expect(DB.prepare("SELECT records FROM users WHERE id = 'u'").first<{ records: number }>()?.records).toBe(2)
+})

@@ -28,8 +28,8 @@ export const AttachmentLink = ({ id, onRemove }: { id: Id; onRemove?: (id: Id) =
   return ask ? (
     <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-red-soft py-1 pl-3 pr-1 text-[13px] font-medium text-red-ink">
       <span className="truncate">Togli {a.name}?</span>
-      <button type="button" onClick={() => onRemove(id)} className="h-7 rounded-full bg-red-ink px-3 text-[12px] font-semibold text-white dark:bg-[#B4231A]">Togli</button>
-      <button type="button" onClick={() => setAsk(false)} className="grid size-7 place-items-center rounded-full hover:bg-black/10" aria-label="Annulla"><X size={14} /></button>
+      <button type="button" onClick={() => onRemove(id)} className="hitbox h-7 rounded-full bg-red-ink px-3 text-[12px] font-semibold text-white dark:bg-[#B4231A]">Togli</button>
+      <button type="button" onClick={() => setAsk(false)} className="hitbox grid size-7 place-items-center rounded-full hover:bg-black/10" aria-label="Annulla"><X size={14} /></button>
     </span>
   ) : (
     <span className="inline-flex max-w-full items-center rounded-full bg-sunken">
@@ -76,7 +76,7 @@ export const AttachmentPicker = ({ id, p }: { id: string; p: ReturnType<typeof u
         {p.pending.map((f, i) => (
           <m.span key={`${f.name}-${i}`} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-lime-soft py-1 pl-3 pr-1 text-[13px] font-medium text-ink">
             <span className="truncate">{f.name}</span>
-            <button type="button" onClick={() => p.drop(i)} className="grid size-6 place-items-center rounded-full hover:bg-black/10" aria-label={`Togli ${f.name}`}><X size={14} /></button>
+            <button type="button" onClick={() => p.drop(i)} className="hitbox grid size-6 place-items-center rounded-full hover:bg-black/10" aria-label={`Togli ${f.name}`}><X size={14} /></button>
           </m.span>
         ))}
       </div>

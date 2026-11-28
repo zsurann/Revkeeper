@@ -3,7 +3,7 @@ import { EMAIL, OWNER } from './contact'
 
 // Informativa privacy (art. 13 GDPR) e termini d'uso: pagine /privacy e /termini, leggibili anche senza installare l'app.
 // Decisioni: issues 43, 44, 49, 53, 56 della mappa "Revkeeper pronta al lancio pubblico".
-const UPDATED = '27 novembre 2026'
+const UPDATED = '28 novembre 2026'
 
 const H = ({ children }: { children: ReactNode }) => <h2 className="t-title m-0 mt-7 text-[19px]">{children}</h2>
 const Mail = () => (EMAIL ? <a className="underline" href={`mailto:${EMAIL}`}>{EMAIL}</a> : <span>(email da completare)</span>)
@@ -25,6 +25,7 @@ const Privacy = () => (
       <li><b>Copie di sicurezza</b> del database e dei file: per recuperare i dati dopo un guasto. Base: art. 6.1.f.</li>
     </ul>
     <p>Nessuna profilazione, pubblicità o vendita di dati. Non c'è bisogno di consenso e non usiamo cookie di tracciamento: l'app salva sul telefono solo ciò che le serve per funzionare (dati del garage, sessione di accesso, tema).</p>
+    <p>Dare i dati è facoltativo: senza i dati di una moto l'app non può calcolarne le scadenze. Non prendiamo decisioni automatizzate né facciamo profilazione (art. 22): i promemoria sono solo calcoli su date e chilometri che inserisci tu.</p>
     <H>Chi riceve i dati</H>
     <ul>
       <li><b>Cloudflare</b> (hosting, database, file, statistiche): database e file in data center nell'Unione europea.</li>

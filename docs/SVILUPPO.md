@@ -6,11 +6,7 @@ La build su Cloudflare Pages legge da sola `.env.production`: ci sono solo l'ide
 
 I promemoria orari stanno in un Worker separato (`revkeeper-cron`). Dopo l'unione su `main`, GitHub lo pubblica da solo se nelle impostazioni del repository (Settings → Secrets and variables → Actions) c'è il secret **`CLOUDFLARE_API_TOKEN`**. Senza quel secret il passaggio viene saltato e online resta il Worker già pubblicato. Se il token vede più di un account Cloudflare, aggiungi anche **`CLOUDFLARE_ACCOUNT_ID`**.
 
-Prima che il Worker nuovo parta, applica una volta la migrazione del database (dal computer, nella cartella del progetto):
-
-```
-npx wrangler d1 migrations apply revkeeper --remote
-```
+Le migrazioni del database (`migrations/`) le applica GitHub Actions al merge su `main`, prima del cron: il token deve avere anche **D1:Edit**. Devono restare additive (colonne e tabelle nuove), perché Pages si pubblica in parallelo.
 
 La chiave privata delle notifiche (`VAPID_PRIVATE_KEY`) è già un secret del Worker: la pubblicazione non la cancella.
 
@@ -35,7 +31,7 @@ Ogni giorno c'è anche D1 Time Travel. Procedura di ripristino: [RIPRISTINO.md](
 
 - Accessi con Google e nuovi ospiti: 60 ogni 10 minuti per rete (IPv6: per blocco /64). Oltre l'80% dello spazio D1 o R2 non si creano nuovi ospiti.
 - Per utente: 120 sincronizzazioni e 120 file all'ora, 5 notifiche di prova e 5 export all'ora.
-- Record: 500 per un ospite, 20.000 per un account Google. Gli ospiti non caricano file.
+- Record: 500 per un ospite, 20.000 per un account Google. File: 100 MB per account Google; gli ospiti non caricano file. I record cancellati spariscono dopo 180 giorni.
 
 Oltre un limite il server risponde 429 con `Retry-After`. Gli indirizzi IP non si salvano: il contatore usa un'impronta (hash).
 

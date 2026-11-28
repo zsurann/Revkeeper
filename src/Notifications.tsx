@@ -108,7 +108,7 @@ export const Notifications = () => {
           <button type="button" onClick={() => void disable()} className={btn.secondary}><BellOff size={16} />Disattiva</button>
         </div>
       )}
-      {msg && <p role="status" className="m-0 text-[14px] font-medium text-red-ink">{msg}</p>}
+      {msg && <p role="alert" className="m-0 text-[14px] font-medium text-red-ink">{msg}</p>}
     </div>
   )
 }

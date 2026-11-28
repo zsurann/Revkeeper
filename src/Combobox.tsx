@@ -304,7 +304,7 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
                 id={`${listId}-${i}`}
                 data-index={i}
                 role="option"
-                aria-selected={i === active || selected}
+                aria-selected={selected}
                 className={`flex cursor-pointer select-none justify-between gap-2 rounded-lg p-2.5 ${i === active ? 'bg-sunken' : selected ? 'bg-lime-soft/60 font-medium' : ''} ${'free' in o ? 'font-semibold text-lime-ink' : 'text-ink'}`}
               >
                 {'free' in o ? <span>Usa «{o.label}»</span> : <Mark text={o.label} q={edited ? value.trim() : ''} />}

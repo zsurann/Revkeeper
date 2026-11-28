@@ -78,6 +78,8 @@ export const BikeForm = ({ bike, onDone, onCancel }: { bike?: Bike; onDone: (b: 
       const empty = ['make', 'model', 'year', 'startKm'].find((k) => !String(form.get(k) ?? '').trim())
       const el = empty ? document.getElementById(empty) : null
       el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      el?.setAttribute('aria-invalid', 'true')
+      el?.addEventListener('input', () => el.removeAttribute('aria-invalid'), { once: true })
       el?.focus({ preventScroll: true })
     }
   }
