@@ -99,6 +99,15 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
     return () => document.removeEventListener('pointerdown', onDown)
   }, [show])
 
+  // All'apertura con poco spazio sotto, la pagina scorre per dare spazio alla lista (es. sotto la foto della moto)
+  useLayoutEffect(() => {
+    if (!show) return
+    const rect = root.current?.getBoundingClientRect()
+    const vh = window.visualViewport?.height ?? window.innerHeight
+    const room = rect ? vh - rect.bottom : Infinity
+    if (rect && room < 320 && rect.top > 80) window.scrollBy({ top: Math.min(rect.top - 72, 320 - room), behavior: 'instant' })
+  }, [show])
+
   // Spazio disponibile sopra/sotto rispetto al visualViewport (resta visibile anche quando si apre la tastiera)
   useLayoutEffect(() => {
     if (!show) return
