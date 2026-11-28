@@ -99,15 +99,6 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
     return () => document.removeEventListener('pointerdown', onDown)
   }, [show])
 
-  // All'apertura con poco spazio sotto, la pagina scorre per dare spazio alla lista (es. sotto la foto della moto)
-  useLayoutEffect(() => {
-    if (!show) return
-    const rect = root.current?.getBoundingClientRect()
-    const vh = window.visualViewport?.height ?? window.innerHeight
-    const room = rect ? vh - rect.bottom : Infinity
-    if (rect && room < 320 && rect.top > 80) window.scrollBy({ top: Math.min(rect.top - 72, 320 - room), behavior: 'instant' })
-  }, [show])
-
   // Spazio disponibile sopra/sotto rispetto al visualViewport (resta visibile anche quando si apre la tastiera)
   useLayoutEffect(() => {
     if (!show) return
@@ -150,6 +141,18 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
     }
   }, [show]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Solo gli eventi nello stesso punto del tocco: un tocco vero subito dopo, altrove, passa
+  const swallowGhostClick = (x: number, y: number) => {
+    const types = ['mousedown', 'mouseup', 'click'] as const
+    const stop = (ev: Event) => {
+      const m = ev as MouseEvent
+      if (Math.hypot(m.clientX - x, m.clientY - y) > 24) return
+      ev.preventDefault()
+      ev.stopPropagation()
+    }
+    for (const type of types) document.addEventListener(type, stop, { capture: true })
+    window.setTimeout(() => { for (const type of types) document.removeEventListener(type, stop, { capture: true }) }, 450)
+  }
   const onListPointerDown = (e: ReactPointerEvent) => {
     cancelClose()
     if (e.pointerType === 'touch' || e.pointerType === 'pen') lastTouchInRoot.current = Date.now()
@@ -171,7 +174,11 @@ export const Combobox = ({ id, name, options, defaultValue = '', placeholder, di
     if (!li) return
     const i = Number(li.getAttribute('data-index'))
     const item = items[i]
-    if (item) pick(item)
+    if (!item) return
+    // Sul tocco il telefono manda anche mousedown e click dopo pointerup: la lista è già chiusa e finirebbero
+    // sul campo che stava sotto (aprendolo o dandogli il focus). Si scartano, solo per un istante.
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') swallowGhostClick(e.clientX, e.clientY)
+    pick(item)
   }
 
   return (
