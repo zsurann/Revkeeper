@@ -22,10 +22,26 @@ Revkeeper si può aprire a tutti: nessun problema BLOCCANTE o ALTO del [controll
 <!-- una riga per ticket chiuso -->
 
 - [Gli ospiti sul server: cosa possono fare e con quali tetti](601-ospiti-e-tetti.md): allegati degli ospiti solo sul telefono; tetto di 500 record per l'ospite e 20.000 per l'account Google; nessun nuovo ospite oltre l'80% di D1 o R2.
+- [Piano Cloudflare: restare sul gratuito?](602-piano-cloudflare.md): sì, il codice si adatta ai limiti.
+- [Dopo un ripristino del DB: cosa fanno i telefoni](603-ripristino-e-telefoni.md): tengono i dati e li reinviano al nuovo accesso.
+- [Pulsante Google: caricarlo al tocco o dichiararlo](604-pulsante-google.md): si dichiara nell'informativa.
+- [Limiti per IP e operatori mobili (CGNAT)](605-limiti-ip-cgnat.md): sync per utente, login 60 ogni 10 minuti per IP.
+- [Sync: pagine bloccate e lotti oltre 50 query](606-sync-pagine-e-lotti.md): un rev per blocco, rev interi nel pull, allegati in un batch.
+- [Non perdere le modifiche non inviate su un 401](607-401-senza-perdite.md): dati tenuti, sessione scorrevole, cursore oltre il server riparte da zero.
+- [Allegati dell'ospite persi passando a Google](608-allegati-ospite-google.md): ricaricati al login.
+- [Togliere l'interruttore EPOCH](609-togliere-epoch.md): tolto.
+- [Input del server: 400 invece di 500, quota atomica](610-input-e-quota.md): corpi validati, campi ignoti scartati, tetti e flag.
+- [Cron promemoria che regge tutti gli utenti](611-cron-promemoria.md): ogni 10 minuti, query fisse, remind_at prima degli invii.
+- [Ospiti: scaricare ed eliminare i propri dati](612-ospiti-export-elimina.md): sezione in Account e informativa.
+- [Accessibilità: focus nei fogli e al cambio pagina](613-a11y-focus.md): fatto.
+- [Peso al primo caricamento e PWA](614-peso-e-pwa.md): 515 → 299 kB.
+- [SECURITY.md, security.txt e action fissate](615-security-txt.md): file aggiunti, SHA delle action no.
 
 ## Not yet specified
 
 - **Pulizia dei record cancellati** (dalla mappa 500): i tombstone restano in D1 per sempre; con i tetti di [Gli ospiti sul server](601-ospiti-e-tetti.md) potrebbe servire.
+- **Copia settimanale del DB a pezzi** (`cron/backup.ts`): tutta in memoria in una sola esecuzione; serve verso 1k utenti.
+- **Action GitHub fissate a uno SHA**.
 - **Statistiche admin ed export ZIP pesanti**: 4 scansioni complete di `records`, CRC32 in JS tutto in memoria. Quanto servono dipende dal piano e dal numero di utenti.
 - **SDK Sentry completo su ogni `/api`**: sostituirlo con la versione leggera del cron dipende dalla CPU misurata in [Controlli nei pannelli Cloudflare e Sentry](616-pannelli.md).
 - **Retry del sync dopo 5xx/429**: oggi nessuno; forma da decidere dopo i limiti per IP.

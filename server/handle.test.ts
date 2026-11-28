@@ -3,6 +3,7 @@ import { handle, LIMITS, type Env } from './api'
 import { remindersFor, type Rec } from './reminders'
 import type { Jwk } from './google'
 import { FakeD1, FakeR2 } from './testing/cloud'
+import { RATE } from './ratelimit'
 import { unzip } from './testing/unzip'
 
 const enc = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url')
@@ -240,7 +241,7 @@ it('un tombstone più vecchio non cancella il file di un allegato ancora vivo', 
 it('limita i tentativi di accesso per IP e le notifiche di prova per utente', async () => {
   const { env, keys } = await session()
   const bad = () => call(env, '/auth/google', { method: 'POST', headers: { 'cf-connecting-ip': '203.0.113.9' }, body: JSON.stringify({ credential: 'a.b.c' }) }, keys)
-  for (let i = 0; i < 20; i++) expect((await bad()).status).toBe(401)
+  for (let i = 0; i < RATE.login.max; i++) expect((await bad()).status).toBe(401)
   const over = await bad()
   expect(over.status).toBe(429)
   expect(Number(over.headers.get('retry-after'))).toBeGreaterThan(0)
@@ -420,4 +421,128 @@ it('un nuovo ospite pulisce gli ospiti senza sessione da oltre 7 giorni', async 
   const ids = d1.prepare("SELECT id FROM users WHERE id IN ('guest-vecchio', 'guest-attivo', 'guest-nuovo') ORDER BY id").all().results.map((r) => r.id)
   expect(ids).toEqual(['guest-attivo', 'guest-nuovo'])
   expect(d1.prepare('SELECT * FROM push_subs').all().results).toEqual([])
+})
+
+// Controllo pre-lancio del 28/11/2026 (issues/600-map-lancio-pubblico.md)
+const uuid = (i: number, prefix = 'a') => `${prefix.repeat(8)}-0000-4000-8000-${String(i).padStart(12, '0')}`
+const reading = (i: number) => ({ id: uuid(i), updatedAt: AT, bikeId: BIKE, date: '2026-01-02', km: 30000 + i })
+const guest = async (env: Env) => tokenOf(await call(env, '/auth/guest', { method: 'POST' }))
+const pullAll = async (env: Env, cookie: string) => {
+  let since = 0
+  const seen = new Set<string>()
+  for (let i = 0; i < 50; i++) {
+    const page = (await (await call(env, `/sync/pull?since=${since}`, { cookie })).json()) as { changes: { id: string }[]; cursor: number; more: boolean }
+    for (const c of page.changes) seen.add(c.id)
+    since = page.cursor
+    if (!page.more) return seen
+  }
+  throw new Error('pull senza fine')
+}
+
+it('eliminare una moto con oltre 500 record non blocca il pull', async () => {
+  const { env, login } = await session()
+  const cookie = await login()
+  expect((await push(env, cookie, [{ kind: 'bikes', id: BIKE, data: bike(), updatedAt: AT }])).status).toBe(200)
+  for (let b = 0; b < 12; b++) expect((await push(env, cookie, Array.from({ length: 50 }, (_, i) => ({ kind: 'readings', id: uuid(b * 50 + i), data: reading(b * 50 + i), updatedAt: AT })))).status).toBe(200)
+  expect((await call(env, `/bikes/${BIKE}`, { method: 'DELETE', cookie })).status).toBe(200)
+  expect((await pullAll(env, cookie)).size).toBe(601)
+})
+
+it('dati vecchi con un solo rev oltre una pagina arrivano interi', async () => {
+  const { env, d1, login } = await session()
+  const cookie = await login()
+  d1.exec("UPDATE users SET rev = 7 WHERE id = '42'")
+  for (let i = 0; i < 520; i++) d1.exec("INSERT INTO records(user_id, kind, id, data, updated_at, device_id, deleted, rev) VALUES ('42', 'readings', ?, NULL, 1, 'd', 1, 7)", uuid(i))
+  expect((await pullAll(env, cookie)).size).toBe(520)
+})
+
+it('un lotto con molti allegati cancellati resta in poche query', async () => {
+  const { env, d1, files, login } = await session()
+  const cookie = await login()
+  const atts = Array.from({ length: 30 }, (_, i) => uuid(i, 'c'))
+  for (const id of atts) {
+    expect((await call(env, `/files/${id}`, { method: 'PUT', cookie, body: new Uint8Array([1, 2, 3]) })).status).toBe(200)
+  }
+  expect((await push(env, cookie, atts.map((id) => ({ kind: 'attachments', id, data: { id, updatedAt: AT, name: 'f.jpg', type: 'image/jpeg' }, updatedAt: AT })))).status).toBe(200)
+  const prepared = vi.spyOn(d1, 'prepare')
+  const batches = vi.spyOn(d1, 'batch')
+  expect((await push(env, cookie, atts.map((id) => ({ kind: 'attachments', id, data: null, updatedAt: AT + 1, deleted: true })))).status).toBe(200)
+  // query contate come D1: un batch vale una
+  const inBatch = batches.mock.calls.reduce((n, [stmts]) => n + stmts.length, 0)
+  expect(prepared.mock.calls.length - inBatch + batches.mock.calls.length).toBeLessThan(15)
+  expect(files.objects.size).toBe(0)
+  expect(d1.prepare('SELECT bytes FROM users WHERE id = ?').bind('42').first<{ bytes: number }>()?.bytes).toBe(0)
+})
+
+it('ospite: niente file online e tetto di record', async () => {
+  const { env } = await session()
+  const g = await guest(env)
+  expect((await call(env, `/files/${FILE}`, { method: 'PUT', cookie: g, body: new Uint8Array([1]) })).status).toBe(403)
+  for (let b = 0; b < LIMITS.guestRecords / 50; b++) expect(await (await push(env, g, Array.from({ length: 50 }, (_, i) => ({ kind: 'readings', id: uuid(b * 50 + i), data: reading(b * 50 + i), updatedAt: AT })))).json()).toEqual({ ok: true })
+  expect((await push(env, g, [{ kind: 'readings', id: uuid(9999), data: reading(9999), updatedAt: AT }])).status).toBe(413)
+  // aggiornare un record già presente non occupa altro spazio
+  expect((await push(env, g, [{ kind: 'readings', id: uuid(0), data: { ...reading(0), km: 1, updatedAt: AT + 1 }, updatedAt: AT + 1 }])).status).toBe(200)
+})
+
+it('nuovi ospiti fermi quando lo spazio è oltre l\'80%', async () => {
+  const { env, d1 } = await session()
+  d1.exec("INSERT INTO flags(name, value) VALUES ('guests_closed', 1)")
+  expect((await call(env, '/auth/guest', { method: 'POST' })).status).toBe(503)
+})
+
+it('i campi fuori dal modello dati non arrivano su D1', async () => {
+  const { env, d1, login } = await session()
+  const cookie = await login()
+  const res = await push(env, cookie, [{ kind: 'bikes', id: BIKE, data: bike({ junk: 'x'.repeat(10_000), tyres: { front: '120/70', pad: 'y' } }), updatedAt: AT }])
+  expect(res.status).toBe(200)
+  const saved = JSON.parse(d1.prepare("SELECT data FROM records WHERE kind = 'bikes'").first<{ data: string }>()!.data)
+  expect(saved.junk).toBeUndefined()
+  expect(saved.tyres).toEqual({ front: '120/70' })
+  expect(saved.make).toBe('Kawasaki')
+})
+
+it('corpi JSON strani danno 400, non 500', async () => {
+  const { env, login, keys } = await session()
+  const cookie = await login()
+  expect((await call(env, '/auth/google', { method: 'POST', body: 'null' }, keys)).status).toBe(400)
+  expect((await call(env, '/auth/google', { method: 'POST', body: JSON.stringify({ credential: 42 }) }, keys)).status).toBe(400)
+  expect((await call(env, '/sync/push', { method: 'POST', cookie, body: 'null' })).status).toBe(400)
+  expect((await call(env, '/push/subscribe', { method: 'POST', cookie, body: '[]' })).status).toBe(400)
+  expect((await call(env, '/push/unsubscribe', { method: 'POST', cookie, body: 'null' })).status).toBe(200)
+})
+
+it('quota dei file: due caricamenti dello stesso file non abbassano il contatore', async () => {
+  const { env, d1, login } = await session()
+  const cookie = await login()
+  await Promise.all([1, 2, 3].map((n) => call(env, `/files/${FILE}`, { method: 'PUT', cookie, body: new Uint8Array(n * 10) })))
+  const bytes = d1.prepare('SELECT bytes FROM users WHERE id = ?').bind('42').first<{ bytes: number }>()!.bytes
+  const size = d1.prepare('SELECT size FROM files WHERE id = ?').bind(FILE).first<{ size: number }>()!.size
+  expect(bytes).toBe(size)
+})
+
+it('la sessione si rinnova da sola, al massimo una volta ogni 30 giorni', async () => {
+  const { env, d1, login } = await session()
+  const cookie = await login()
+  expect((await call(env, '/me', { cookie })).headers.get('set-cookie')).toBeNull()
+  d1.exec('UPDATE sessions SET expires_at = ?', Date.now() + 10 * 86_400_000)
+  const renewed = await call(env, '/me', { cookie })
+  expect(renewed.headers.get('set-cookie')).toContain(`Max-Age=${LIMITS.sessionDays * 86400}`)
+  const exp = d1.prepare('SELECT expires_at AS e FROM sessions').first<{ e: number }>()!.e
+  expect(exp).toBeGreaterThan(Date.now() + 179 * 86_400_000)
+})
+
+it('dopo un ripristino il telefono con il cursore avanti riparte da zero', async () => {
+  const { env, d1, login } = await session()
+  const cookie = await login()
+  expect((await push(env, cookie, [{ kind: 'bikes', id: BIKE, data: bike(), updatedAt: AT }])).status).toBe(200)
+  d1.exec("UPDATE users SET rev = 1 WHERE id = '42'")
+  const page = (await (await call(env, '/sync/pull?since=40', { cookie })).json()) as { cursor: number; more: boolean }
+  expect(page).toMatchObject({ cursor: 0, more: true })
+})
+
+it('esportare i dati ha un tetto orario', async () => {
+  const { env, login } = await session()
+  const cookie = await login()
+  for (let i = 0; i < RATE.export.max; i++) expect((await call(env, '/account/export', { cookie })).status).toBe(200)
+  expect((await call(env, '/account/export', { cookie })).status).toBe(429)
 })

@@ -36,10 +36,16 @@ export const remindersFor = (records: Rec[], today: string): string[] => {
   return out
 }
 
+// Un formatter per fuso, riusato: crearne uno costa quanto il resto del giro (limite di 10 ms di CPU)
+const formatters = new Map<string, Intl.DateTimeFormat>()
+const formatter = (tz: string) => {
+  let f = formatters.get(tz)
+  if (!f) formatters.set(tz, (f = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' })))
+  return f
+}
 export const localParts = (now: Date, tz: string) => {
-  const date = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
-  const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' }).format(now))
-  return { date, hour }
+  const p = Object.fromEntries(formatter(tz).formatToParts(now).map((x) => [x.type, x.value]))
+  return { date: `${p.year}-${p.month}-${p.day}`, hour: Number(p.hour) }
 }
 
 // Il telefono mostra già "Revkeeper": il titolo è la scadenza, il testo la moto ("Kawasaki Z650: Catena scade tra 7 giorni")

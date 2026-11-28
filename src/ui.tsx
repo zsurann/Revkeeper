@@ -148,7 +148,17 @@ export const Sheet = ({ open, onClose, title, children }: { open: boolean; onClo
   useEffect(() => {
     if (!open) return
     const prev = document.activeElement as HTMLElement | null
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && onCloseRef.current()
+    // Tab resta dentro il foglio: lo sfondo è coperto dal velo e non va raggiunto
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') return onCloseRef.current()
+      if (e.key !== 'Tab' || !panel.current) return
+      const all = [...panel.current.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])')].filter((el) => el.offsetParent !== null || el.classList.contains('sr-only'))
+      if (!all.length) return
+      const first = all[0]!, last = all.at(-1)!
+      if (!panel.current.contains(document.activeElement)) { e.preventDefault(); first.focus() }
+      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
     addEventListener('keydown', key)
     const t = setTimeout(() => panel.current?.querySelector<HTMLElement>('input,select,textarea,button:not([data-close])')?.focus(), 260)
     document.documentElement.style.overflow = 'hidden'

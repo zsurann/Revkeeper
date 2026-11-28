@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 workers_dev = false
 
 [triggers]
-crons = ["0 * * * *", "30 2 * * SUN"] # promemoria ogni ora; la domenica copia di database e file e pulizia inattivi
+crons = ["*/10 * * * *", "30 2 * * SUN"] # promemoria ogni 10 minuti (spazio una volta all'ora); la domenica copia di database e file e pulizia inattivi
 
 [vars]
 # DSN pubblico del progetto Sentry "revkeeper-api"

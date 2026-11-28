@@ -16,7 +16,7 @@ const Privacy = () => (
     <p>Revkeeper è un servizio gratuito gestito da una persona privata, {OWNER}, titolare del trattamento. Contatto per ogni richiesta: <Mail />.</p>
     <H>Quali dati, perché e su che base</H>
     <ul>
-      <li><b>Dati della moto</b> (marca, modello, targa e telaio se li inserisci, km, interventi, spese, scadenze, foto e PDF allegati): servono a far funzionare l'app. Restano sul telefono; vanno sul server solo se accedi con Google o attivi le notifiche. Base: esecuzione del servizio che richiedi (art. 6.1.b).</li>
+      <li><b>Dati della moto</b> (marca, modello, targa e telaio se li inserisci, km, interventi, spese, scadenze, foto e PDF allegati): servono a far funzionare l'app. Restano sul telefono; vanno sul server solo se accedi con Google o attivi le notifiche (senza Google foto e PDF restano comunque sul telefono). Base: esecuzione del servizio che richiedi (art. 6.1.b).</li>
       <li><b>Account Google</b> (identificativo ed email): per salvare il garage online e usarlo su più telefoni. Base: art. 6.1.b.</li>
       <li><b>Account ospite</b>: se attivi le notifiche senza Google, il server crea un account pseudonimo (un codice casuale, senza email) legato al telefono, per calcolare e inviare i promemoria. Base: art. 6.1.b.</li>
       <li><b>Notifiche</b>: l'indirizzo di consegna fornito dal browser, l'ora e il fuso scelti. Il testo mostra moto e scadenza, mai la targa. Base: art. 6.1.b.</li>
@@ -28,17 +28,17 @@ const Privacy = () => (
     <H>Chi riceve i dati</H>
     <ul>
       <li><b>Cloudflare</b> (hosting, database, file, statistiche): database e file in data center nell'Unione europea.</li>
-      <li><b>Google</b> (accesso con Google), <b>Sentry</b> (errori, server in Germania) e i servizi di notifica del browser (Google, Apple, Mozilla, Microsoft).</li>
+      <li><b>Google</b> (accesso con Google: per mostrare il pulsante "Accedi con Google" il browser contatta Google già all'apertura della schermata, che riceve indirizzo IP e tipo di browser anche se non accedi), <b>Sentry</b> (errori, server in Germania) e i servizi di notifica del browser (Google, Apple, Mozilla, Microsoft).</li>
     </ul>
     <p>Alcuni fornitori hanno sede negli Stati Uniti: i trasferimenti si basano sul Data Privacy Framework UE-USA e sulle clausole contrattuali standard dei fornitori.</p>
     <H>Per quanto tempo</H>
     <ul>
       <li>Account Google: finché non lo elimini. Dopo 24 mesi senza accessi viene eliminato, con un avviso prima se hai le notifiche attive.</li>
-      <li>Account ospite: eliminato poco dopo la scadenza della sessione (circa 6 mesi).</li>
+      <li>Account ospite: eliminato se non usi l'app per circa 6 mesi (la sessione si rinnova finché la usi).</li>
       <li>Copie di sicurezza: il database fino a 5 settimane, i file 30 giorni. Dopo l'eliminazione dell'account i dati possono restare nelle copie fino a quella scadenza; se una copia viene ripristinata, le eliminazioni vengono riapplicate.</li>
     </ul>
     <H>I tuoi diritti</H>
-    <p>Puoi chiedere accesso, rettifica, cancellazione, limitazione, portabilità e opporti al trattamento basato sul legittimo interesse. Nell'app, in Account, puoi già scaricare tutti i tuoi dati ed eliminare l'account. Rispondiamo entro 30 giorni. Puoi anche presentare reclamo al Garante per la protezione dei dati personali (garanteprivacy.it).</p>
+    <p>Puoi chiedere accesso, rettifica, cancellazione, limitazione, portabilità e opporti al trattamento basato sul legittimo interesse. Nell'app, in Account, puoi già scaricare tutti i tuoi dati ed eliminare l'account (o, senza Google, la copia anonima usata per le notifiche). Rispondiamo entro 30 giorni. Puoi anche presentare reclamo al Garante per la protezione dei dati personali (garanteprivacy.it).</p>
     <H>Età minima</H>
     <p>Revkeeper è per chi ha almeno 14 anni.</p>
     <H>Sicurezza e violazioni</H>

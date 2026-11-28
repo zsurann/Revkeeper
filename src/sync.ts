@@ -9,10 +9,12 @@ const BATCH = 50
 const api = async (path: string, init?: RequestInit) => {
   const res = await fetch(`/api${path}`, { ...init, headers: { 'content-type': 'application/json', ...init?.headers } })
   if (res.status === 401) throw new LoggedOut()
+  if (res.status === 413 && path === '/sync/push') throw new RecordsFull(String((await res.json().catch(() => ({}))).error ?? 'Limite di record raggiunto'))
   if (!res.ok) throw new Error(`${path}: ${res.status} ${(await res.json().catch(() => ({}))).error ?? ''}`)
   return res.json()
 }
 export class LoggedOut extends Error {}
+export class RecordsFull extends Error {}
 
 const deviceId = async () => {
   let id = await getMeta<string>('deviceId')
@@ -27,12 +29,15 @@ const toChange = (kind: StoreName, r: Rec): Change => {
 }
 
 // File che il server rifiuta per sempre (troppo grande, spazio esaurito, tipo non valido): riprovare non serve
-const REJECTED = new Set([400, 411, 413, 415, 507])
+const REJECTED = new Set([400, 403, 411, 413, 415, 507])
 
 const pushAll = async (device: string) => {
   const d = await db()
   const rejected: string[] = []
+  // Ospite: gli allegati restano sul telefono (ai promemoria non servono) e partono al login Google
+  const guest = !(await getMeta<string>('account'))
   for (const kind of STORES) {
+    if (guest && kind === 'attachments') continue
     let dirty = ((await d.getAll(kind)) as Rec[]).filter((r) => r.dirty)
     if (kind === 'attachments') {
       const held = new Set<string>()
@@ -111,21 +116,29 @@ export const syncNow = () =>
         globalThis.dispatchEvent?.(new Event('revkeeper:guestexpired'))
         return 0
       }
-      if (e instanceof LoggedOut) {
-        await dropLocalPush().catch(() => undefined)
-        await clearLocal()
-        globalThis.dispatchEvent?.(new Event('revkeeper:loggedout'))
-      }
+      if (e instanceof LoggedOut) await sessionLost()
       throw e
     } finally {
       running = undefined
     }
   })())
 
-// Primo accesso: tutto il locale va inviato, poi si scarica tutto dal server
+// Sessione scaduta o sconosciuta (anche dopo un ripristino del server): i dati restano sul telefono, comprese
+// le modifiche non inviate. Si torna "senza account"; al prossimo accesso con Google il telefono reinvia tutto.
+const sessionLost = async () => {
+  await dropLocalPush().catch(() => undefined)
+  await setMeta('account', undefined)
+  await setMeta('guest', false)
+  globalThis.dispatchEvent?.(new Event('revkeeper:loggedout'))
+  toast('Accesso scaduto', { kind: 'warn', body: 'I dati restano su questo telefono: accedi di nuovo da Account per sincronizzarli' })
+}
+
+// Primo accesso: tutto il locale va inviato, poi si scarica tutto dal server.
+// Anche i file: quelli caricati da ospite il server li cancella al passaggio all'account Google.
 const markAllDirty = async () => {
   const d = await db()
-  for (const kind of STORES) for (const r of (await d.getAll(kind)) as Rec[]) await d.put(kind, { ...r, dirty: 1 } as never)
+  for (const kind of STORES)
+    for (const r of (await d.getAll(kind)) as Rec[]) await d.put(kind, { ...r, dirty: 1, ...(kind === 'attachments' && r.blob ? { uploaded: undefined } : {}) } as never)
   await setMeta('cursor', 0)
 }
 export const startAccount = async (email: string) => {
@@ -195,6 +208,14 @@ export const deleteAccount = async () => {
   await clearLocal()
 }
 
+// Ospite: cancella la copia anonima sul server (promemoria compresi), i dati sul telefono restano
+export const deleteGuestCopy = async () => {
+  await clearPush().catch(() => undefined)
+  const res = await fetch('/api/account/delete', { method: 'POST' })
+  if (!res.ok && res.status !== 401) throw new Error(`Eliminazione non riuscita: ${res.status}`)
+  await setMeta('guest', false)
+}
+
 export const deleteBikeEverywhere = async (bikeId: Id): Promise<{ synced: boolean }> => {
   const removed = await removeBikeCascade(bikeId)
   const account = await getMeta<string>('account')
@@ -207,9 +228,7 @@ export const deleteBikeEverywhere = async (bikeId: Id): Promise<{ synced: boolea
     return { synced: false }
   }
   if (res.status === 401) {
-    await dropLocalPush().catch(() => undefined)
-    await clearLocal()
-    globalThis.dispatchEvent?.(new Event('revkeeper:loggedout'))
+    await sessionLost()
     throw new LoggedOut()
   }
   if (!res.ok && res.status !== 404) {
@@ -249,9 +268,9 @@ export const downloadAccountExport = async () => {
 // In automatico gli errori restano in console, tranne i file rifiutati: lì serve che la persona lo sappia (una volta)
 let warned = ''
 const quiet = (e: unknown) => {
-  if (e instanceof FilesRejected && e.message !== warned) {
+  if ((e instanceof FilesRejected || e instanceof RecordsFull) && e.message !== warned) {
     warned = e.message
-    toast('Alcuni allegati restano sul telefono', { kind: 'warn', body: e.message })
+    toast(e instanceof RecordsFull ? 'Dati non salvati online' : 'Alcuni allegati restano sul telefono', { kind: 'warn', body: e.message })
   } else console.warn(e)
 }
 let timer: ReturnType<typeof setTimeout> | undefined

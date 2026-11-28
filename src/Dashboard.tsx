@@ -142,8 +142,9 @@ export const Dashboard = ({ next, rows, docs, last, labelOf, km, from, rate, onK
   go: (to: 'maint' | 'services' | 'documents') => void
 }) => (
   <div className="grid gap-6 lg:grid-cols-12">
+    <h1 className="sr-only">Cruscotto</h1>
     {docs.filter((d) => d.status === 'overdue').map((d) => (
-      <button key={d.kind} type="button" role="alert" onClick={() => go('documents')} className="flex items-center gap-3 rounded-lg bg-red-soft p-4 text-left ring-1 ring-red/30 lg:col-span-12">
+      <button key={d.kind} type="button" onClick={() => go('documents')} className="flex items-center gap-3 rounded-lg bg-red-soft p-4 text-left ring-1 ring-red/30 lg:col-span-12">
         <TriangleAlert size={20} className="shrink-0 text-red-ink" />
         <span className="grid flex-1">
           <b className="text-[15px] font-semibold text-red-ink">{DOC[d.kind].label} {d.days !== undefined ? daysText(d.days, d.kind === 'bollo') : d.kind === 'bollo' ? 'scaduto' : 'scaduta'}</b>

@@ -67,7 +67,7 @@ export const usePending = () => {
 
 export const AttachmentPicker = ({ id, p }: { id: string; p: ReturnType<typeof usePending> }) => (
   <div className="grid gap-2">
-    <label htmlFor={id} className="flex h-12 items-center justify-center gap-2 rounded-md border border-dashed border-line-strong text-[14px] font-medium text-ink-2 transition-colors hover:bg-sunken">
+    <label htmlFor={id} className="has-[+input:focus-visible]:ring-2 has-[+input:focus-visible]:ring-ink flex h-12 items-center justify-center gap-2 rounded-md border border-dashed border-line-strong text-[14px] font-medium text-ink-2 transition-colors hover:bg-sunken">
       <Paperclip size={16} />Allega foto o PDF <span className="text-ink-3">· max 15 MB</span>
     </label>
     <input id={id} type="file" multiple accept="image/*,application/pdf" className="sr-only" onChange={(e) => void p.add(e.target.files)} />

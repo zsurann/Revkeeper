@@ -1,6 +1,6 @@
 import { AnimatePresence, LayoutGroup, LazyMotion, m, MotionConfig } from 'motion/react'
 import { ChevronDown, FileText, Gauge, NotebookPen, Settings2, UserRound, Warehouse, WifiOff, Wrench, type LucideIcon } from 'lucide-react'
-import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Dashboard, DashboardSkeleton, type DocRow, type Row } from './Dashboard'
 import { startAutoSync } from './sync'
 import { findDuplicateBikes, getMeta, itemLabels, listBikes, listByBike, mergeBikes, save } from './db'
@@ -166,15 +166,26 @@ const Main = () => {
   useEffect(() => watchSystemTheme(), [])
   // Ogni cambio di schermata riparte dall'alto (es. dopo aver salvato il modulo moto)
   useEffect(toTop, [view, tab, bike?.id])
+  // Cambio pagina: titolo della scheda e focus sul titolo della pagina, così lettori di schermo e tastiera ripartono da lì
+  const firstPage = useRef(true)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const h = document.querySelector<HTMLElement>('main h1, h1')
+      document.title = h?.textContent ? `${h.textContent} · Revkeeper` : 'Revkeeper'
+      if (firstPage.current) return void (firstPage.current = false)
+      if (h) {
+        h.tabIndex = -1
+        h.focus({ preventScroll: true })
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [pageKey, bike?.id])
   useEffect(() => {
     startAutoSync()
     const onSynced = () => void load()
+    // Sessione scaduta: i dati restano sul telefono, si torna solo "senza account"
     const onLoggedOut = () => {
-      setWelcomed(false)
-      setActiveId(undefined)
-      setDetail(undefined)
       setEmail(undefined)
-      setStack([ROOT])
       void load()
     }
     const onGuestExpired = () => void renewGuestPush().catch(() => undefined)
